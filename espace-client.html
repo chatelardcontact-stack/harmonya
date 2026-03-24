@@ -363,6 +363,9 @@
     }
     .empty-state-icon { font-size: 2.5rem; margin-bottom: 16px; opacity: .4; }
     .empty-state-text { font-size: .88rem; }
+    .empty-state-sub { font-size: .78rem; color: var(--text-dim); margin-top: 8px; opacity: .7; }
+    .btn-empty-cta { display: inline-block; margin-top: 20px; padding: 11px 24px; background: var(--gold); color: #0a0a0a; border-radius: 50px; font-size: .82rem; font-weight: 500; letter-spacing: .05em; text-decoration: none; transition: background .2s; }
+    .btn-empty-cta:hover { background: var(--gold-light); }
 
     /* ── Documents Panel ─────────────────────────── */
     .doc-list { display: flex; flex-direction: column; gap: 12px; }
@@ -929,7 +932,7 @@
   // ── Config ────────────────────────────────────────
   const SUPABASE_URL  = 'https://qewdympkbxbevgmbfxfd.supabase.co';
   const SUPABASE_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFld2R5bXBrYnhiZXZnbWJmeGZkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyOTM0NDMsImV4cCI6MjA4OTg2OTQ0M30.LMHNi_cP5klEHTPn-HrY2LDjwJLEq_LbVZSnLJrATY4';
-  const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  var supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
   let currentUser = null;
   let realtimeChannel = null;
@@ -1129,7 +1132,7 @@
     // Upcoming
     const upcomingEl = document.getElementById('rdv-upcoming');
     if (upcoming.length === 0) {
-      upcomingEl.innerHTML = `<div class="empty-state"><div class="empty-state-icon">📅</div><div class="empty-state-text">Aucun rendez-vous à venir</div></div>`;
+      upcomingEl.innerHTML = `<div class="empty-state"><div class="empty-state-icon">📅</div><div class="empty-state-text">Aucun rendez-vous à venir</div><div class="empty-state-sub">Après votre réservation, votre RDV apparaît ici automatiquement.</div><a href="index.html" class="btn-empty-cta" onclick="window.location='index.html';setTimeout(()=>openBookingModal(),500);return false;">Réserver une séance →</a></div>`;
     } else {
       upcomingEl.innerHTML = upcoming.map(r => rdvCard(r)).join('');
     }
@@ -1166,7 +1169,7 @@
 
   function renderRDVEmpty() {
     document.getElementById('rdv-stats').innerHTML = '';
-    document.getElementById('rdv-upcoming').innerHTML = `<div class="empty-state"><div class="empty-state-icon">📅</div><div class="empty-state-text">Aucun rendez-vous trouvé</div></div>`;
+    document.getElementById('rdv-upcoming').innerHTML = `<div class="empty-state"><div class="empty-state-icon">📅</div><div class="empty-state-text">Aucun rendez-vous pour le moment</div><div class="empty-state-sub">Réservez votre première séance — elle apparaîtra ici automatiquement.</div><a href="index.html" class="btn-empty-cta">Réserver une séance →</a></div>`;
     document.getElementById('rdv-past').innerHTML = '';
   }
 
