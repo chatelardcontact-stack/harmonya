@@ -1,0 +1,1475 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Espace Client — Harmonya</title>
+  <link rel="icon" href="logo-removebg-preview.png" type="image/png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400;1,500&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
+  <style>
+    /* ── Variables ─────────────────────────────────── */
+    :root {
+      --gold:        #C9A96E;
+      --gold-light:  #E2C99A;
+      --gold-dark:   #A8824E;
+      --ink:         #1A1612;
+      --dark-bg:     #0E0B08;
+      --dark-card:   #1A1512;
+      --dark-card-2: #221D18;
+      --dark-border: rgba(201,169,110,.15);
+      --text-dim:    rgba(255,255,255,.55);
+      --text-mid:    rgba(255,255,255,.8);
+      --serif:  'Playfair Display', Georgia, serif;
+      --sans:   'DM Sans', system-ui, sans-serif;
+      --t:      .3s ease;
+      --sidebar-w: 260px;
+    }
+
+    *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+    html { font-size:16px; }
+    body {
+      font-family: var(--sans);
+      background: var(--dark-bg);
+      color: #fff;
+      line-height: 1.6;
+      font-weight: 300;
+      overflow-x: hidden;
+      min-height: 100vh;
+    }
+    a { text-decoration: none; color: inherit; }
+    button { cursor: pointer; border: none; background: none; font-family: var(--sans); }
+
+    /* ── Loading ────────────────────────────────────── */
+    #loading-screen {
+      position: fixed; inset: 0;
+      background: var(--dark-bg);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 9999;
+      transition: opacity .4s ease;
+    }
+    #loading-screen.fade-out { opacity: 0; pointer-events: none; }
+    .loader-logo { text-align: center; }
+    .loader-logo img { width: 160px; filter: brightness(0) invert(1); margin-bottom: 24px; }
+    .loader-spinner {
+      width: 32px; height: 32px;
+      border: 2px solid rgba(201,169,110,.2);
+      border-top-color: var(--gold);
+      border-radius: 50%;
+      animation: spin .8s linear infinite;
+      margin: 0 auto;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Hidden ─────────────────────────────────────── */
+    .hidden { display: none !important; }
+
+    /* ═══════════════════════════════════════════════
+       AUTH SCREEN
+    ═══════════════════════════════════════════════ */
+    #auth-screen {
+      min-height: 100vh;
+      display: flex; align-items: center; justify-content: center;
+      padding: 24px;
+      background:
+        radial-gradient(ellipse 80% 60% at 20% 40%, rgba(201,169,110,.07) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 80% at 80% 70%, rgba(201,169,110,.05) 0%, transparent 60%),
+        var(--dark-bg);
+    }
+    .auth-card {
+      width: 100%; max-width: 440px;
+      background: var(--dark-card);
+      border: 1px solid var(--dark-border);
+      border-radius: 4px;
+      padding: 56px 48px 48px;
+      text-align: center;
+    }
+    .auth-logo { margin-bottom: 32px; }
+    .auth-logo img {
+      width: 180px;
+      filter: brightness(0) invert(1);
+      margin: 0 auto;
+    }
+    .auth-divider {
+      width: 48px; height: 1px;
+      background: linear-gradient(to right, transparent, var(--gold), transparent);
+      margin: 0 auto 28px;
+    }
+    .auth-title {
+      font-family: var(--serif);
+      font-size: 1.6rem;
+      font-weight: 400;
+      margin-bottom: 8px;
+    }
+    .auth-subtitle {
+      font-size: .85rem;
+      color: var(--text-dim);
+      margin-bottom: 40px;
+      line-height: 1.5;
+    }
+    .btn-google {
+      display: flex; align-items: center; justify-content: center; gap: 12px;
+      width: 100%; padding: 14px 24px;
+      background: rgba(255,255,255,.06);
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: 3px;
+      color: #fff;
+      font-size: .9rem; font-weight: 400; letter-spacing: .02em;
+      transition: all var(--t);
+      margin-bottom: 16px;
+    }
+    .btn-google:hover {
+      background: rgba(255,255,255,.1);
+      border-color: rgba(255,255,255,.22);
+    }
+    .btn-google svg { flex-shrink: 0; }
+    .auth-back {
+      font-size: .78rem; color: var(--text-dim);
+      transition: color var(--t);
+    }
+    .auth-back:hover { color: var(--gold-light); }
+    .auth-back span { margin-right: 4px; }
+    .auth-sep {
+      display: flex; align-items: center; gap: 12px;
+      margin: 20px 0; color: var(--text-dim); font-size: .75rem;
+    }
+    .auth-sep::before, .auth-sep::after {
+      content: ''; flex: 1; height: 1px;
+      background: rgba(255,255,255,.1);
+    }
+    .auth-field {
+      text-align: left; margin-bottom: 12px;
+    }
+    .auth-field label {
+      display: block; font-size: .65rem; letter-spacing: .12em;
+      text-transform: uppercase; color: var(--text-dim); margin-bottom: 6px;
+    }
+    .auth-input {
+      width: 100%; background: rgba(255,255,255,.04);
+      border: 1px solid rgba(255,255,255,.1); border-radius: 3px;
+      padding: 11px 14px; color: #fff; font-family: var(--sans); font-size: .88rem;
+      outline: none; transition: border-color var(--t);
+    }
+    .auth-input:focus { border-color: rgba(201,169,110,.4); }
+    .auth-input::placeholder { color: rgba(255,255,255,.25); }
+    .btn-auth-submit {
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      width: 100%; padding: 13px; margin-top: 4px;
+      background: linear-gradient(135deg, var(--gold-dark), var(--gold));
+      color: var(--ink); font-family: var(--sans); font-size: .85rem;
+      font-weight: 500; letter-spacing: .06em; text-transform: uppercase;
+      border-radius: 3px; transition: opacity var(--t); cursor: pointer; border: none;
+    }
+    .btn-auth-submit:hover { opacity: .88; }
+    .auth-toggle {
+      font-size: .78rem; color: var(--text-dim); margin-top: 14px;
+    }
+    .auth-toggle a {
+      color: var(--gold-light); text-decoration: underline; cursor: pointer;
+    }
+    .auth-error { font-size: .78rem; color: #e57373; margin-top: 10px; min-height: 18px; }
+    .auth-success { font-size: .78rem; color: var(--gold-light); margin-top: 10px; }
+
+    /* ═══════════════════════════════════════════════
+       DASHBOARD LAYOUT
+    ═══════════════════════════════════════════════ */
+    #dashboard {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* ── Sidebar ─────────────────────────────────── */
+    .sidebar {
+      width: var(--sidebar-w);
+      background: var(--dark-card);
+      border-right: 1px solid var(--dark-border);
+      display: flex; flex-direction: column;
+      position: fixed; top: 0; left: 0; bottom: 0;
+      z-index: 100;
+      transition: transform var(--t);
+    }
+    .sidebar-logo {
+      padding: 32px 28px 24px;
+      border-bottom: 1px solid var(--dark-border);
+    }
+    .sidebar-logo img {
+      width: 140px;
+      filter: brightness(0) invert(1);
+    }
+    .sidebar-label {
+      font-size: .6rem; letter-spacing: .18em; text-transform: uppercase;
+      color: var(--gold);
+      margin-top: 8px;
+    }
+    .sidebar-nav {
+      flex: 1; padding: 24px 0;
+      overflow-y: auto;
+    }
+    .sidebar-nav-item {
+      display: flex; align-items: center; gap: 12px;
+      padding: 12px 28px;
+      color: var(--text-dim);
+      font-size: .85rem; font-weight: 400;
+      cursor: pointer;
+      transition: all var(--t);
+      position: relative;
+      border-left: 2px solid transparent;
+    }
+    .sidebar-nav-item:hover {
+      color: var(--text-mid);
+      background: rgba(201,169,110,.05);
+    }
+    .sidebar-nav-item.active {
+      color: var(--gold-light);
+      background: rgba(201,169,110,.08);
+      border-left-color: var(--gold);
+    }
+    .sidebar-nav-item svg { flex-shrink: 0; }
+    .sidebar-badge {
+      margin-left: auto;
+      background: var(--gold);
+      color: var(--ink);
+      font-size: .65rem; font-weight: 600;
+      padding: 2px 7px;
+      border-radius: 20px;
+    }
+    .sidebar-user {
+      padding: 20px 28px;
+      border-top: 1px solid var(--dark-border);
+      display: flex; align-items: center; gap: 12px;
+    }
+    .sidebar-avatar {
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--gold-dark), var(--gold));
+      display: flex; align-items: center; justify-content: center;
+      font-size: .85rem; font-weight: 500;
+      color: var(--ink);
+      flex-shrink: 0;
+      overflow: hidden;
+    }
+    .sidebar-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .sidebar-user-info { flex: 1; min-width: 0; }
+    .sidebar-user-name {
+      font-size: .82rem; font-weight: 400;
+      color: var(--text-mid);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .sidebar-user-email {
+      font-size: .7rem; color: var(--text-dim);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .btn-signout {
+      color: var(--text-dim);
+      padding: 6px;
+      border-radius: 3px;
+      transition: color var(--t);
+      flex-shrink: 0;
+    }
+    .btn-signout:hover { color: #e57373; }
+
+    /* ── Main Content ────────────────────────────── */
+    .main-content {
+      margin-left: var(--sidebar-w);
+      flex: 1;
+      padding: 40px 48px;
+      max-width: calc(100vw - var(--sidebar-w));
+    }
+
+    /* ── Panel Header ────────────────────────────── */
+    .panel { display: none; }
+    .panel.active { display: block; }
+    .panel-header {
+      margin-bottom: 36px;
+    }
+    .panel-tag {
+      font-size: .65rem; letter-spacing: .2em; text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 8px;
+    }
+    .panel-title {
+      font-family: var(--serif);
+      font-size: 1.8rem; font-weight: 400;
+      color: #fff;
+    }
+
+    /* ── Cards ───────────────────────────────────── */
+    .card {
+      background: var(--dark-card);
+      border: 1px solid var(--dark-border);
+      border-radius: 4px;
+      padding: 24px 28px;
+      margin-bottom: 16px;
+      transition: border-color var(--t);
+    }
+    .card:hover { border-color: rgba(201,169,110,.28); }
+
+    /* ── RDV Panel ───────────────────────────────── */
+    .rdv-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
+    .rdv-card {
+      background: var(--dark-card);
+      border: 1px solid var(--dark-border);
+      border-radius: 4px;
+      padding: 22px 24px;
+      transition: border-color var(--t);
+      position: relative;
+      overflow: hidden;
+    }
+    .rdv-card::before {
+      content: '';
+      position: absolute; top: 0; left: 0; bottom: 0;
+      width: 3px;
+    }
+    .rdv-card.confirme::before  { background: var(--gold); }
+    .rdv-card.termine::before   { background: #7a7068; }
+    .rdv-card.annule::before    { background: #e57373; }
+    .rdv-card.en_attente::before { background: #7eb8c8; }
+    .rdv-date {
+      font-size: .72rem; letter-spacing: .12em; text-transform: uppercase;
+      color: var(--gold-light);
+      margin-bottom: 6px;
+    }
+    .rdv-prestation {
+      font-family: var(--serif); font-size: 1.05rem;
+      color: #fff; margin-bottom: 12px;
+    }
+    .rdv-meta {
+      display: flex; align-items: center; gap: 16px;
+      font-size: .78rem; color: var(--text-dim);
+    }
+    .rdv-meta-item { display: flex; align-items: center; gap: 6px; }
+    .rdv-statut {
+      display: inline-block;
+      font-size: .65rem; letter-spacing: .1em; text-transform: uppercase;
+      padding: 3px 10px;
+      border-radius: 20px;
+      margin-top: 14px;
+    }
+    .rdv-statut.confirme  { background: rgba(201,169,110,.15); color: var(--gold-light); }
+    .rdv-statut.termine   { background: rgba(122,112,104,.15); color: #aaaa; }
+    .rdv-statut.annule    { background: rgba(229,115,115,.12); color: #e57373; }
+    .rdv-statut.en_attente { background: rgba(126,184,200,.12); color: #7eb8c8; }
+    .section-label {
+      font-size: .68rem; letter-spacing: .18em; text-transform: uppercase;
+      color: var(--text-dim);
+      margin-bottom: 16px; margin-top: 32px;
+    }
+    .section-label:first-child { margin-top: 0; }
+    .empty-state {
+      text-align: center;
+      padding: 64px 24px;
+      color: var(--text-dim);
+    }
+    .empty-state-icon { font-size: 2.5rem; margin-bottom: 16px; opacity: .4; }
+    .empty-state-text { font-size: .88rem; }
+
+    /* ── Documents Panel ─────────────────────────── */
+    .doc-list { display: flex; flex-direction: column; gap: 12px; }
+    .doc-item {
+      display: flex; align-items: center; gap: 16px;
+      background: var(--dark-card);
+      border: 1px solid var(--dark-border);
+      border-radius: 4px;
+      padding: 16px 20px;
+      transition: border-color var(--t);
+    }
+    .doc-item:hover { border-color: rgba(201,169,110,.28); }
+    .doc-icon {
+      width: 40px; height: 40px;
+      background: rgba(201,169,110,.1);
+      border-radius: 3px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .doc-icon svg { color: var(--gold); }
+    .doc-info { flex: 1; }
+    .doc-name { font-size: .9rem; color: #fff; margin-bottom: 2px; }
+    .doc-type {
+      font-size: .72rem; color: var(--text-dim);
+      text-transform: capitalize;
+    }
+    .doc-date { font-size: .75rem; color: var(--text-dim); white-space: nowrap; }
+
+    /* ── Messagerie Panel ────────────────────────── */
+    .chat-container {
+      background: var(--dark-card);
+      border: 1px solid var(--dark-border);
+      border-radius: 4px;
+      display: flex; flex-direction: column;
+      height: calc(100vh - 200px);
+      min-height: 400px;
+    }
+    .chat-header {
+      padding: 18px 24px;
+      border-bottom: 1px solid var(--dark-border);
+      display: flex; align-items: center; gap: 12px;
+    }
+    .chat-avatar {
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--gold-dark), var(--gold));
+      display: flex; align-items: center; justify-content: center;
+      font-family: var(--serif); font-style: italic;
+      font-size: 1rem; color: var(--ink);
+    }
+    .chat-header-info { }
+    .chat-header-name { font-size: .9rem; color: #fff; }
+    .chat-header-status {
+      font-size: .72rem; color: var(--gold-light);
+      display: flex; align-items: center; gap: 5px;
+    }
+    .online-dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: #7eb8c8;
+    }
+    .chat-messages {
+      flex: 1;
+      padding: 24px;
+      overflow-y: auto;
+      display: flex; flex-direction: column; gap: 16px;
+    }
+    .chat-messages::-webkit-scrollbar { width: 4px; }
+    .chat-messages::-webkit-scrollbar-track { background: transparent; }
+    .chat-messages::-webkit-scrollbar-thumb { background: rgba(201,169,110,.2); border-radius: 2px; }
+    .msg-row {
+      display: flex; gap: 10px;
+      align-items: flex-end;
+    }
+    .msg-row.from-me { flex-direction: row-reverse; }
+    .msg-avatar-sm {
+      width: 28px; height: 28px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--gold-dark), var(--gold));
+      display: flex; align-items: center; justify-content: center;
+      font-size: .7rem; color: var(--ink);
+      flex-shrink: 0;
+    }
+    .msg-bubble {
+      max-width: 65%;
+      padding: 10px 14px;
+      border-radius: 16px;
+      font-size: .85rem;
+      line-height: 1.5;
+    }
+    .msg-row.from-admin .msg-bubble {
+      background: var(--dark-card-2);
+      border: 1px solid var(--dark-border);
+      color: var(--text-mid);
+      border-bottom-left-radius: 4px;
+    }
+    .msg-row.from-me .msg-bubble {
+      background: linear-gradient(135deg, var(--gold-dark), var(--gold));
+      color: var(--ink);
+      border-bottom-right-radius: 4px;
+    }
+    .msg-time {
+      font-size: .65rem; color: var(--text-dim);
+      margin-top: 4px;
+      text-align: right;
+    }
+    .msg-row.from-admin .msg-time { text-align: left; }
+    .chat-input-area {
+      padding: 16px 20px;
+      border-top: 1px solid var(--dark-border);
+      display: flex; gap: 12px; align-items: center;
+    }
+    .chat-input {
+      flex: 1;
+      background: rgba(255,255,255,.05);
+      border: 1px solid rgba(255,255,255,.1);
+      border-radius: 24px;
+      padding: 10px 18px;
+      color: #fff;
+      font-family: var(--sans); font-size: .88rem;
+      outline: none;
+      transition: border-color var(--t);
+    }
+    .chat-input::placeholder { color: var(--text-dim); }
+    .chat-input:focus { border-color: rgba(201,169,110,.4); }
+    .btn-send {
+      width: 40px; height: 40px;
+      background: linear-gradient(135deg, var(--gold-dark), var(--gold));
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      color: var(--ink);
+      flex-shrink: 0;
+      transition: opacity var(--t);
+    }
+    .btn-send:hover { opacity: .85; }
+
+    /* ── Factures Panel ──────────────────────────── */
+    .factures-table {
+      width: 100%;
+      background: var(--dark-card);
+      border: 1px solid var(--dark-border);
+      border-radius: 4px;
+      overflow: hidden;
+      border-collapse: collapse;
+    }
+    .factures-table th {
+      padding: 14px 20px;
+      text-align: left;
+      font-size: .68rem; letter-spacing: .12em; text-transform: uppercase;
+      color: var(--text-dim);
+      border-bottom: 1px solid var(--dark-border);
+      font-weight: 400;
+    }
+    .factures-table td {
+      padding: 16px 20px;
+      font-size: .85rem; color: var(--text-mid);
+      border-bottom: 1px solid rgba(201,169,110,.06);
+    }
+    .factures-table tr:last-child td { border-bottom: none; }
+    .factures-table tr:hover td { background: rgba(201,169,110,.03); }
+    .statut-badge {
+      display: inline-block;
+      font-size: .65rem; letter-spacing: .08em; text-transform: uppercase;
+      padding: 3px 10px; border-radius: 20px;
+    }
+    .statut-badge.payee     { background: rgba(201,169,110,.12); color: var(--gold-light); }
+    .statut-badge.en_attente { background: rgba(126,184,200,.12); color: #7eb8c8; }
+    .statut-badge.annulee   { background: rgba(229,115,115,.12); color: #e57373; }
+    .btn-dl {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: .75rem; color: var(--gold);
+      padding: 4px 10px;
+      border: 1px solid rgba(201,169,110,.2);
+      border-radius: 3px;
+      transition: all var(--t);
+    }
+    .btn-dl:hover { background: rgba(201,169,110,.1); border-color: var(--gold); }
+
+    /* ── Stats Row ───────────────────────────────── */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 16px;
+      margin-bottom: 36px;
+    }
+    .stat-card {
+      background: var(--dark-card);
+      border: 1px solid var(--dark-border);
+      border-radius: 4px;
+      padding: 20px 22px;
+    }
+    .stat-label {
+      font-size: .65rem; letter-spacing: .15em; text-transform: uppercase;
+      color: var(--text-dim); margin-bottom: 8px;
+    }
+    .stat-value {
+      font-family: var(--serif); font-size: 1.9rem; font-weight: 400;
+      color: var(--gold-light);
+    }
+    .stat-sub { font-size: .75rem; color: var(--text-dim); margin-top: 2px; }
+
+    /* ── Forfaits Panel ──────────────────────────── */
+    .forfaits-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 16px;
+    }
+    .forfait-card {
+      background: var(--dark-card);
+      border: 1px solid var(--dark-border);
+      border-radius: 4px;
+      padding: 24px;
+      position: relative;
+      overflow: hidden;
+      transition: border-color var(--t);
+    }
+    .forfait-card:hover { border-color: rgba(201,169,110,.28); }
+    .forfait-card::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(to right, var(--gold-dark), var(--gold-light));
+    }
+    .forfait-card.termine { opacity: .6; }
+    .forfait-card.termine::before { background: #7a7068; }
+    .forfait-card.suspendu::before { background: #7eb8c8; }
+    .forfait-header {
+      display: flex; justify-content: space-between; align-items: flex-start;
+      margin-bottom: 16px;
+    }
+    .forfait-name {
+      font-family: var(--serif); font-size: 1.05rem; font-weight: 400;
+      color: #fff;
+      margin-bottom: 4px;
+    }
+    .forfait-type {
+      font-size: .72rem; color: var(--text-dim);
+      text-transform: capitalize;
+    }
+    .forfait-statut-badge {
+      font-size: .6rem; letter-spacing: .1em; text-transform: uppercase;
+      padding: 3px 9px; border-radius: 20px;
+      white-space: nowrap; flex-shrink: 0;
+    }
+    .forfait-statut-badge.actif      { background: rgba(201,169,110,.15); color: var(--gold-light); }
+    .forfait-statut-badge.termine    { background: rgba(122,112,104,.15); color: #aaa; }
+    .forfait-statut-badge.suspendu   { background: rgba(126,184,200,.12); color: #7eb8c8; }
+    .forfait-progress-wrap {
+      margin-bottom: 14px;
+    }
+    .forfait-progress-label {
+      display: flex; justify-content: space-between;
+      font-size: .72rem; color: var(--text-dim);
+      margin-bottom: 8px;
+    }
+    .forfait-progress-label span:last-child { color: var(--gold-light); font-weight: 400; }
+    .forfait-progress-track {
+      height: 4px;
+      background: rgba(255,255,255,.08);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+    .forfait-progress-bar {
+      height: 100%;
+      background: linear-gradient(to right, var(--gold-dark), var(--gold-light));
+      border-radius: 2px;
+      transition: width .6s ease;
+    }
+    .forfait-seances {
+      font-size: .8rem; color: var(--text-dim);
+      margin-bottom: 18px;
+    }
+    .forfait-seances strong { color: var(--gold-light); font-weight: 400; }
+    .forfait-achat {
+      font-size: .7rem; color: var(--text-dim);
+      margin-bottom: 18px;
+    }
+    .btn-forfait-book {
+      display: inline-flex; align-items: center; gap: 8px;
+      width: 100%;
+      justify-content: center;
+      padding: 11px 20px;
+      background: linear-gradient(135deg, var(--gold-dark), var(--gold));
+      color: var(--ink);
+      font-family: var(--sans); font-size: .82rem; font-weight: 500;
+      letter-spacing: .06em; text-transform: uppercase;
+      border-radius: 3px;
+      transition: opacity var(--t);
+      text-decoration: none;
+    }
+    .btn-forfait-book:hover { opacity: .88; }
+    .forfait-notes {
+      margin-top: 12px;
+      font-size: .75rem; color: rgba(255,255,255,.35);
+      font-style: italic;
+    }
+
+    /* ── Mobile ──────────────────────────────────── */
+    .burger-btn {
+      display: none;
+      position: fixed; top: 16px; left: 16px; z-index: 200;
+      width: 40px; height: 40px;
+      background: var(--dark-card);
+      border: 1px solid var(--dark-border);
+      border-radius: 3px;
+      flex-direction: column; justify-content: center; align-items: center;
+      gap: 5px; cursor: pointer;
+    }
+    .burger-btn span { display: block; width: 18px; height: 1px; background: var(--text-mid); }
+    .sidebar-overlay {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,.5);
+      z-index: 99;
+    }
+
+    @media (max-width: 900px) {
+      .burger-btn { display: flex; }
+      .sidebar { transform: translateX(-100%); }
+      .sidebar.open { transform: translateX(0); }
+      .sidebar-overlay.open { display: block; }
+      .main-content { margin-left: 0; padding: 80px 20px 32px; max-width: 100vw; }
+      .rdv-grid { grid-template-columns: 1fr; }
+      .factures-table { display: block; overflow-x: auto; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- pas de loading screen -->
+
+  <!-- BURGER (mobile) -->
+  <button class="burger-btn" id="burgerBtn" onclick="toggleSidebar()">
+    <span></span><span></span><span></span>
+  </button>
+  <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+
+  <!-- AUTH SCREEN -->
+  <div id="auth-screen">
+    <div class="auth-card">
+      <div class="auth-logo">
+        <img src="logo-removebg-preview.png" alt="Harmonya">
+      </div>
+      <div class="auth-divider"></div>
+      <h1 class="auth-title" id="auth-title">Votre espace personnel</h1>
+      <p class="auth-subtitle" id="auth-subtitle">Accédez à vos rendez-vous, documents et forfaits</p>
+
+      <!-- Google -->
+      <button class="btn-google" onclick="signInGoogle()">
+        <svg width="18" height="18" viewBox="0 0 24 24">
+          <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+          <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+          <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/>
+          <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+        </svg>
+        Continuer avec Google
+      </button>
+
+      <div class="auth-sep">ou</div>
+
+      <!-- Email / Password form -->
+      <div id="auth-form-login">
+        <div class="auth-field">
+          <label>Email</label>
+          <input type="email" id="ec-email" class="auth-input" placeholder="votre@email.com" autocomplete="email">
+        </div>
+        <div class="auth-field">
+          <label>Mot de passe</label>
+          <input type="password" id="ec-password" class="auth-input" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')ecSignIn()">
+        </div>
+        <button class="btn-auth-submit" onclick="ecSignIn()">Se connecter</button>
+        <div class="auth-error" id="ec-error"></div>
+        <div class="auth-success" id="ec-success"></div>
+        <div class="auth-toggle">
+          Pas encore de compte ? <a onclick="switchAuthMode('signup')">Créer un compte</a>
+        </div>
+        <div style="text-align:center;margin-top:10px;">
+          <a href="#" onclick="ecForgot();return false;" style="font-size:.75rem;color:var(--text-dim);transition:color .3s;" onmouseover="this.style.color='var(--gold-light)'" onmouseout="this.style.color='var(--text-dim)'">
+            Mot de passe oublié ?
+          </a>
+        </div>
+      </div>
+
+      <!-- Signup form -->
+      <div id="auth-form-signup" style="display:none;">
+        <div class="auth-field">
+          <label>Prénom et nom</label>
+          <input type="text" id="ec-name" class="auth-input" placeholder="Marie Dupont" autocomplete="name">
+        </div>
+        <div class="auth-field">
+          <label>Email</label>
+          <input type="email" id="ec-email-signup" class="auth-input" placeholder="votre@email.com" autocomplete="email">
+        </div>
+        <div class="auth-field">
+          <label>Mot de passe</label>
+          <input type="password" id="ec-password-signup" class="auth-input" placeholder="••••••••" autocomplete="new-password" onkeydown="if(event.key==='Enter')ecSignUp()">
+        </div>
+        <button class="btn-auth-submit" onclick="ecSignUp()">Créer mon compte</button>
+        <div class="auth-error" id="ec-error-signup"></div>
+        <div class="auth-success" id="ec-success-signup"></div>
+        <div class="auth-toggle">
+          Déjà un compte ? <a onclick="switchAuthMode('login')">Se connecter</a>
+        </div>
+      </div>
+
+      <a href="index.html" class="auth-back" style="margin-top:20px;display:block;">
+        <span>←</span> Retour au site
+      </a>
+    </div>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div id="dashboard" class="hidden">
+
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-logo">
+        <img src="logo-removebg-preview.png" alt="Harmonya">
+        <div class="sidebar-label">Espace Client</div>
+      </div>
+      <nav class="sidebar-nav">
+        <div class="sidebar-nav-item active" data-panel="rdv" onclick="switchPanel('rdv', this)">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+          </svg>
+          Mes rendez-vous
+        </div>
+        <div class="sidebar-nav-item" data-panel="documents" onclick="switchPanel('documents', this)">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+            <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/>
+          </svg>
+          Mes documents
+        </div>
+        <div class="sidebar-nav-item" data-panel="messagerie" onclick="switchPanel('messagerie', this)" id="nav-messagerie">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+            <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
+          </svg>
+          Messagerie
+          <span class="sidebar-badge hidden" id="msg-badge">0</span>
+        </div>
+        <div class="sidebar-nav-item" data-panel="factures" onclick="switchPanel('factures', this)">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+            <line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/>
+          </svg>
+          Mes factures
+        </div>
+        <div class="sidebar-nav-item" data-panel="forfaits" onclick="switchPanel('forfaits', this)" id="nav-forfaits">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+          </svg>
+          Mes forfaits
+          <span class="sidebar-badge hidden" id="forfait-badge">0</span>
+        </div>
+      </nav>
+      <div class="sidebar-user">
+        <div class="sidebar-avatar" id="userAvatar">?</div>
+        <div class="sidebar-user-info">
+          <div class="sidebar-user-name" id="userName">—</div>
+          <div class="sidebar-user-email" id="userEmail">—</div>
+        </div>
+        <button class="btn-signout" onclick="signOut()" title="Se déconnecter">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+            <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16,17 21,12 16,7"/><line x1="21" y1="12" x2="9" y2="12"/>
+          </svg>
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main content -->
+    <main class="main-content">
+
+      <!-- ── Panel RDV ──────────────────────────── -->
+      <div class="panel active" id="panel-rdv">
+        <div class="panel-header">
+          <div class="panel-tag">✦ Harmonya</div>
+          <h2 class="panel-title">Mes rendez-vous</h2>
+        </div>
+        <div class="stats-row" id="rdv-stats"></div>
+        <div class="section-label">À venir</div>
+        <div class="rdv-grid" id="rdv-upcoming"></div>
+        <div class="section-label">Historique</div>
+        <div class="rdv-grid" id="rdv-past"></div>
+      </div>
+
+      <!-- ── Panel Documents ────────────────────── -->
+      <div class="panel" id="panel-documents">
+        <div class="panel-header">
+          <div class="panel-tag">✦ Harmonya</div>
+          <h2 class="panel-title">Mes documents</h2>
+        </div>
+        <div class="doc-list" id="doc-list"></div>
+      </div>
+
+      <!-- ── Panel Messagerie ───────────────────── -->
+      <div class="panel" id="panel-messagerie">
+        <div class="panel-header">
+          <div class="panel-tag">✦ Harmonya</div>
+          <h2 class="panel-title">Messagerie</h2>
+        </div>
+        <div class="chat-container">
+          <div class="chat-header">
+            <div class="chat-avatar">H</div>
+            <div class="chat-header-info">
+              <div class="chat-header-name">Harmonya Institut</div>
+              <div class="chat-header-status">
+                <div class="online-dot"></div> Répond sous 24h
+              </div>
+            </div>
+          </div>
+          <div class="chat-messages" id="chat-messages">
+            <!-- messages injectés par JS -->
+          </div>
+          <div class="chat-input-area">
+            <input type="text" class="chat-input" id="chat-input" placeholder="Écrire un message…" onkeydown="handleChatKey(event)">
+            <button class="btn-send" onclick="sendMessage()">
+              <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22,2 15,22 11,13 2,9 22,2"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Panel Factures ─────────────────────── -->
+      <div class="panel" id="panel-factures">
+        <div class="panel-header">
+          <div class="panel-tag">✦ Harmonya</div>
+          <h2 class="panel-title">Mes factures</h2>
+        </div>
+        <div class="stats-row" id="factures-stats"></div>
+        <table class="factures-table">
+          <thead>
+            <tr>
+              <th>N°</th>
+              <th>Prestation</th>
+              <th>Date</th>
+              <th>Montant</th>
+              <th>Statut</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="factures-tbody"></tbody>
+        </table>
+      </div>
+
+      <!-- ── Panel Forfaits ─────────────────────── -->
+      <div class="panel" id="panel-forfaits">
+        <div class="panel-header">
+          <div class="panel-tag">✦ Harmonya</div>
+          <h2 class="panel-title">Mes forfaits</h2>
+        </div>
+        <div class="stats-row" id="forfaits-stats"></div>
+        <div class="section-label" id="forfaits-actifs-label">Forfaits actifs</div>
+        <div class="forfaits-grid" id="forfaits-actifs"></div>
+        <div class="section-label" id="forfaits-archives-label" style="display:none;">Archivés</div>
+        <div class="forfaits-grid" id="forfaits-archives"></div>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- Supabase JS v2 -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+
+  <script>
+  // ── Config ────────────────────────────────────────
+  const SUPABASE_URL  = 'https://qewdympkbxbevgmbfxfd.supabase.co';
+  const SUPABASE_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFld2R5bXBrYnhiZXZnbWJmeGZkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyOTM0NDMsImV4cCI6MjA4OTg2OTQ0M30.LMHNi_cP5klEHTPn-HrY2LDjwJLEq_LbVZSnLJrATY4';
+  const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  let currentUser = null;
+  let realtimeChannel = null;
+
+  // ── Init — auth screen visible par défaut, on vérifie session en arrière-plan
+  async function init() {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        currentUser = session.user;
+        await showDashboard();
+      }
+      // Sinon on reste sur l'écran auth (déjà visible)
+    } catch (e) {
+      // On reste sur l'écran auth
+    }
+
+    // Écouter les changements d'auth
+    supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'SIGNED_IN' && session) {
+        currentUser = session.user;
+        await showDashboard();
+      } else if (event === 'SIGNED_OUT') {
+        currentUser = null;
+        showAuth();
+      }
+    });
+  }
+
+  function showAuth() {
+    document.getElementById('auth-screen').style.display = 'flex';
+    document.getElementById('dashboard').style.display = 'none';
+  }
+
+  async function showDashboard() {
+    document.getElementById('auth-screen').style.display = 'none';
+    document.getElementById('dashboard').style.display = 'flex';
+    updateUserInfo();
+    await Promise.all([loadRDV(), loadDocuments(), loadMessages(), loadFactures(), loadForfaits()]);
+    subscribeMessages();
+  }
+
+  // ── Auth mode toggle ─────────────────────────────
+  function switchAuthMode(mode) {
+    const isSignup = mode === 'signup';
+    document.getElementById('auth-form-login').style.display  = isSignup ? 'none' : 'block';
+    document.getElementById('auth-form-signup').style.display = isSignup ? 'block' : 'none';
+    document.getElementById('auth-title').textContent    = isSignup ? 'Créer un compte' : 'Votre espace personnel';
+    document.getElementById('auth-subtitle').textContent = isSignup ? "Rejoignez l'espace Harmonya" : 'Accédez à vos rendez-vous, documents et forfaits';
+    ['ec-error','ec-success','ec-error-signup','ec-success-signup'].forEach(id => { const el = document.getElementById(id); if (el) el.textContent = ''; });
+  }
+
+  // ── Auth Google ───────────────────────────────────
+  async function signInGoogle() {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: window.location.href }
+    });
+    if (error) alert('Erreur de connexion : ' + error.message);
+  }
+
+  // ── Auth Email/Password ───────────────────────────
+  async function ecSignIn() {
+    const email    = document.getElementById('ec-email').value.trim();
+    const password = document.getElementById('ec-password').value;
+    const errEl    = document.getElementById('ec-error');
+    errEl.textContent = '';
+    if (!email || !password) { errEl.textContent = 'Veuillez remplir tous les champs.'; return; }
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) {
+      errEl.textContent = error.message.includes('Invalid') ? 'Email ou mot de passe incorrect.' : error.message;
+    }
+  }
+
+  async function ecSignUp() {
+    const name     = document.getElementById('ec-name').value.trim();
+    const email    = document.getElementById('ec-email-signup').value.trim();
+    const password = document.getElementById('ec-password-signup').value;
+    const errEl    = document.getElementById('ec-error-signup');
+    const okEl     = document.getElementById('ec-success-signup');
+    errEl.textContent = ''; okEl.textContent = '';
+    if (!email || !password) { errEl.textContent = 'Veuillez remplir tous les champs.'; return; }
+    if (password.length < 6) { errEl.textContent = 'Le mot de passe doit contenir au moins 6 caractères.'; return; }
+    const { error } = await supabase.auth.signUp({
+      email, password,
+      options: { data: { full_name: name, name } }
+    });
+    if (error) { errEl.textContent = error.message; }
+    else { okEl.textContent = 'Compte créé ! Vérifiez vos emails pour confirmer votre adresse.'; }
+  }
+
+  async function ecForgot() {
+    const email = document.getElementById('ec-email').value.trim();
+    const errEl = document.getElementById('ec-error');
+    const okEl  = document.getElementById('ec-success');
+    if (!email) { errEl.textContent = "Entrez votre email ci-dessus d'abord."; return; }
+    const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: window.location.href });
+    if (error) { errEl.textContent = error.message; }
+    else { okEl.style.color = 'var(--gold-light)'; okEl.textContent = 'Lien envoyé à ' + email; }
+  }
+
+  async function signOut() {
+    if (realtimeChannel) supabase.removeChannel(realtimeChannel);
+    await supabase.auth.signOut();
+  }
+
+  // ── User Info ────────────────────────────────────
+  function updateUserInfo() {
+    if (!currentUser) return;
+    const meta = currentUser.user_metadata || {};
+    const name = meta.full_name || meta.name || currentUser.email.split('@')[0];
+    const email = currentUser.email;
+    const avatar = meta.avatar_url || meta.picture || null;
+
+    document.getElementById('userName').textContent = name;
+    document.getElementById('userEmail').textContent = email;
+
+    const avatarEl = document.getElementById('userAvatar');
+    if (avatar) {
+      avatarEl.innerHTML = `<img src="${avatar}" alt="${name}">`;
+    } else {
+      avatarEl.textContent = name.charAt(0).toUpperCase();
+    }
+  }
+
+  // ── Panel Navigation ─────────────────────────────
+  function switchPanel(panelId, navEl) {
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.sidebar-nav-item').forEach(n => n.classList.remove('active'));
+    document.getElementById('panel-' + panelId).classList.add('active');
+    navEl.classList.add('active');
+    if (window.innerWidth <= 900) toggleSidebar();
+  }
+
+  function toggleSidebar() {
+    const s = document.getElementById('sidebar');
+    const o = document.getElementById('sidebarOverlay');
+    s.classList.toggle('open');
+    o.classList.toggle('open');
+  }
+
+  // ── Helpers ──────────────────────────────────────
+  function formatDate(dateStr) {
+    if (!dateStr) return '—';
+    return new Date(dateStr).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+  }
+  function formatDateShort(dateStr) {
+    if (!dateStr) return '—';
+    return new Date(dateStr).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' });
+  }
+  function formatTime(timeStr) {
+    if (!timeStr) return '';
+    return timeStr.substring(0, 5);
+  }
+  function formatMsgTime(ts) {
+    if (!ts) return '';
+    const d = new Date(ts);
+    return d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' }) + ' · ' + d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+  }
+
+  function typeLabel(type) {
+    const map = { fiche_sante: 'Fiche santé', consentement: 'Consentement', compte_rendu: 'Compte rendu', autre: 'Document' };
+    return map[type] || type;
+  }
+
+  // ── RDV ─────────────────────────────────────────
+  async function loadRDV() {
+    const { data, error } = await supabase
+      .from('rendez_vous')
+      .select('*')
+      .eq('client_id', currentUser.id)
+      .order('date', { ascending: false });
+
+    if (error) { renderRDVEmpty(); return; }
+
+    const today = new Date().toISOString().split('T')[0];
+    const upcoming = (data || []).filter(r => r.date >= today && r.statut !== 'annulé');
+    const past     = (data || []).filter(r => r.date < today || r.statut === 'terminé' || r.statut === 'annulé');
+    const total    = data ? data.length : 0;
+
+    // Stats
+    document.getElementById('rdv-stats').innerHTML = `
+      <div class="stat-card">
+        <div class="stat-label">Total séances</div>
+        <div class="stat-value">${total}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">À venir</div>
+        <div class="stat-value">${upcoming.length}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Terminées</div>
+        <div class="stat-value">${past.filter(r => r.statut === 'terminé').length}</div>
+      </div>
+    `;
+
+    // Upcoming
+    const upcomingEl = document.getElementById('rdv-upcoming');
+    if (upcoming.length === 0) {
+      upcomingEl.innerHTML = `<div class="empty-state"><div class="empty-state-icon">📅</div><div class="empty-state-text">Aucun rendez-vous à venir</div></div>`;
+    } else {
+      upcomingEl.innerHTML = upcoming.map(r => rdvCard(r)).join('');
+    }
+
+    // Past
+    const pastEl = document.getElementById('rdv-past');
+    if (past.length === 0) {
+      pastEl.innerHTML = `<div class="empty-state"><div class="empty-state-icon">🕰️</div><div class="empty-state-text">Aucun historique</div></div>`;
+    } else {
+      pastEl.innerHTML = past.slice(0, 6).map(r => rdvCard(r)).join('');
+    }
+  }
+
+  function rdvCard(r) {
+    const statutClass = r.statut.replace('é','e').replace('è','e').replace(' ','_');
+    const statutLabel = r.statut.charAt(0).toUpperCase() + r.statut.slice(1);
+    const prix = r.prix ? `${r.prix}€` : '';
+    return `
+      <div class="rdv-card ${statut_to_class(r.statut)}">
+        <div class="rdv-date">${formatDate(r.date)} · ${formatTime(r.heure)}</div>
+        <div class="rdv-prestation">${r.prestation}</div>
+        <div class="rdv-meta">
+          ${prix ? `<div class="rdv-meta-item"><svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>${prix}</div>` : ''}
+          ${r.notes ? `<div class="rdv-meta-item" style="color:rgba(255,255,255,.35);font-size:.73rem;">${r.notes}</div>` : ''}
+        </div>
+        <div class="rdv-statut ${statut_to_class(r.statut)}">${statutLabel}</div>
+      </div>`;
+  }
+
+  function statut_to_class(s) {
+    const map = { 'confirmé': 'confirme', 'terminé': 'termine', 'annulé': 'annule', 'en_attente': 'en_attente' };
+    return map[s] || 'confirme';
+  }
+
+  function renderRDVEmpty() {
+    document.getElementById('rdv-stats').innerHTML = '';
+    document.getElementById('rdv-upcoming').innerHTML = `<div class="empty-state"><div class="empty-state-icon">📅</div><div class="empty-state-text">Aucun rendez-vous trouvé</div></div>`;
+    document.getElementById('rdv-past').innerHTML = '';
+  }
+
+  // ── Documents ────────────────────────────────────
+  async function loadDocuments() {
+    const { data, error } = await supabase
+      .from('documents')
+      .select('*')
+      .eq('client_id', currentUser.id)
+      .order('created_at', { ascending: false });
+
+    const listEl = document.getElementById('doc-list');
+    if (error || !data || data.length === 0) {
+      listEl.innerHTML = `<div class="empty-state"><div class="empty-state-icon">📄</div><div class="empty-state-text">Aucun document disponible pour le moment</div></div>`;
+      return;
+    }
+
+    listEl.innerHTML = data.map(d => `
+      <div class="doc-item">
+        <div class="doc-icon">
+          <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+            <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/>
+          </svg>
+        </div>
+        <div class="doc-info">
+          <div class="doc-name">${d.nom}</div>
+          <div class="doc-type">${typeLabel(d.type)}</div>
+        </div>
+        <div class="doc-date">${formatDateShort(d.created_at)}</div>
+        ${d.storage_path ? `<a href="#" class="btn-dl" onclick="downloadDoc('${d.storage_path}','${d.nom}');return false;">
+          <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Télécharger
+        </a>` : ''}
+      </div>
+    `).join('');
+  }
+
+  async function downloadDoc(path, nom) {
+    const { data } = await supabase.storage.from('documents').createSignedUrl(path, 60);
+    if (data?.signedUrl) {
+      const a = document.createElement('a');
+      a.href = data.signedUrl; a.download = nom; a.click();
+    }
+  }
+
+  // ── Messages ─────────────────────────────────────
+  async function loadMessages() {
+    const { data, error } = await supabase
+      .from('messages')
+      .select('*')
+      .eq('client_id', currentUser.id)
+      .order('created_at', { ascending: true });
+
+    renderMessages(data || []);
+    // Marquer comme lus
+    if (data && data.some(m => m.de_admin && !m.lu)) {
+      await supabase.from('messages')
+        .update({ lu: true })
+        .eq('client_id', currentUser.id).eq('de_admin', true).eq('lu', false);
+    }
+  }
+
+  function renderMessages(messages) {
+    const user = currentUser;
+    const meta = user?.user_metadata || {};
+    const name = meta.full_name || meta.name || 'Vous';
+    const initial = name.charAt(0).toUpperCase();
+
+    const container = document.getElementById('chat-messages');
+    if (messages.length === 0) {
+      container.innerHTML = `
+        <div class="empty-state">
+          <div class="empty-state-icon">💬</div>
+          <div class="empty-state-text">Aucun message pour le moment.<br>Envoyez votre première question !</div>
+        </div>`;
+      return;
+    }
+
+    container.innerHTML = messages.map(m => {
+      const fromMe = !m.de_admin;
+      return `
+        <div class="msg-row ${fromMe ? 'from-me' : 'from-admin'}">
+          <div class="msg-avatar-sm">${fromMe ? initial : 'H'}</div>
+          <div>
+            <div class="msg-bubble">${escapeHtml(m.contenu)}</div>
+            <div class="msg-time">${formatMsgTime(m.created_at)}</div>
+          </div>
+        </div>`;
+    }).join('');
+
+    container.scrollTop = container.scrollHeight;
+    updateMsgBadge(messages);
+  }
+
+  function updateMsgBadge(messages) {
+    const unread = (messages || []).filter(m => m.de_admin && !m.lu).length;
+    const badge = document.getElementById('msg-badge');
+    if (unread > 0) {
+      badge.textContent = unread;
+      badge.classList.remove('hidden');
+    } else {
+      badge.classList.add('hidden');
+    }
+  }
+
+  function subscribeMessages() {
+    if (realtimeChannel) supabase.removeChannel(realtimeChannel);
+    realtimeChannel = supabase
+      .channel('messages-' + currentUser.id)
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'messages',
+        filter: `client_id=eq.${currentUser.id}`
+      }, () => loadMessages())
+      .subscribe();
+  }
+
+  async function sendMessage() {
+    const input = document.getElementById('chat-input');
+    const text = input.value.trim();
+    if (!text) return;
+    input.value = '';
+
+    const { error } = await supabase.from('messages').insert({
+      client_id: currentUser.id,
+      contenu: text,
+      de_admin: false
+    });
+    if (!error) await loadMessages();
+  }
+
+  function handleChatKey(e) {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+  }
+
+  function escapeHtml(str) {
+    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  // ── Factures ─────────────────────────────────────
+  async function loadFactures() {
+    const { data, error } = await supabase
+      .from('factures')
+      .select('*')
+      .eq('client_id', currentUser.id)
+      .order('date', { ascending: false });
+
+    const tbody = document.getElementById('factures-tbody');
+    const statsEl = document.getElementById('factures-stats');
+
+    if (error || !data || data.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:rgba(255,255,255,.35);padding:48px;">Aucune facture pour le moment</td></tr>`;
+      statsEl.innerHTML = '';
+      return;
+    }
+
+    const total = data.reduce((sum, f) => sum + parseFloat(f.montant || 0), 0);
+    const payees = data.filter(f => f.statut === 'payée').reduce((sum, f) => sum + parseFloat(f.montant || 0), 0);
+
+    statsEl.innerHTML = `
+      <div class="stat-card">
+        <div class="stat-label">Total dépensé</div>
+        <div class="stat-value">${total.toFixed(0)}€</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Factures réglées</div>
+        <div class="stat-value">${data.filter(f => f.statut === 'payée').length}</div>
+      </div>
+    `;
+
+    tbody.innerHTML = data.map(f => `
+      <tr>
+        <td style="color:var(--gold-light);font-size:.8rem;">${f.numero}</td>
+        <td>${f.prestation}</td>
+        <td>${formatDateShort(f.date)}</td>
+        <td style="font-weight:400;">${parseFloat(f.montant).toFixed(2)}€</td>
+        <td><span class="statut-badge ${f.statut.replace('é','e').replace('è','e').replace(' ','_')}">${f.statut}</span></td>
+        <td>${f.pdf_url ? `<a href="${f.pdf_url}" class="btn-dl" target="_blank"><svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>PDF</a>` : '<span style="color:rgba(255,255,255,.2);font-size:.75rem;">—</span>'}</td>
+      </tr>
+    `).join('');
+  }
+
+  // ── Forfaits ─────────────────────────────────────
+  async function loadForfaits() {
+    const { data, error } = await supabase
+      .from('forfaits')
+      .select('*')
+      .eq('user_id', currentUser.id)
+      .order('created_at', { ascending: false });
+
+    const statsEl   = document.getElementById('forfaits-stats');
+    const actifsEl  = document.getElementById('forfaits-actifs');
+    const archivEl  = document.getElementById('forfaits-archives');
+    const archLabel = document.getElementById('forfaits-archives-label');
+
+    if (error || !data || data.length === 0) {
+      statsEl.innerHTML = '';
+      actifsEl.innerHTML = `
+        <div class="empty-state" style="grid-column:1/-1;">
+          <div class="empty-state-icon">✨</div>
+          <div class="empty-state-text">Aucun forfait actif pour le moment.<br>
+          Découvrez nos cures et offrez-vous un suivi personnalisé.</div>
+        </div>`;
+      archivEl.innerHTML = '';
+      archLabel.style.display = 'none';
+      // Cacher le badge
+      document.getElementById('forfait-badge').classList.add('hidden');
+      return;
+    }
+
+    const actifs   = data.filter(f => f.statut === 'actif');
+    const archives = data.filter(f => f.statut !== 'actif');
+    const totalRestantes = actifs.reduce((s, f) => s + (f.seances_total - f.seances_utilisees), 0);
+
+    // Badge sidebar
+    if (actifs.length > 0) {
+      const badge = document.getElementById('forfait-badge');
+      badge.textContent = actifs.length;
+      badge.classList.remove('hidden');
+    }
+
+    // Stats
+    statsEl.innerHTML = `
+      <div class="stat-card">
+        <div class="stat-label">Forfaits actifs</div>
+        <div class="stat-value">${actifs.length}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Séances restantes</div>
+        <div class="stat-value">${totalRestantes}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Séances effectuées</div>
+        <div class="stat-value">${actifs.reduce((s,f) => s + f.seances_utilisees, 0)}</div>
+      </div>
+    `;
+
+    // Actifs
+    if (actifs.length === 0) {
+      actifsEl.innerHTML = `<div class="empty-state" style="grid-column:1/-1;"><div class="empty-state-icon">✨</div><div class="empty-state-text">Aucun forfait actif</div></div>`;
+    } else {
+      actifsEl.innerHTML = actifs.map(f => forfaitCard(f)).join('');
+    }
+
+    // Archives
+    if (archives.length > 0) {
+      archLabel.style.display = '';
+      archivEl.innerHTML = archives.map(f => forfaitCard(f)).join('');
+    } else {
+      archLabel.style.display = 'none';
+      archivEl.innerHTML = '';
+    }
+  }
+
+  function forfaitCard(f) {
+    const restantes = f.seances_total - f.seances_utilisees;
+    const pct = f.seances_total > 0 ? Math.round((f.seances_utilisees / f.seances_total) * 100) : 0;
+    const statutClass = f.statut || 'actif';
+
+    const bookBtn = (f.statut === 'actif' && restantes > 0 && f.calendly_url)
+      ? `<a href="${f.calendly_url}" target="_blank" rel="noopener" class="btn-forfait-book">
+           <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+             <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+           </svg>
+           Réserver ma prochaine séance
+         </a>`
+      : (f.statut === 'actif' && restantes <= 0
+          ? `<div style="text-align:center;font-size:.8rem;color:var(--gold-light);padding:10px 0;">✓ Toutes les séances ont été utilisées</div>`
+          : '');
+
+    return `
+      <div class="forfait-card ${statutClass}">
+        <div class="forfait-header">
+          <div>
+            <div class="forfait-name">${f.nom}</div>
+            <div class="forfait-type">${f.type}</div>
+          </div>
+          <span class="forfait-statut-badge ${statutClass}">${f.statut === 'actif' ? 'Actif' : f.statut === 'termine' ? 'Terminé' : 'Suspendu'}</span>
+        </div>
+        <div class="forfait-progress-wrap">
+          <div class="forfait-progress-label">
+            <span>Progression</span>
+            <span>${f.seances_utilisees} / ${f.seances_total} séances</span>
+          </div>
+          <div class="forfait-progress-track">
+            <div class="forfait-progress-bar" style="width:${pct}%"></div>
+          </div>
+        </div>
+        <div class="forfait-seances">
+          <strong>${restantes}</strong> séance${restantes !== 1 ? 's' : ''} restante${restantes !== 1 ? 's' : ''}
+        </div>
+        ${f.date_achat ? `<div class="forfait-achat">Forfait souscrit le ${formatDate(f.date_achat)}</div>` : ''}
+        ${bookBtn}
+        ${f.notes ? `<div class="forfait-notes">${f.notes}</div>` : ''}
+      </div>`;
+  }
+
+  // ── Start ────────────────────────────────────────
+  if (supabase) {
+    clearTimeout(window._globalLoadTimer);
+    init();
+  }
+  </script>
+</body>
+</html>

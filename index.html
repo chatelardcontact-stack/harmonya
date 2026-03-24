@@ -1,0 +1,1178 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Harmonya — Institut de Massage Premium | Illkirch-Graffenstaden</title>
+    <meta name="description" content="Harmonya — Institut de massage premium réservé aux femmes à Illkirch-Graffenstaden. Drainage lymphatique post-opératoire après liposuccion 360°, BBL, abdominoplastie, rhinoplastie, lymphœdème. Soins post-natal, Drain & Sculpt. Infirmières certifiées. À domicile.">
+    <meta name="keywords" content="drainage lymphatique post opératoire, liposuccion 360, BBL brazilian butt lift, abdominoplastie, rhinoplastie, lymphœdème, tummy tuck, lipofilling, drainage post natal, drainage post opératoire Strasbourg, drainage lymphatique Illkirch, massage bien-être femme, drain sculpt, modélissage, infirmière certifiée, soins à domicile Alsace">
+    <meta property="og:title" content="Harmonya — Drainage Lymphatique Post-Opératoire & Massage | Illkirch-Graffenstaden">
+    <meta property="og:description" content="Institut premium réservé aux femmes. Drainage post-op après liposuccion 360°, BBL, abdominoplastie, rhinoplastie. Post-natal. Drain & Sculpt. Infirmières certifiées.">
+    <meta property="og:type" content="website">
+    <meta property="og:locale" content="fr_FR">
+    <link rel="icon" href="logo-removebg-preview.png" type="image/png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400;1,500&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <!-- Booking Modal Styles -->
+    <style>
+      #bk-overlay{position:fixed;inset:0;z-index:9998;background:rgba(0,0,0,0.88);display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);}
+      #bk-card{background:#0a0a0a;border:1px solid rgba(201,169,110,0.25);border-radius:20px;max-width:560px;width:100%;max-height:88vh;overflow-y:auto;padding:44px 40px 40px;position:relative;scrollbar-width:none;}
+      #bk-card::-webkit-scrollbar{display:none;}
+      .bk-close{position:absolute;top:18px;right:18px;width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .2s;}
+      .bk-close:hover{background:rgba(201,169,110,0.2);border-color:rgba(201,169,110,0.4);}
+      .bk-back{background:none;border:none;color:rgba(201,169,110,0.7);font-size:13px;letter-spacing:.04em;cursor:pointer;padding:0;margin-bottom:16px;display:inline-flex;align-items:center;gap:6px;transition:color .2s;}
+      .bk-back:hover{color:#c9a96e;}
+      .bk-eyebrow{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:#c9a96e;margin:0 0 8px;}
+      .bk-title{font-family:'Playfair Display',serif;font-size:clamp(22px,4vw,30px);font-weight:400;color:#fff;margin:0 0 16px;line-height:1.2;}
+      .bk-meta{display:flex;align-items:center;gap:8px;font-size:14px;color:rgba(255,255,255,0.55);margin-bottom:16px;}
+      .bk-meta-sep{color:#c9a96e;opacity:.5;}
+      .bk-desc{font-size:14.5px;line-height:1.65;color:rgba(255,255,255,0.6);margin:0 0 20px;}
+      .bk-zones{font-size:12.5px;color:rgba(201,169,110,0.7);letter-spacing:.04em;margin-bottom:24px;padding:10px 14px;border:1px solid rgba(201,169,110,0.15);border-radius:8px;}
+      .bk-themes{margin-bottom:24px;}
+      .bk-themes-label{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,0.4);margin:0 0 12px;}
+      .bk-theme-row{padding:12px 14px;border:1px solid rgba(255,255,255,0.07);border-radius:10px;margin-bottom:8px;}
+      .bk-theme-row strong{color:#fff;font-size:14px;}
+      .bk-theme-row em{color:rgba(201,169,110,0.8);font-style:normal;font-size:13px;}
+      .bk-theme-zones{display:block;font-size:11.5px;color:rgba(255,255,255,0.4);margin-top:4px;letter-spacing:.03em;}
+      .bk-cta{display:inline-flex;align-items:center;gap:10px;background:#c9a96e;color:#0a0a0a;font-size:14px;font-weight:500;letter-spacing:.06em;padding:14px 28px;border-radius:50px;text-decoration:none;transition:background .25s,transform .2s;margin-bottom:12px;}
+      .bk-cta:hover{background:#d4b880;transform:translateY(-1px);}
+      .bk-note{font-size:11.5px;color:rgba(255,255,255,0.25);margin:0;}
+      .bk-massage-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:8px;}
+      .bk-massage-card{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:18px 16px;text-align:left;cursor:pointer;transition:border-color .2s,background .2s;}
+      .bk-massage-card:hover{border-color:rgba(201,169,110,0.4);background:rgba(201,169,110,0.05);}
+      .bk-mc-name{font-family:'Playfair Display',serif;font-size:17px;color:#fff;margin-bottom:6px;}
+      .bk-mc-info{font-size:12px;color:rgba(201,169,110,0.7);}
+      .bk-duo-badge{display:inline-block;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;background:rgba(201,169,110,0.12);color:#c9a96e;border:1px solid rgba(201,169,110,0.3);border-radius:20px;padding:3px 10px;margin-bottom:14px;}
+      /* Category & drainage pickers */
+      .bk-cat-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:12px;}
+      .bk-cat-card{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:26px 20px;text-align:left;cursor:pointer;transition:border-color .22s,background .22s,transform .22s;width:100%;}
+      .bk-cat-card:hover{border-color:rgba(201,169,110,0.5);background:rgba(201,169,110,0.06);transform:translateY(-3px);}
+      .bk-cat-icon{font-size:28px;margin-bottom:12px;display:block;}
+      .bk-cat-name{font-family:'Playfair Display',serif;font-size:19px;color:#fff;margin:0 0 6px;line-height:1.2;}
+      .bk-cat-sub{font-size:12px;color:rgba(201,169,110,0.7);line-height:1.5;}
+      .bk-drain-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px;}
+      .bk-drain-card{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:16px 14px;text-align:left;cursor:pointer;transition:border-color .2s,background .2s;width:100%;}
+      .bk-drain-card:hover{border-color:rgba(201,169,110,0.4);background:rgba(201,169,110,0.05);}
+      .bk-drain-name{font-family:'Playfair Display',serif;font-size:15px;color:#fff;margin-bottom:5px;}
+      .bk-drain-info{font-size:11.5px;color:rgba(201,169,110,0.7);}
+      @media(max-width:480px){#bk-card{padding:36px 22px 28px;} .bk-massage-grid,.bk-cat-grid,.bk-drain-grid{grid-template-columns:1fr;}}
+    </style>
+</head>
+<body>
+    <!-- CURSOR -->
+    <div class="cursor" id="cursor"></div>
+    <div class="cursor-follower" id="cursorFollower"></div>
+
+    <!-- NAVBAR -->
+    <nav class="navbar" id="navbar">
+        <div class="nav-inner">
+            <ul class="nav-links" id="navLinks">
+                <li><a href="#about" data-text="À propos">À propos</a></li>
+                <li><a href="#drainage" data-text="Drainage">Drainage</a></li>
+                <li><a href="#services" data-text="Soins">Soins</a></li>
+                <li><a href="#gift" data-text="Bon cadeau">Bon cadeau</a></li>
+                <li><a href="#reviews" data-text="Avis">Avis</a></li>
+                <li><a href="espace-client.html" class="nav-btn nav-btn-outline">Mon espace</a></li>
+                <li><a href="" onclick="openBookingModal();return false;" class="nav-btn">Réserver</a></li>
+            </ul>
+            <button class="burger" id="burger" aria-label="Menu">
+                <span></span><span></span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- HERO -->
+    <section class="hero" id="hero">
+        <div class="hero-bg">
+            <!-- Vidéo fond flouté -->
+            <video class="hero-video-bg" autoplay muted loop playsinline>
+                <source src="video/Snapchat-732278939~4.mp4" type="video/mp4">
+            </video>
+            <div class="hero-orb hero-orb-1"></div>
+            <div class="hero-orb hero-orb-2"></div>
+            <div class="hero-orb hero-orb-3"></div>
+            <div class="hero-grain"></div>
+        </div>
+
+        <div class="hero-content">
+            <!-- Colonne texte -->
+            <div class="hero-text-col">
+                <div class="hero-tag reveal-up" style="--d:0ms">
+                    <span>✦</span> Réservé aux femmes <span>✦</span>
+                </div>
+
+                <!-- Logo dans le hero — signature de marque -->
+                <div class="hero-logo reveal-up" style="--d:80ms">
+                    <img src="logo-removebg-preview.png" alt="Harmonya">
+                </div>
+
+                <h1 class="hero-heading">
+                    <span class="hero-line reveal-up" style="--d:220ms">L'art du</span>
+                    <span class="hero-line italic reveal-up" style="--d:340ms">bien-être</span>
+                </h1>
+                <p class="hero-sub reveal-up" style="--d:350ms">
+                    Institut de massage premium · Illkirch-Graffenstaden
+                </p>
+                <div class="hero-actions reveal-up" style="--d:500ms">
+                    <a href="" onclick="openBookingModal();return false;" class="btn-gold">Réserver une séance</a>
+                    <a href="tel:0626142589" class="btn-ghost">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 12.22 19.79 19.79 0 01.12 3.59a2 2 0 011.99-2H5a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>
+                        06 26 14 25 89
+                    </a>
+                </div>
+                <div class="hero-stars reveal-up" style="--d:650ms">
+                    <div class="stars-row">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                    </div>
+                    <span>5.0 · 22 avis Google vérifiés</span>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="hero-scroll-cue">
+            <span>Défiler</span>
+            <div class="scroll-bar"></div>
+        </div>
+    </section>
+
+    <!-- ABOUT -->
+    <section class="section about" id="about">
+        <div class="wrap">
+            <div class="about-layout">
+                <div class="about-visual reveal-left">
+                    <div class="about-img-frame">
+                        <div class="about-img-real">
+                            <img src="images/cabinet 1.jpg" alt="Cabinet Harmonya — Espace de soin" loading="lazy">
+                        </div>
+                        <div class="img-deco img-deco-1"></div>
+                        <div class="img-deco img-deco-2"></div>
+                    </div>
+                    <div class="about-badge">
+                        <span class="badge-num">5★</span>
+                        <span class="badge-text">Institut<br>certifié</span>
+                    </div>
+                </div>
+                <div class="about-text reveal-right">
+                    <span class="eyebrow">Notre histoire</span>
+                    <h2>L'harmonie<br><em>au quotidien</em></h2>
+                    <p class="lead-text">Bienvenue chez Harmonya, un espace dédié exclusivement aux femmes, où chaque soin est pensé pour répondre à vos besoins uniques.</p>
+                    <p>Hélène, praticienne certifiée, vous accompagne avec douceur, bienveillance et professionnalisme. Que vous cherchiez à vous ressourcer, à prendre soin de votre corps ou à vous rétablir, elle adapte chaque soin à votre situation.</p>
+                    <div class="about-pillars">
+                        <div class="pillar">
+                            <div class="pillar-icon">
+                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><path d="M8 12l3 3 5-5"/></svg>
+                            </div>
+                            <div>
+                                <strong>Espace privé</strong>
+                                <p>Réservé uniquement aux femmes</p>
+                            </div>
+                        </div>
+                        <div class="pillar">
+                            <div class="pillar-icon">
+                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-4 0a1 1 0 01-1-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 01-1 1"/></svg>
+                            </div>
+                            <div>
+                                <strong>À domicile</strong>
+                                <p>Déplacements disponibles</p>
+                            </div>
+                        </div>
+                        <div class="pillar">
+                            <div class="pillar-icon">
+                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                            </div>
+                            <div>
+                                <strong>Soins certifiés</strong>
+                                <p>Formation Magic Hands</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Certification Magic Hands -->
+                    <div class="certif-strip reveal-up">
+                        <span class="certif-label">Certifiée par</span>
+                        <a href="https://magichands-massage.fr/" target="_blank" rel="noopener" class="certif-link">
+                            <img src="images/magic-hands-logo-gold.png" alt="Magic Hands — École internationale de formation en massage" class="certif-logo">
+                        </a>
+                        <div class="certif-text">
+                            <strong>Magic Hands</strong>
+                            <span>École internationale de formation en massage · QUALIOPI</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- DRAINAGE PREMIUM SECTION -->
+    <section class="section drainage-section" id="drainage">
+        <div class="drainage-bg">
+            <div class="drainage-orb"></div>
+        </div>
+        <div class="wrap">
+            <div class="drainage-header reveal-up">
+                <span class="eyebrow light">Soin phare</span>
+                <h2 class="light">Drainage Lymphatique<br><em>Post-Opératoire & Post-Natal</em></h2>
+                <p class="drainage-intro light">Un accompagnement médical et bienveillant pour votre récupération</p>
+            </div>
+
+            <div class="drainage-grid">
+                <div class="drainage-card main-card reveal-up" style="--d:0ms">
+                    <div class="drain-card-glow"></div>
+                    <div class="drain-icon-wrap">
+                        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+                    </div>
+                    <h3>En collaboration avec des infirmières libérales certifiées</h3>
+                    <p>Harmonya travaille en partenariat avec un réseau d'<strong>infirmières libérales certifiées</strong> dans votre secteur. Cette collaboration garantit un suivi médical rigoureux et un drainage adapté à votre protocole de récupération — à l'institut ou <strong>à votre domicile</strong>.</p>
+                    <ul class="drain-list">
+                        <li>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 13l4 4L19 7"/></svg>
+                            Liposuccion, liposuccion 360°, lipofilling
+                        </li>
+                        <li>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 13l4 4L19 7"/></svg>
+                            BBL (Brazilian Butt Lift), abdominoplastie, tummy tuck
+                        </li>
+                        <li>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 13l4 4L19 7"/></svg>
+                            Rhinoplastie, bichectomie, lifting visage & cou
+                        </li>
+                        <li>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 13l4 4L19 7"/></svg>
+                            Augmentation mammaire, réduction mammaire, blépharoplastie
+                        </li>
+                        <li>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 13l4 4L19 7"/></svg>
+                            Lymphœdème, chirurgie bariatrique, post-césarienne
+                        </li>
+                        <li>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 13l4 4L19 7"/></svg>
+                            Suivi post-natal · protocole personnalisé chirurgien
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="drainage-card side-cards">
+                    <div class="mini-card reveal-up" style="--d:100ms">
+                        <div class="mini-card-top">
+                            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-4 0a1 1 0 01-1-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 01-1 1"/></svg>
+                            <span class="mini-badge">Disponible</span>
+                        </div>
+                        <h4>À domicile</h4>
+                        <p>Le drainage post-opératoire peut être réalisé directement chez vous, pour un confort optimal pendant votre convalescence.</p>
+                        <div class="mini-price">+ 5€ <small>/ + 10€ hors secteur</small></div>
+                    </div>
+
+                    <div class="mini-card cure-card reveal-up" style="--d:200ms">
+                        <div class="mini-card-top">
+                            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+                            <span class="mini-badge gold">Cure 5 séances</span>
+                        </div>
+                        <h4>Cure complète</h4>
+                        <p>5 séances de 60 minutes pour une récupération optimale. Bilan 20 min inclus + 1 séance offerte.</p>
+                        <div class="mini-price">340 € <small>dès 5 séances</small></div>
+                    </div>
+
+                    <div class="mini-card reveal-up" style="--d:300ms">
+                        <div class="mini-card-top">
+                            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                        </div>
+                        <h4>Drainage classique</h4>
+                        <p>Également disponible sans indication chirurgicale — jambes lourdes, rétention d'eau, circulation, bien-être général.</p>
+                        <a href="#services" class="mini-link">Voir les tarifs →</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Procedures Strip -->
+            <div class="procedures-strip reveal-up">
+                <p class="proc-eyebrow">Interventions & indications prises en charge</p>
+                <div class="proc-tags">
+                    <span class="proc-tag proc-tag-gold">Liposuccion 360°</span>
+                    <span class="proc-tag proc-tag-gold">BBL — Brazilian Butt Lift</span>
+                    <span class="proc-tag">Liposuccion classique</span>
+                    <span class="proc-tag">Lipofilling</span>
+                    <span class="proc-tag proc-tag-gold">Abdominoplastie</span>
+                    <span class="proc-tag proc-tag-gold">Tummy Tuck</span>
+                    <span class="proc-tag">Rhinoplastie</span>
+                    <span class="proc-tag">Bichectomie</span>
+                    <span class="proc-tag proc-tag-gold">Lymphœdème</span>
+                    <span class="proc-tag">Blépharoplastie</span>
+                    <span class="proc-tag">Lifting visage & cou</span>
+                    <span class="proc-tag">Augmentation mammaire</span>
+                    <span class="proc-tag">Réduction mammaire</span>
+                    <span class="proc-tag">Chirurgie bariatrique</span>
+                    <span class="proc-tag">Post-césarienne</span>
+                    <span class="proc-tag proc-tag-gold">Post-natal</span>
+                </div>
+            </div>
+
+            <div class="drainage-cta reveal-up">
+                <a href="" onclick="openBookingModal();return false;" class="btn-gold">Prendre rendez-vous</a>
+                <a href="tel:0626142589" class="btn-ghost-light">Nous appeler</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- SERVICES -->
+    <section class="section services-section" id="services">
+        <div class="wrap">
+            <div class="section-head reveal-up">
+                <span class="eyebrow">Nos prestations</span>
+                <h2>Massages & <em>Soins</em></h2>
+            </div>
+
+            <div class="tabs reveal-up">
+                <button class="tab active" data-tab="massages">Massages bien-être</button>
+                <button class="tab" data-tab="drainage-classique">Drainage classique</button>
+                <button class="tab" data-tab="post-op">Post-opératoire</button>
+                <button class="tab" data-tab="post-natal">Post-natal</button>
+                <button class="tab" data-tab="drain-sculpt">Drain & Sculpt</button>
+            </div>
+
+            <!-- MASSAGES -->
+            <div class="tab-panel active" id="panel-massages">
+                <div class="cards-grid">
+                    <div class="soin-card reveal-up" style="--d:0ms" data-magnetic>
+                        <div class="soin-card-inner">
+                            <div class="soin-top">
+                                <div class="soin-num">01</div>
+                                <div class="soin-duration">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+                                    30 min
+                                </div>
+                            </div>
+                            <h3 class="soin-name">Découverte</h3>
+                            <p class="soin-desc">Initiation au massage sensoriel. Une invitation à la sérénité. Zones : cervicales, dos, épaules, jambes.</p>
+                            <div class="soin-footer">
+                                <div class="soin-price">45 <sup>€</sup></div>
+                                <div class="soin-arrow">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                                </div>
+                            </div>
+                            <div class="soin-hover-line"></div>
+                        </div>
+                    </div>
+
+                    <div class="soin-card reveal-up" style="--d:80ms" data-magnetic>
+                        <div class="soin-card-inner">
+                            <div class="soin-top">
+                                <div class="soin-num">02</div>
+                                <div class="soin-duration">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+                                    60 min
+                                </div>
+                            </div>
+                            <h3 class="soin-name">Immersion</h3>
+                            <p class="soin-desc">4 thèmes au choix — Les Îles (lomi-lomi polynésien), L'Orient, L'Asie (deep tissus), L'Afrique. Cervicales, dos, épaules, visage, jambes, pieds.</p>
+                            <div class="soin-footer">
+                                <div class="soin-price">60 <sup>€</sup></div>
+                                <div class="soin-arrow">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                                </div>
+                            </div>
+                            <div class="soin-hover-line"></div>
+                        </div>
+                    </div>
+
+                    <div class="soin-card soin-featured reveal-up" style="--d:160ms" data-magnetic>
+                        <div class="soin-label">Meilleure vente</div>
+                        <div class="soin-card-inner">
+                            <div class="soin-top">
+                                <div class="soin-num">03</div>
+                                <div class="soin-duration">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+                                    90 min
+                                </div>
+                            </div>
+                            <h3 class="soin-name">Évasion</h3>
+                            <p class="soin-desc">Le tour du monde — les 4 thèmes réunis. Enrichi de réflexologie pour un lâché prise total. Cervicales, dos, épaules, abdomen, jambes.</p>
+                            <div class="soin-footer">
+                                <div class="soin-price">85 <sup>€</sup></div>
+                                <div class="soin-arrow">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                                </div>
+                            </div>
+                            <div class="soin-hover-line"></div>
+                        </div>
+                    </div>
+
+                    <div class="soin-card reveal-up" style="--d:240ms" data-magnetic>
+                        <div class="soin-card-inner">
+                            <div class="soin-top">
+                                <div class="soin-num">04</div>
+                                <div class="soin-duration">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+                                    60 · 90 min
+                                </div>
+                            </div>
+                            <h3 class="soin-name">Cocooning</h3>
+                            <p class="soin-desc">Massage aux pierres chaudes alliant chaleur et douceur pour un moment de pure relaxation. Dos, épaules, visage, jambes, pieds.</p>
+                            <div class="soin-footer">
+                                <div class="soin-price">95 <sup>€</sup> <small>/ 115€</small></div>
+                                <div class="soin-arrow">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                                </div>
+                            </div>
+                            <div class="soin-hover-line"></div>
+                        </div>
+                    </div>
+
+                    <div class="soin-card soin-featured reveal-up" style="--d:320ms" data-magnetic>
+                        <div class="soin-label">En duo · Partenariat</div>
+                        <div class="soin-card-inner">
+                            <div class="soin-top">
+                                <div class="soin-num">05</div>
+                                <div class="soin-duration">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+                                    90 min
+                                </div>
+                            </div>
+                            <h3 class="soin-name">Massage Duo</h3>
+                            <p class="soin-desc">Un moment de bien-être à deux. En partenariat avec <a href="https://www.instagram.com/evasionlomilomi/" target="_blank" rel="noopener" style="color:#c9a96e;text-decoration:none;">@evasionlomilomi</a>. Idéal pour les couples.</p>
+                            <div class="soin-footer">
+                                <div class="soin-price">190 <sup>€</sup></div>
+                                <div class="soin-arrow">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                                </div>
+                            </div>
+                            <div class="soin-hover-line"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- DRAINAGE CLASSIQUE -->
+            <div class="tab-panel" id="panel-drainage-classique">
+                <div class="drainage-note reveal-up">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-4 0a1 1 0 01-1-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 01-1 1"/></svg>
+                    Tous les drainages sont également disponibles à domicile (+5€ / +10€)
+                </div>
+                <div class="cards-grid">
+                    <div class="soin-card reveal-up" style="--d:0ms" data-magnetic>
+                        <div class="soin-card-inner">
+                            <div class="soin-top">
+                                <div class="soin-num">01</div>
+                                <div class="soin-duration">45 min</div>
+                            </div>
+                            <h3 class="soin-name">Bas du corps</h3>
+                            <p class="soin-desc">Soin ciblé sur le bas du corps pour relancer la circulation et réduire la rétention d'eau.</p>
+                            <div class="soin-footer">
+                                <div class="soin-price">50 <sup>€</sup></div>
+                                <div class="soin-arrow"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
+                            </div>
+                            <div class="soin-hover-line"></div>
+                        </div>
+                    </div>
+
+                    <div class="soin-card reveal-up" style="--d:80ms" data-magnetic>
+                        <div class="soin-card-inner">
+                            <div class="soin-top">
+                                <div class="soin-num">02</div>
+                                <div class="soin-duration">60 min</div>
+                            </div>
+                            <h3 class="soin-name">Haut du corps</h3>
+                            <p class="soin-desc">Libérer les tensions, favoriser le drainage naturel du haut du corps.</p>
+                            <div class="soin-footer">
+                                <div class="soin-price">60 <sup>€</sup></div>
+                                <div class="soin-arrow"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
+                            </div>
+                            <div class="soin-hover-line"></div>
+                        </div>
+                    </div>
+
+                    <div class="soin-card reveal-up" style="--d:160ms" data-magnetic>
+                        <div class="soin-card-inner">
+                            <div class="soin-top">
+                                <div class="soin-num">03</div>
+                                <div class="soin-duration">80 min</div>
+                            </div>
+                            <h3 class="soin-name">Classique complet</h3>
+                            <p class="soin-desc">Stimulation du système lymphatique en profondeur pour une détoxification optimale.</p>
+                            <div class="soin-footer">
+                                <div class="soin-price">80 <sup>€</sup></div>
+                                <div class="soin-arrow"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
+                            </div>
+                            <div class="soin-hover-line"></div>
+                        </div>
+                    </div>
+
+                    <div class="soin-card soin-featured reveal-up" style="--d:240ms" data-magnetic>
+                        <div class="soin-label">Corps complet</div>
+                        <div class="soin-card-inner">
+                            <div class="soin-top">
+                                <div class="soin-num">04</div>
+                                <div class="soin-duration">120 min</div>
+                            </div>
+                            <h3 class="soin-name">Corps entier</h3>
+                            <p class="soin-desc">Un soin intégral pour une détoxification profonde et un bien-être total du corps.</p>
+                            <div class="soin-footer">
+                                <div class="soin-price">140 <sup>€</sup></div>
+                                <div class="soin-arrow"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
+                            </div>
+                            <div class="soin-hover-line"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- POST-OPÉRATOIRE -->
+            <div class="tab-panel" id="panel-post-op">
+                <div class="drainage-note reveal-up">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                    En collaboration avec des infirmières libérales certifiées · Disponible à domicile (+5€ / +10€ hors secteur)
+                </div>
+                <div class="cards-grid">
+                    <div class="soin-card reveal-up" style="--d:0ms" data-magnetic>
+                        <div class="soin-card-inner">
+                            <div class="soin-top">
+                                <div class="soin-num">01</div>
+                                <div class="soin-duration">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+                                    60 min
+                                </div>
+                            </div>
+                            <h3 class="soin-name">Séance standard</h3>
+                            <p class="soin-desc">Cicatrice consolidée, point fermé (2+ semaines post-op). Après liposuccion, abdominoplastie, césarienne.</p>
+                            <div class="soin-footer">
+                                <div class="soin-price">80 <sup>€</sup></div>
+                                <div class="soin-arrow"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
+                            </div>
+                            <div class="soin-hover-line"></div>
+                        </div>
+                    </div>
+
+                    <div class="soin-card reveal-up" style="--d:80ms" data-magnetic>
+                        <div class="soin-card-inner">
+                            <div class="soin-top">
+                                <div class="soin-num">02</div>
+                                <div class="soin-duration">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+                                    70 min
+                                </div>
+                            </div>
+                            <h3 class="soin-name">Séance complexe</h3>
+                            <p class="soin-desc">Avec drain Redon ou point ouvert. Technique adaptée, protocole coordonné avec votre chirurgien.</p>
+                            <div class="soin-footer">
+                                <div class="soin-price">95 <sup>€</sup></div>
+                                <div class="soin-arrow"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
+                            </div>
+                            <div class="soin-hover-line"></div>
+                        </div>
+                    </div>
+
+                    <div class="soin-card soin-featured reveal-up" style="--d:160ms" data-magnetic>
+                        <div class="soin-label">Bilan inclus + 1 offerte</div>
+                        <div class="soin-card-inner">
+                            <div class="soin-top">
+                                <div class="soin-num">03</div>
+                                <div class="soin-duration">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+                                    Cure · 5 séances
+                                </div>
+                            </div>
+                            <h3 class="soin-name">Cure 5 séances</h3>
+                            <p class="soin-desc">Bilan 20 min + 5 séances + 1 offerte. Standard : 340€ — Complexe (Redon) : 400€.</p>
+                            <div class="soin-footer">
+                                <div class="soin-price">340 <sup>€</sup></div>
+                                <div class="soin-arrow"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
+                            </div>
+                            <div class="soin-hover-line"></div>
+                        </div>
+                    </div>
+
+                    <div class="soin-card soin-featured reveal-up" style="--d:240ms" data-magnetic>
+                        <div class="soin-label">Bilan inclus + 1 offerte</div>
+                        <div class="soin-card-inner">
+                            <div class="soin-top">
+                                <div class="soin-num">04</div>
+                                <div class="soin-duration">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+                                    Cure · 10 séances
+                                </div>
+                            </div>
+                            <h3 class="soin-name">Cure 10 séances</h3>
+                            <p class="soin-desc">Bilan 30 min + 10 séances + 1 offerte. Standard : 660€ — Complexe (Redon) : 760€.</p>
+                            <div class="soin-footer">
+                                <div class="soin-price">660 <sup>€</sup></div>
+                                <div class="soin-arrow"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
+                            </div>
+                            <div class="soin-hover-line"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- POST-NATAL -->
+            <div class="tab-panel" id="panel-post-natal">
+                <div class="drainage-note reveal-up">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+                    Protocole doux dédié à la récupération maternité · Disponible à domicile (+5€ / +10€ hors secteur)
+                </div>
+                <div class="cards-grid">
+                    <div class="soin-card reveal-up" style="--d:0ms" data-magnetic>
+                        <div class="soin-card-inner">
+                            <div class="soin-top">
+                                <div class="soin-num">01</div>
+                                <div class="soin-duration">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+                                    60 min
+                                </div>
+                            </div>
+                            <h3 class="soin-name">Séance post-natal</h3>
+                            <p class="soin-desc">Protocole doux pour la récupération après accouchement. Réduit les œdèmes, soutient la cicatrisation et le retour à soi.</p>
+                            <div class="soin-footer">
+                                <div class="soin-price">75 <sup>€</sup></div>
+                                <div class="soin-arrow"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
+                            </div>
+                            <div class="soin-hover-line"></div>
+                        </div>
+                    </div>
+
+                    <div class="soin-card soin-featured reveal-up" style="--d:80ms" data-magnetic>
+                        <div class="soin-label">Bilan inclus</div>
+                        <div class="soin-card-inner">
+                            <div class="soin-top">
+                                <div class="soin-num">02</div>
+                                <div class="soin-duration">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+                                    Cure · 5 séances
+                                </div>
+                            </div>
+                            <h3 class="soin-name">Cure 5 séances</h3>
+                            <p class="soin-desc">Bilan personnalisé + 5 séances de drainage post-natal. Accompagnement progressif pour retrouver légèreté et bien-être.</p>
+                            <div class="soin-footer">
+                                <div class="soin-price">320 <sup>€</sup></div>
+                                <div class="soin-arrow"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
+                            </div>
+                            <div class="soin-hover-line"></div>
+                        </div>
+                    </div>
+
+                    <div class="soin-card soin-featured reveal-up" style="--d:160ms" data-magnetic>
+                        <div class="soin-label">Bilan inclus</div>
+                        <div class="soin-card-inner">
+                            <div class="soin-top">
+                                <div class="soin-num">03</div>
+                                <div class="soin-duration">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+                                    Cure · 10 séances
+                                </div>
+                            </div>
+                            <h3 class="soin-name">Cure 10 séances</h3>
+                            <p class="soin-desc">Bilan personnalisé + 10 séances. Accompagnement complet pour une récupération post-natal en profondeur.</p>
+                            <div class="soin-footer">
+                                <div class="soin-price">610 <sup>€</sup></div>
+                                <div class="soin-arrow"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
+                            </div>
+                            <div class="soin-hover-line"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- DRAIN & SCULPT -->
+            <div class="tab-panel" id="panel-drain-sculpt">
+                <div class="drainage-note reveal-up">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 3l14 9-14 9V3z"/></svg>
+                    Drainage lymphatique combiné au modelissage sculpt pour un résultat drainant et remodelant
+                </div>
+                <div class="cards-grid">
+                    <div class="soin-card reveal-up" style="--d:0ms" data-magnetic>
+                        <div class="soin-card-inner">
+                            <div class="soin-top">
+                                <div class="soin-num">01</div>
+                                <div class="soin-duration">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+                                    70 min
+                                </div>
+                            </div>
+                            <h3 class="soin-name">Soin combiné</h3>
+                            <p class="soin-desc">Drainage lymphatique + modelissage sculpt. 2 zones ciblées : abdomen, cuisses, dos (pas visage).</p>
+                            <div class="soin-footer">
+                                <div class="soin-price">85 <sup>€</sup></div>
+                                <div class="soin-arrow"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
+                            </div>
+                            <div class="soin-hover-line"></div>
+                        </div>
+                    </div>
+
+                    <div class="soin-card reveal-up" style="--d:80ms" data-magnetic>
+                        <div class="soin-card-inner">
+                            <div class="soin-top">
+                                <div class="soin-num">02</div>
+                                <div class="soin-duration">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+                                    Bilan + 1 séance
+                                </div>
+                            </div>
+                            <h3 class="soin-name">Cure découverte</h3>
+                            <p class="soin-desc">Bilan personnalisé + 1 séance Drain & Sculpt. Idéal pour découvrir cette combinaison sur-mesure.</p>
+                            <div class="soin-footer">
+                                <div class="soin-price">125 <sup>€</sup></div>
+                                <div class="soin-arrow"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
+                            </div>
+                            <div class="soin-hover-line"></div>
+                        </div>
+                    </div>
+
+                    <div class="soin-card soin-featured reveal-up" style="--d:160ms" data-magnetic>
+                        <div class="soin-label">Meilleure formule</div>
+                        <div class="soin-card-inner">
+                            <div class="soin-top">
+                                <div class="soin-num">03</div>
+                                <div class="soin-duration">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+                                    Cure · 10 séances
+                                </div>
+                            </div>
+                            <h3 class="soin-name">Cure 10 séances</h3>
+                            <p class="soin-desc">Drainage + modelissage sur 10 séances. Zones : abdomen, cuisses/jambes, fesses, bras. Résultat visible et durable.</p>
+                            <div class="soin-footer">
+                                <div class="soin-price">820 <sup>€</sup></div>
+                                <div class="soin-arrow"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
+                            </div>
+                            <div class="soin-hover-line"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- GIFT -->
+    <section class="section gift-section" id="gift">
+        <div class="wrap">
+            <div class="gift-layout">
+                <div class="gift-info reveal-left">
+                    <span class="eyebrow">Bon cadeau</span>
+                    <h2>Offrez un moment<br><em>d'exception</em></h2>
+                    <p>Faites plaisir à un proche avec un bon cadeau Harmonya. Valable 1 an à compter de la date d'achat.</p>
+                    <a href="tel:0626142589" class="btn-gold">Commander par téléphone</a>
+                </div>
+                <div class="gift-values reveal-right">
+                    <div class="gift-item" data-value="45">
+                        <span class="gift-eur">45€</span>
+                        <span class="gift-label">Découverte 30'</span>
+                    </div>
+                    <div class="gift-item" data-value="60">
+                        <span class="gift-eur">60€</span>
+                        <span class="gift-label">Immersion 60'</span>
+                    </div>
+                    <div class="gift-item" data-value="85">
+                        <span class="gift-eur">85€</span>
+                        <span class="gift-label">Immersion 90'</span>
+                    </div>
+                    <div class="gift-item featured" data-value="95">
+                        <span class="gift-eur">95€</span>
+                        <span class="gift-label">Évasion · Cocooning 60'</span>
+                    </div>
+                    <div class="gift-item" data-value="115">
+                        <span class="gift-eur">115€</span>
+                        <span class="gift-label">Cocooning 90'</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- REVIEWS -->
+    <section class="section reviews-section" id="reviews">
+        <div class="wrap">
+            <div class="reviews-head reveal-up">
+                <span class="eyebrow">Avis Google</span>
+                <h2>Ce qu'elles <em>disent</em></h2>
+                <div class="google-badge">
+                    <svg width="20" height="20" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+                    22 avis Google · Note 5/5
+                </div>
+            </div>
+            <div class="reviews-slider reveal-up">
+                <div class="reviews-track" id="reviewsTrack">
+                    <!-- Avis Google vérifiés — 22 avis · 5/5 -->
+                    <div class="review-card">
+                        <div class="review-stars">★★★★★</div>
+                        <p class="review-text">« Que dire... waouw ! C'était une expérience incroyable. Hélène est d'un professionnalisme qui se perd de nos jours ! D'une douceur surprenante et tellement à l'écoute. Tout est pensé pour que ce moment de détente se transforme en havre de paix. J'ai déjà hâte du prochain rendez-vous que j'ai pris soin de réserver avant de quitter le cabinet 🙊 »</p>
+                        <div class="review-author">
+                            <div class="review-avatar">D</div>
+                            <div>
+                                <strong>Dina Nadi</strong>
+                                <span>Avril 2025</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="review-card">
+                        <div class="review-stars">★★★★★</div>
+                        <p class="review-text">« Une vraie belle découverte avec Hélène ! J'ai testé le drainage lymphatique, la madérothérapie et même une séance de sport : tout était top. Hélène est douce, bienveillante, très pro et à l'écoute ✨ Je ressors de chaque séance détendue, légère et reboostée. Je recommande à 100% les yeux fermés ! »</p>
+                        <div class="review-author">
+                            <div class="review-avatar">S</div>
+                            <div>
+                                <strong>Sasa T.</strong>
+                                <span>Juillet 2025</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="review-card">
+                        <div class="review-stars">★★★★★</div>
+                        <p class="review-text">« J'ai passé un moment exceptionnel lors de ce massage ! L'accueil a été chaleureux et bienveillant et l'ambiance du lieu m'a immédiatement mise en confiance. J'ai senti toutes mes tensions disparaître, je suis ressortie détendue. Hélène est une personne super sympathique et très professionnelle, je recommande cet endroit sans hésiter 😊 »</p>
+                        <div class="review-author">
+                            <div class="review-avatar">E</div>
+                            <div>
+                                <strong>Ezo</strong>
+                                <span>Octobre 2025</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="review-card">
+                        <div class="review-stars">★★★★★</div>
+                        <p class="review-text">« J'ai agréablement voyagé à travers la séance de massage au thème "Asie", offert par un ami. Hélène est très douce, professionnelle et à l'écoute de notre corps et de nos sens. J'ai passé un moment magique et tellement agréable que je recommande très fortement, détente absolue assurée. »</p>
+                        <div class="review-author">
+                            <div class="review-avatar">R</div>
+                            <div>
+                                <strong>Ra L.</strong>
+                                <span>Décembre 2025</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="review-card">
+                        <div class="review-stars">★★★★★</div>
+                        <p class="review-text">« Une professionnelle au top ! Les massages sont réalisés avec beaucoup de douceur et de soin. Sa voix est incroyablement douce et apaisante, on se sent détendue dès l'arrivée. Le lieu est superbe, très bien décoré, on s'y sent tellement bien. Un vrai moment de bien-être, je recommande sans hésiter. »</p>
+                        <div class="review-author">
+                            <div class="review-avatar">R</div>
+                            <div>
+                                <strong>Rachida</strong>
+                                <span>Janvier 2026</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="reviews-nav">
+                    <button class="rev-btn" id="revPrev" aria-label="Précédent">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+                    </button>
+                    <div class="rev-dots" id="revDots"></div>
+                    <button class="rev-btn" id="revNext" aria-label="Suivant">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CONTACT -->
+    <section class="section contact-section" id="contact">
+        <div class="wrap">
+            <div class="contact-layout">
+                <div class="contact-left reveal-left">
+                    <span class="eyebrow">Contact</span>
+                    <h2>Prendre<br><em>rendez-vous</em></h2>
+                    <div class="contact-items">
+                        <a href="https://maps.google.com/?q=1+A+rue+de+la+poste+67400+Illkirch-Graffenstaden" target="_blank" class="c-item">
+                            <div class="c-icon">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                            </div>
+                            <div>
+                                <strong>Adresse</strong>
+                                <p>1 A rue de la poste<br>67400 Illkirch-Graffenstaden</p>
+                            </div>
+                        </a>
+                        <a href="tel:0626142589" class="c-item">
+                            <div class="c-icon">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 12.22 19.79 19.79 0 01.12 3.59a2 2 0 011.99-2H5a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>
+                            </div>
+                            <div>
+                                <strong>Téléphone</strong>
+                                <p>06 26 14 25 89</p>
+                            </div>
+                        </a>
+                        <div class="c-item">
+                            <div class="c-icon">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+                            </div>
+                            <div>
+                                <strong>Horaires</strong>
+                                <p>Sur rendez-vous uniquement</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="socials">
+                        <a href="#" class="soc" aria-label="Instagram">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="5"/><circle cx="17.5" cy="6.5" r="1.5" fill="currentColor" stroke="none"/></svg>
+                        </a>
+                        <a href="#" class="soc" aria-label="Snapchat">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12.206 1c.638.004 2.986.103 4.499 2.467.582.91.77 1.974.84 2.702.036.382.05.783.05 1.173 0 .244-.008.476-.02.676.388.176.796.276 1.17.276.218 0 .396-.04.502-.09a.654.654 0 01.274-.058c.252 0 .479.167.479.42 0 .564-1.11.934-1.676 1.08l-.078.022c-.134.036-.216.06-.254.106-.046.056-.05.132-.014.274.68 2.652 2.476 3.066 2.99 3.172.164.034.254.052.254.17 0 .27-.488.488-1.494.668-.088.016-.126.084-.17.172-.054.108-.122.242-.32.366-.386.242-.864.26-1.298.276-.274.01-.558.02-.788.088-.164.048-.34.156-.55.288-.532.334-1.262.792-2.6.792-.04 0-.082-.002-.122-.004-.042.002-.084.004-.126.004-1.338 0-2.068-.458-2.6-.792-.21-.132-.386-.24-.55-.288-.23-.068-.514-.078-.788-.088-.434-.016-.912-.034-1.298-.276-.198-.124-.266-.258-.32-.366-.044-.088-.082-.156-.17-.172C4.488 14.276 4 14.058 4 13.788c0-.118.09-.136.254-.17.514-.106 2.31-.52 2.99-3.172.036-.142.032-.218-.014-.274-.038-.046-.12-.07-.254-.106l-.078-.022C6.332 9.898 5.222 9.528 5.222 8.964a.468.468 0 01.48-.42.654.654 0 01.273.058c.106.05.284.09.502.09.374 0 .782-.1 1.17-.276a7.54 7.54 0 01-.02-.676c0-.39.014-.79.05-1.173.07-.728.258-1.792.84-2.702C10.03 1.103 12.378 1.004 13.016 1h-.81z"/></svg>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="contact-form-box reveal-right">
+                    <form id="contactForm">
+                        <h3>Envoyez-nous un message</h3>
+                        <div class="field">
+                            <input type="text" id="f-name" name="name" required placeholder=" ">
+                            <label for="f-name">Votre prénom & nom</label>
+                            <span class="field-line"></span>
+                        </div>
+                        <div class="field">
+                            <input type="tel" id="f-phone" name="phone" placeholder=" ">
+                            <label for="f-phone">Téléphone</label>
+                            <span class="field-line"></span>
+                        </div>
+                        <div class="field field-select">
+                            <select id="f-method" name="method">
+                                <option value="" disabled selected>Comment souhaitez-vous être contactée ?</option>
+                                <option>Par téléphone</option>
+                                <option>Par SMS</option>
+                                <option>Par Instagram</option>
+                                <option>Par Snapchat</option>
+                            </select>
+                            <span class="field-line"></span>
+                        </div>
+                        <div class="field">
+                            <textarea id="f-msg" name="message" rows="4" required placeholder=" "></textarea>
+                            <label for="f-msg">Votre message</label>
+                            <span class="field-line"></span>
+                        </div>
+                        <button type="submit" class="btn-submit">
+                            <span class="btn-submit-text">Envoyer le message</span>
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="footer">
+        <div class="wrap">
+            <div class="footer-grid">
+                <div class="footer-brand">
+                    <img src="logo-removebg-preview.png" alt="Harmonya">
+                    <p>Institut de massage premium<br>Réservé aux femmes · Illkirch-Graffenstaden</p>
+                </div>
+                <div class="footer-nav">
+                    <h5>Navigation</h5>
+                    <a href="#about">À propos</a>
+                    <a href="#drainage">Drainage</a>
+                    <a href="#services">Nos soins</a>
+                    <a href="#gift">Bon cadeau</a>
+                    <a href="#reviews">Avis</a>
+                    <a href="#contact">Contact</a>
+                </div>
+                <div class="footer-info">
+                    <h5>Nous trouver</h5>
+                    <p>1 A rue de la poste<br>67400 Illkirch-Graffenstaden</p>
+                    <a href="tel:0626142589">06 26 14 25 89</a>
+                </div>
+            </div>
+            <div class="footer-certif">
+                <span>Certifiée par</span>
+                <a href="https://magichands-massage.fr/" target="_blank" rel="noopener">
+                    <img src="images/magic-hands-logo-white.png" alt="Magic Hands" style="height:32px;width:auto;opacity:.5;vertical-align:middle;transition:opacity .2s;" onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='.5'">
+                </a>
+            </div>
+            <div class="footer-bottom">
+                <p>© 2026 Harmonya · Tous droits réservés</p>
+                <p>Site web conçu avec soin</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+
+    <!-- Booking Modal -->
+    <div id="bk-overlay" style="display:none;" role="dialog" aria-modal="true">
+        <div id="bk-card"></div>
+    </div>
+
+    <script>
+    const BK_SERVICES = {
+      'decouverte': {
+        name: 'Découverte',
+        duration: '30 min', price: '45€',
+        desc: 'Initiation au massage sensoriel. Une invitation à la sérénité.',
+        zones: 'Cervicales · Dos · Épaules · Jambes',
+        url: 'https://calendly.com/massage-harmonya/massage-decouverte'
+      },
+      'immersion': {
+        name: 'Immersion',
+        duration: '60 min', price: '60€',
+        desc: 'Laissez-vous porter par la magie du massage sensoriel. Chaque thème vous plongera dans une ambiance propice à un doux voyage, loin du stress.',
+        themes: [
+          { name: 'Les Îles', sub: 'Lomi-lomi polynésien', zones: 'Cervicales · Dos · Épaules · Visage · Jambes · Pieds' },
+          { name: "L'Orient", sub: 'Massage oriental', zones: 'Cervicales · Dos · Épaules · Visage · Jambes · Pieds' },
+          { name: "L'Asie", sub: 'Deep tissus sportif', zones: 'Cervicales · Dos · Épaules · Visage · Jambes · Pieds' },
+          { name: "L'Afrique", sub: 'Massage africain', zones: 'Cervicales · Dos · Épaules · Abdomen · Jambes' }
+        ],
+        url: 'https://calendly.com/massage-harmonya/massage-immersion'
+      },
+      'evasion': {
+        name: 'Évasion',
+        duration: '90 min', price: '85€',
+        desc: 'Le tour du monde en un soin — les 4 thèmes réunis. Enrichi de réflexologie pour un lâché prise total.',
+        zones: 'Cervicales · Dos · Épaules · Abdomen · Jambes',
+        url: 'https://calendly.com/massage-harmonya/massage-evasion'
+      },
+      'cocooning': {
+        name: 'Cocooning',
+        duration: '60 ou 90 min', price: '95€ — 115€',
+        desc: 'Massage aux pierres chaudes alliant chaleur et douceur pour un moment de pure relaxation.',
+        zones: 'Dos · Épaules · Visage · Jambes · Pieds',
+        url: 'https://calendly.com/massage-harmonya/massage-cocooning'
+      },
+      'duo': {
+        name: 'Massage Duo',
+        duration: '90 min', price: '190€',
+        desc: 'Un moment de bien-être à deux, en partenariat avec @evasionlomilomi. Massage sensoriel pour les couples.',
+        duo: true,
+        url: 'https://calendly.com/massage-harmonya/massage-duo'
+      },
+      'drainage-classique': {
+        name: 'Drainage Lymphatique',
+        duration: 'Dès 45 min', price: 'Dès 50€',
+        desc: "Drainage lymphatique manuel méthode Vodder. Indiqué pour la rétention d'eau, lymphœdème, jambes lourdes. Disponible à domicile.",
+        url: 'https://calendly.com/massage-harmonya/drainage-lymphatique-classique'
+      },
+      'post-op': {
+        name: 'Drainage Post-Opératoire',
+        duration: '60–70 min', price: 'Dès 80€',
+        desc: 'Protocole spécialisé après liposuccion 360°, BBL, abdominoplastie, rhinoplastie. En collaboration avec des infirmières certifiées.',
+        url: 'https://calendly.com/massage-harmonya/drainage-post-operatoire'
+      },
+      'post-natal': {
+        name: 'Drainage Post-Natal',
+        duration: '60 min', price: '75€',
+        desc: 'Protocole doux dédié à la récupération maternité. Réduit les œdèmes, soutient la cicatrisation et le retour à soi.',
+        url: 'https://calendly.com/massage-harmonya/drainage-post-natal'
+      },
+      'drain-sculpt': {
+        name: 'Drain & Sculpt',
+        duration: '70 min', price: 'Dès 85€',
+        desc: 'Protocole exclusif alliant drainage lymphatique et modelage sculptant. Corps affiné, peau lissée, silhouette redessinée.',
+        url: 'https://calendly.com/massage-harmonya/drain-sculpt'
+      }
+    };
+    const MASSAGE_IDS = ['decouverte','immersion','evasion','cocooning','duo'];
+
+    function openBookingModal(id) {
+      var overlay = document.getElementById('bk-overlay');
+      overlay.style.display = 'flex';
+      document.body.style.overflow = 'hidden';
+      if (!id) {
+        renderCategoryPicker();
+      } else if (id === 'massages') {
+        renderMassagePicker();
+      } else if (id === 'drainages') {
+        renderDrainagePicker();
+      } else if (BK_SERVICES[id]) {
+        renderServiceDetail(id);
+      } else {
+        renderCategoryPicker();
+      }
+    }
+    function closeBookingModal() {
+      document.getElementById('bk-overlay').style.display = 'none';
+      document.body.style.overflow = '';
+    }
+
+    // ── Écran 1 : choix de la catégorie ──────────────
+    function renderCategoryPicker() {
+      var html = closeBtn();
+      html += '<p class="bk-eyebrow">Harmonya · Réservation</p>';
+      html += '<h2 class="bk-title">Quel soin souhaitez-vous ?</h2>';
+      html += '<div class="bk-cat-grid">';
+      html += '<button class="bk-cat-card" onclick="renderMassagePicker()">';
+      html += '<span class="bk-cat-icon">🤲</span>';
+      html += '<div class="bk-cat-name">Massages bien-être</div>';
+      html += '<div class="bk-cat-sub">Découverte · Immersion · Évasion<br>Cocooning · Massage Duo</div>';
+      html += '</button>';
+      html += '<button class="bk-cat-card" onclick="renderDrainagePicker()">';
+      html += '<span class="bk-cat-icon">💧</span>';
+      html += '<div class="bk-cat-name">Drainages lymphatiques</div>';
+      html += '<div class="bk-cat-sub">Classique · Post-opératoire<br>Post-natal · Drain & Sculpt</div>';
+      html += '</button>';
+      html += '</div>';
+      document.getElementById('bk-card').innerHTML = html;
+    }
+
+    // ── Écran 2a : massages ───────────────────────────
+    function renderMassagePicker() {
+      var html = closeBtn();
+      html += '<button class="bk-back" onclick="renderCategoryPicker()">← Retour</button>';
+      html += '<p class="bk-eyebrow">Massages bien-être</p>';
+      html += '<h2 class="bk-title">Choisissez votre soin</h2>';
+      html += '<div class="bk-massage-grid">';
+      MASSAGE_IDS.forEach(function(id) {
+        var s = BK_SERVICES[id];
+        html += '<button class="bk-massage-card" onclick="renderServiceDetail(\'' + id + '\')">';
+        html += '<div class="bk-mc-name">' + s.name + '</div>';
+        html += '<div class="bk-mc-info">' + s.duration + ' · ' + s.price + '</div>';
+        html += '</button>';
+      });
+      html += '</div>';
+      document.getElementById('bk-card').innerHTML = html;
+    }
+
+    // ── Écran 2b : drainages ──────────────────────────
+    var DRAIN_IDS = ['drainage-classique','post-op','post-natal','drain-sculpt'];
+    function renderDrainagePicker() {
+      var html = closeBtn();
+      html += '<button class="bk-back" onclick="renderCategoryPicker()">← Retour</button>';
+      html += '<p class="bk-eyebrow">Drainages lymphatiques</p>';
+      html += '<h2 class="bk-title">Quel drainage ?</h2>';
+      html += '<div class="bk-drain-grid">';
+      DRAIN_IDS.forEach(function(id) {
+        var s = BK_SERVICES[id];
+        html += '<button class="bk-drain-card" onclick="renderServiceDetail(\'' + id + '\', true)">';
+        html += '<div class="bk-drain-name">' + s.name + '</div>';
+        html += '<div class="bk-drain-info">' + s.duration + ' · ' + s.price + '</div>';
+        html += '</button>';
+      });
+      html += '</div>';
+      document.getElementById('bk-card').innerHTML = html;
+    }
+
+    function closeBtn() {
+      return '<button onclick="closeBookingModal()" class="bk-close" aria-label="Fermer"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>';
+    }
+    function renderServiceDetail(id, fromDrain) {
+      var s = BK_SERVICES[id];
+      if (!s) return;
+      var fromMassage = MASSAGE_IDS.includes(id);
+      var html = closeBtn();
+      if (fromMassage) html += '<button class="bk-back" onclick="renderMassagePicker()">← Retour</button>';
+      else if (fromDrain || DRAIN_IDS.includes(id)) html += '<button class="bk-back" onclick="renderDrainagePicker()">← Retour</button>';
+      if (s.duo) html += '<span class="bk-duo-badge">✦ En partenariat avec @evasionlomilomi</span>';
+      html += '<p class="bk-eyebrow">Réservation</p>';
+      html += '<h2 class="bk-title">' + s.name + '</h2>';
+      html += '<div class="bk-meta"><span>' + s.duration + '</span><span class="bk-meta-sep">·</span><span>' + s.price + '</span></div>';
+      html += '<p class="bk-desc">' + s.desc + '</p>';
+      if (s.themes) {
+        html += '<div class="bk-themes"><p class="bk-themes-label">Choisissez votre thème :</p>';
+        s.themes.forEach(function(t) {
+          html += '<div class="bk-theme-row"><strong>' + t.name + '</strong> <em>— ' + t.sub + '</em><span class="bk-theme-zones">' + t.zones + '</span></div>';
+        });
+        html += '</div>';
+      } else if (s.zones) {
+        html += '<div class="bk-zones">' + s.zones + '</div>';
+      }
+      html += '<a href="' + s.url + '" target="_blank" rel="noopener" class="bk-cta" onclick="closeBookingModal()">Choisir mon créneau <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></a>';
+      html += '<p class="bk-note">Vous serez redirigée vers Calendly pour choisir votre créneau.</p>';
+      document.getElementById('bk-card').innerHTML = html;
+    }
+    document.getElementById('bk-overlay').addEventListener('click', function(e) {
+      if (e.target === this) closeBookingModal();
+    });
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') closeBookingModal();
+    });
+    </script>
+</body>
+</html>

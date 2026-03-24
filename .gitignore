@@ -1,0 +1,15 @@
+# Claude / Cowork
+.claude/settings.local.json
+.claude/projects/
+
+# Misc
+*.DS_Store
+Thumbs.db
+*.log
+node_modules/
+.env
+.env.local
+
+# Lock files from git
+*.lock
+tEKnyL1
