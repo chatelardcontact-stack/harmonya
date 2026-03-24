@@ -964,12 +964,16 @@
 
   function showAuth() {
     document.getElementById('auth-screen').style.display = 'flex';
-    document.getElementById('dashboard').style.display = 'none';
+    const d = document.getElementById('dashboard');
+    d.classList.add('hidden');
+    d.style.display = 'none';
   }
 
   async function showDashboard() {
     document.getElementById('auth-screen').style.display = 'none';
-    document.getElementById('dashboard').style.display = 'flex';
+    const d = document.getElementById('dashboard');
+    d.classList.remove('hidden');
+    d.style.display = 'flex';
     updateUserInfo();
     await Promise.all([loadRDV(), loadDocuments(), loadMessages(), loadFactures(), loadForfaits()]);
     subscribeMessages();
