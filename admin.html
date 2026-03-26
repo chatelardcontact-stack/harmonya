@@ -341,12 +341,10 @@
 
     <!-- ── OVERVIEW ──────────────────────────── -->
     <div class="panel active" id="panel-overview">
-      <div class="panel-header">
-        <div>
-          <div class="panel-tag">✦ Harmonya · Admin</div>
-          <h2 class="panel-title">Tableau de bord</h2>
-        </div>
-        <div id="overview-date" style="font-size:.8rem;color:var(--text-dim);"></div>
+      <div class="panel-header" style="flex-direction:column;align-items:flex-start;gap:4px;padding-bottom:28px;border-bottom:1px solid rgba(255,255,255,.06);margin-bottom:28px;">
+        <div class="panel-tag" id="overview-date" style="font-size:.6rem;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);margin-bottom:8px;"></div>
+        <h2 id="admin-greeting" class="panel-title" style="font-size:2rem;margin:0 0 6px;"></h2>
+        <p id="admin-subtitle" style="font-size:.9rem;color:var(--text-dim);margin:0;font-style:italic;"></p>
       </div>
       <div class="stats-row" id="overview-stats">
         <div class="stat-card"><div class="stat-label">Clientes</div><div class="stat-value" id="ov-clients">—</div></div>
@@ -607,8 +605,25 @@ async function init() {
 function showDashboard() {
   document.getElementById('auth-screen').classList.add('hidden');
   document.getElementById('dashboard').classList.remove('hidden');
+
+  const now = new Date();
+  const h = now.getHours();
+  const greeting = h < 12 ? 'Bonjour' : h < 18 ? 'Bon après-midi' : 'Bonsoir';
+
+  const subtitles = [
+    'Que faisons-nous aujourd\'hui ? ✨',
+    'Prête à prendre soin de vos clientes ? 🌸',
+    'Votre journée commence ici, on s\'occupe du reste 💆‍♀️',
+    'Tout est là, juste pour vous 🌿',
+    'Une belle journée commence — voici votre espace 🌙',
+  ];
+  const sub = subtitles[now.getDay() % subtitles.length];
+
   document.getElementById('overview-date').textContent =
-    new Date().toLocaleDateString('fr-FR', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+    '✦ ' + now.toLocaleDateString('fr-FR', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+  document.getElementById('admin-greeting').textContent = greeting + ', Hélène 👋';
+  document.getElementById('admin-subtitle').textContent = sub;
+
   loadAll();
 }
 

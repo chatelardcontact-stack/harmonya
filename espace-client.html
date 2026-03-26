@@ -973,7 +973,14 @@
     d.style.display = 'none';
   }
 
+  const ADMIN_EMAILS = ['massage.harmonya@gmail.com', 'contact@harmonyamassage.fr'];
+
   async function showDashboard() {
+    // Rediriger les admins vers le panel administration
+    if (currentUser && ADMIN_EMAILS.includes(currentUser.email)) {
+      window.location.href = 'admin.html';
+      return;
+    }
     document.getElementById('auth-screen').style.display = 'none';
     const d = document.getElementById('dashboard');
     d.classList.remove('hidden');
