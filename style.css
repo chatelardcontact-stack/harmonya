@@ -747,6 +747,16 @@ h2.light em { color: var(--gold-light); }
 .soin-price small { font-size: 1rem; color: var(--text-muted); font-family: var(--sans); }
 .soin-featured .soin-price { color: var(--gold-light); }
 .soin-featured .soin-price small { color: rgba(255,255,255,.3); }
+/* Dual pricing (Standard / Complexe) */
+.soin-dual-prices { display: flex; align-items: flex-end; gap: 0; }
+.soin-dual-item { display: flex; flex-direction: column; align-items: center; padding: 0 14px; }
+.soin-dual-item:first-child { padding-left: 0; }
+.soin-dual-sep { width: 1px; background: var(--cream-2); align-self: stretch; margin-bottom: 2px; }
+.soin-featured .soin-dual-sep { background: rgba(255,255,255,.12); }
+.dual-label { font-size: .58rem; text-transform: uppercase; letter-spacing: .1em; color: var(--text-muted); margin-bottom: 5px; }
+.soin-featured .dual-label { color: rgba(255,255,255,.4); }
+.dual-price { font-family: var(--serif); font-size: 1.55rem; color: var(--gold-dark); line-height: 1; }
+.soin-featured .dual-price { color: var(--gold-light); }
 .soin-arrow {
   width: 40px; height: 40px;
   border: 1px solid var(--cream-2);
