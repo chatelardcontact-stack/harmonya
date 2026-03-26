@@ -2,7 +2,7 @@ import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY')!
 const HELENE_EMAIL = 'contact@harmonyamassage.fr'
-const FROM_EMAIL = 'Harmonya <notifications@send.harmonyamassage.fr>'
+const FROM_EMAIL = 'Harmonya <notifications@harmonyamassage.fr>'
 
 async function sendEmail(to: string, subject: string, html: string) {
   const res = await fetch('https://api.resend.com/emails', {
