@@ -173,6 +173,18 @@
     .seance-btn:hover { background:rgba(201,169,110,.15); }
     .seance-count { font-size:.82rem; color:var(--gold-light); min-width:60px; text-align:center; }
 
+    /* ── CALENDAR ──────────────────────────────── */
+    .calendar-week { display:grid; grid-template-columns:repeat(7,1fr); gap:8px; margin-bottom:28px; }
+    .calendar-day { background:var(--dark-card); border:1px solid var(--dark-border); border-radius:4px; padding:12px; }
+    .calendar-day-header { font-size:.7rem; letter-spacing:.1em; text-transform:uppercase; color:var(--text-dim); margin-bottom:12px; border-bottom:1px solid var(--dark-border); padding-bottom:8px; }
+    .calendar-slots { display:flex; flex-direction:column; gap:4px; max-height:400px; overflow-y:auto; }
+    .calendar-slot { padding:8px 10px; border-radius:3px; font-size:.75rem; cursor:pointer; transition:all .2s; border:1px solid rgba(201,169,110,.15); }
+    .calendar-slot.free { background:rgba(201,169,110,.05); color:var(--text-dim); }
+    .calendar-slot.free:hover { background:rgba(201,169,110,.12); }
+    .calendar-slot.blocked { background:#e57373; color:var(--ink); border-color:#e57373; }
+    .calendar-slot.blocked:hover { background:#d84545; }
+    .calendar-info { font-size:.7rem; color:var(--text-dim); margin-top:8px; padding-top:8px; border-top:1px solid var(--dark-border); }
+
     /* ── MESSAGERIE ────────────────────────────── */
     .msg-layout { display:grid; grid-template-columns:280px 1fr; gap:0; background:var(--dark-card); border:1px solid var(--dark-border); border-radius:4px; overflow:hidden; height:calc(100vh - 180px); min-height:480px; }
     .conv-list { border-right:1px solid var(--dark-border); overflow-y:auto; }
@@ -323,6 +335,14 @@
         <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
         Factures
       </div>
+      <div class="nav-item" data-panel="calendrier" onclick="switchPanel('calendrier',this)">
+        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        Calendrier
+      </div>
+      <div class="nav-item" data-panel="contrats" onclick="switchPanel('contrats',this)">
+        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg>
+        Contrats
+      </div>
     </nav>
     <div class="sidebar-user">
       <div class="sidebar-avatar">H</div>
@@ -465,6 +485,45 @@
       </table>
     </div>
 
+    <!-- ── CALENDRIER ─────────────────────────── -->
+    <div class="panel" id="panel-calendrier">
+      <div class="panel-header">
+        <div>
+          <div class="panel-tag">✦ Harmonya · Admin</div>
+          <h2 class="panel-title">Calendrier</h2>
+        </div>
+        <div style="display:flex;gap:10px;">
+          <button class="btn-outline" onclick="prevWeek()">
+            <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+            Semaine précédente
+          </button>
+          <button class="btn-outline" onclick="nextWeek()">
+            Semaine suivante
+            <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+        </div>
+      </div>
+      <div id="calendar-view"></div>
+    </div>
+
+    <!-- ── CONTRATS ───────────────────────────── -->
+    <div class="panel" id="panel-contrats">
+      <div class="panel-header">
+        <div>
+          <div class="panel-tag">✦ Harmonya · Admin</div>
+          <h2 class="panel-title">Contrats</h2>
+        </div>
+        <button class="btn-action" onclick="openModal('contrat')">
+          <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Nouveau contrat
+        </button>
+      </div>
+      <table class="data-table">
+        <thead><tr><th>Cliente</th><th>Prestation</th><th>Plan de paiement</th><th>Montant</th><th>Statut</th><th></th></tr></thead>
+        <tbody id="contrats-tbody"></tbody>
+      </table>
+    </div>
+
   </main>
 </div>
 
@@ -483,6 +542,7 @@
   </div>
   <div class="drawer-tabs">
     <div class="drawer-tab active" onclick="switchDrawerTab('forfaits',this)">Forfaits</div>
+    <div class="drawer-tab" onclick="switchDrawerTab('suivi',this)" id="tab-suivi">Suivi</div>
     <div class="drawer-tab" onclick="switchDrawerTab('rdv-client',this)">RDV</div>
     <div class="drawer-tab" onclick="switchDrawerTab('msg-client',this)">Messages</div>
     <div class="drawer-tab" onclick="switchDrawerTab('docs-client',this)">Documents</div>
@@ -498,6 +558,7 @@
       </div>
       <div id="drawer-forfaits"></div>
     </div>
+    <div class="drawer-tab-content" id="dt-suivi"><div id="drawer-suivi"></div></div>
     <div class="drawer-tab-content" id="dt-rdv-client"><div id="drawer-rdv"></div></div>
     <div class="drawer-tab-content" id="dt-msg-client"><div id="drawer-msgs"></div></div>
     <div class="drawer-tab-content" id="dt-docs-client">
@@ -628,7 +689,8 @@ function showDashboard() {
 }
 
 async function loadAll() {
-  await Promise.all([loadClients(), loadAllRDVData(), loadAllMessages(), loadAllForfaitsData(), loadAllDocuments(), loadAllFactures()]);
+  await Promise.all([loadClients(), loadAllRDVData(), loadAllMessages(), loadAllForfaitsData(), loadAllDocuments(), loadAllFactures(), loadAllContrats()]);
+  renderCalendarWeek();
   renderOverview();
   subscribeRealtime();
 }
@@ -731,6 +793,7 @@ function switchDrawerTab(tabId, el) {
   document.getElementById('dt-' + tabId).classList.add('active');
 
   if (tabId === 'forfaits')    loadDrawerForfaits(selectedClientId);
+  if (tabId === 'suivi')       loadDrawerSuivi(selectedClientId);
   if (tabId === 'rdv-client')  loadDrawerRDV(selectedClientId);
   if (tabId === 'msg-client')  loadDrawerMsgs(selectedClientId);
   if (tabId === 'docs-client') loadDrawerDocs(selectedClientId);
@@ -1137,6 +1200,58 @@ async function saveFacture(form) {
   if (!error) { closeModal(); loadAllFactures(); }
 }
 
+async function saveContrat(form) {
+  const echances = generateEchances(form.plan_paiement.value, parseFloat(form.montant.value));
+  const { error } = await sb.from('contrats').insert({
+    client_id: form.client_id.value,
+    prestation: form.prestation.value.trim(),
+    montant: parseFloat(form.montant.value) || 0,
+    plan_paiement: form.plan_paiement.value || '1x',
+    echances: echances,
+    statut: 'en_attente'
+  });
+  if (!error) { closeModal(); loadAllContrats(); }
+}
+
+function generateEchances(plan, total) {
+  const times = parseInt(plan[0]) || 1;
+  const perInstallment = total / times;
+  const echances = [];
+  const today = new Date();
+  for (let i = 0; i < times; i++) {
+    const d = new Date(today);
+    d.setMonth(d.getMonth() + i);
+    echances.push({
+      numero: i + 1,
+      date: d.toISOString().split('T')[0],
+      montant: perInstallment,
+      payee: false
+    });
+  }
+  return echances;
+}
+
+async function loadDrawerSuivi(clientId) {
+  const { data } = await sb.from('suivi_seances').select('*').eq('client_id', clientId).order('date', { ascending: false });
+  const el = document.getElementById('drawer-suivi');
+  if (!data || !data.length) {
+    el.innerHTML = `<div class="empty-state"><div class="empty-state-icon">📸</div><div class="empty-state-text">Aucun suivi</div></div>`;
+    return;
+  }
+  el.innerHTML = `<div style="display:flex;justify-content:flex-end;margin-bottom:16px;">
+    <button class="btn-outline" onclick="openModal('seance')">
+      <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Ajouter une séance
+    </button>
+  </div>` + data.map(s => `
+    <div style="background:var(--dark-card-2);border:1px solid var(--dark-border);border-radius:4px;padding:14px 16px;margin-bottom:12px;">
+      <div style="display:flex;justify-content:space-between;margin-bottom:8px;"><strong style="font-size:.88rem;">Séance ${s.numero}</strong><span style="font-size:.75rem;color:var(--text-dim);">${fmtDateShort(s.date)}</span></div>
+      ${s.notes ? `<div style="font-size:.8rem;color:var(--text-dim);margin-bottom:8px;">${esc(s.notes)}</div>` : ''}
+      ${s.photos && s.photos.length ? `<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;"><img src="${s.photos[0]}" style="width:100%;height:auto;border-radius:3px;" alt="photo"></div>` : ''}
+    </div>
+  `).join('');
+}
+
 async function loadDrawerFacts(clientId) {
   const { data } = await sb.from('factures').select('*').eq('client_id', clientId).order('date', { ascending: false });
   const el = document.getElementById('drawer-facts');
@@ -1312,6 +1427,39 @@ function openModal(type) {
       </form>`;
   }
 
+  else if (type === 'contrat') {
+    const clientOptions = allClients.map(c => `<option value="${c.id}" ${selectedClientId===c.id?'selected':''}>${esc(c.full_name||c.email)}</option>`).join('');
+    const CURES = [
+      {nom: 'Cure 5 séances Standard', prix: 340},
+      {nom: 'Cure 5 séances Complexe', prix: 400},
+      {nom: 'Cure 10 séances Standard', prix: 660},
+      {nom: 'Cure 10 séances Complexe', prix: 760}
+    ];
+    const cureOpts = CURES.map(c => `<option value="${c.nom}">${c.nom} — ${c.prix}€</option>`).join('');
+    html = `
+      <button class="modal-close" onclick="closeModal()"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+      <h3 class="modal-title">Nouveau contrat</h3>
+      <form id="modal-form" onsubmit="event.preventDefault();saveContrat(this);">
+        <div class="form-field"><label class="form-label">Cliente *</label><select name="client_id" class="form-select" required onchange="updateContratForm()">${clientOptions||'<option value="">Aucune cliente</option>'}</select></div>
+        <div class="form-field"><label class="form-label">Prestation *</label><select name="prestation" class="form-select" required>${cureOpts}</select></div>
+        <div class="form-field"><label class="form-label">Plan de paiement</label>
+          <select name="plan_paiement" class="form-select">
+            <option value="1x">Paiement unique</option>
+            <option value="2x">2 fois</option>
+            <option value="3x">3 fois</option>
+            <option value="4x">4 fois</option>
+            <option value="5x">5 fois</option>
+          </select>
+        </div>
+        <div class="form-field"><label class="form-label">Montant total (€) *</label><input name="montant" type="number" step="0.01" class="form-input" required placeholder="340"></div>
+        <div class="form-field"><label class="form-label">Notes</label><textarea name="notes" class="form-input" style="min-height:80px;"></textarea></div>
+        <div class="form-actions">
+          <button type="button" class="btn-cancel" onclick="closeModal()">Annuler</button>
+          <button type="submit" class="btn-action">Créer le contrat</button>
+        </div>
+      </form>`;
+  }
+
   content.innerHTML = html;
   overlay.classList.add('open');
 }
@@ -1334,10 +1482,118 @@ function applyPreset(sel) {
   if (form.calendly_url) form.calendly_url.value = preset.url;
 }
 
+// ── CALENDAR MANAGEMENT ───────────────────────────
+let currentWeekStart = new Date(new Date().setDate(new Date().getDate() - new Date().getDay() + 1));
+
+async function loadAvailabilites(weekStart) {
+  const weekEnd = new Date(weekStart);
+  weekEnd.setDate(weekEnd.getDate() + 6);
+  try {
+    const {data, error} = await sb.from('disponibilites').select('*')
+      .gte('date', weekStart.toISOString().split('T')[0])
+      .lte('date', weekEnd.toISOString().split('T')[0]);
+    if (error) throw error;
+    return data || [];
+  } catch (err) {
+    console.error('Erreur chargement dispo:', err);
+    return [];
+  }
+}
+
+function renderCalendarWeek() {
+  const weekStart = new Date(currentWeekStart);
+  const weekEnd = new Date(weekStart);
+  weekEnd.setDate(weekEnd.getDate() + 6);
+
+  loadAvailabilites(weekStart).then(bloques => {
+    let html = '<div class="calendar-week">';
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(weekStart);
+      d.setDate(d.getDate() + i);
+      const dateStr = d.toISOString().split('T')[0];
+      const dayName = ['Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi','Dimanche'][i];
+      const dayNum = d.getDate();
+
+      html += '<div class="calendar-day">';
+      html += `<div class="calendar-day-header">${dayName} ${dayNum}</div>`;
+      html += '<div class="calendar-slots">';
+
+      for (let h = 8; h < 20; h++) {
+        const slot = `${h.toString().padStart(2,'0')}:00`;
+        const isBlocked = bloques.some(b => b.date === dateStr && b.heure_debut <= slot);
+        html += `<div class="calendar-slot ${isBlocked?'blocked':'free'}" onclick="toggleSlot('${dateStr}','${slot}')">${slot}</div>`;
+      }
+      html += '</div>';
+      html += `<div class="calendar-info">${isBlocked?'Bloquée':'Disponible'}</div>`;
+      html += '</div>';
+    }
+    html += '</div>';
+    document.getElementById('calendar-view').innerHTML = html;
+  });
+}
+
+async function toggleSlot(date, time) {
+  try {
+    const existing = await sb.from('disponibilites').select('id').eq('date', date).eq('heure_debut', time).single();
+    if (existing.data) {
+      await sb.from('disponibilites').delete().eq('id', existing.data.id);
+    } else {
+      await sb.from('disponibilites').insert({date, heure_debut: time, heure_fin: time, type: 'bloquee'});
+    }
+    renderCalendarWeek();
+  } catch (err) {
+    console.error('Erreur toggle slot:', err);
+  }
+}
+
+function prevWeek() {
+  currentWeekStart.setDate(currentWeekStart.getDate() - 7);
+  renderCalendarWeek();
+}
+
+function nextWeek() {
+  currentWeekStart.setDate(currentWeekStart.getDate() + 7);
+  renderCalendarWeek();
+}
+
+// ── CONTRACTS MANAGEMENT ───────────────────────────
+let allContrats = [];
+
+async function loadAllContrats() {
+  try {
+    const {data, error} = await sb.from('contrats').select('*').order('created_at', {ascending: false});
+    if (error) throw error;
+    allContrats = data || [];
+    renderContratsTable();
+  } catch (err) {
+    console.error('Erreur contrats:', err);
+  }
+}
+
+function renderContratsTable() {
+  let html = '';
+  if (allContrats.length === 0) {
+    html = '<div class="empty-state"><div class="empty-state-icon">📄</div><div class="empty-state-text">Aucun contrat</div></div>';
+  } else {
+    allContrats.forEach(c => {
+      const client = allClients.find(cl => cl.id === c.client_id);
+      const badge = c.statut === 'signé' ? '<span class="badge actif">Signé</span>' : '<span class="badge en_attente">En attente</span>';
+      html += `<tr><td>${esc(client?.full_name||client?.email||'—')}</td><td>${esc(c.prestation)}</td><td>${c.plan_paiement}</td><td>${c.montant}€</td><td>${badge}</td><td style="cursor:pointer;" onclick="openContratDrawer('${c.id}')">→</td></tr>`;
+    });
+  }
+  document.getElementById('contrats-tbody').innerHTML = html;
+}
+
+function openContratDrawer(contratId) {
+  // Will be implemented with drawer
+  console.log('Open contrat:', contratId);
+}
+
 // ── REALTIME ──────────────────────────────────────────
 function subscribeRealtime() {
   const ch = sb.channel('admin-msgs')
     .on('postgres_changes', { event:'INSERT', schema:'public', table:'messages' }, () => loadAllMessages())
+    .on('postgres_changes', { event:'INSERT', schema:'public', table:'contrats' }, () => loadAllContrats())
     .subscribe();
   realtimeChannels.push(ch);
 }

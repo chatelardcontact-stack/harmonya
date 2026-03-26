@@ -680,6 +680,17 @@
       z-index: 99;
     }
 
+    /* ── Contrats & Signature ──────────────────────── */
+    .contrat-card { background: var(--dark-card); border: 1px solid var(--dark-border); border-radius: 4px; padding: 20px; margin-bottom: 14px; }
+    .contrat-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+    .contrat-title { font-family: var(--serif); font-size: 1.1rem; font-weight: 400; }
+    .contrat-statut { font-size: .68rem; letter-spacing: .08em; text-transform: uppercase; padding: 3px 9px; border-radius: 20px; background: rgba(201,169,110,.15); color: var(--gold-light); }
+    .contrat-statut.signe { background: rgba(122,200,122,.15); color: #7ac87a; }
+    .signature-canvas { border: 2px dashed var(--dark-border); border-radius: 4px; cursor: crosshair; background: rgba(255,255,255,.02); width: 100%; height: 120px; display: block; margin-bottom: 12px; }
+    .signature-actions { display: flex; gap: 10px; margin-bottom: 16px; }
+    .btn-sig { padding: 8px 16px; font-size: .8rem; border: 1px solid var(--dark-border); border-radius: 3px; cursor: pointer; transition: all var(--t); }
+    .btn-sig:hover { background: rgba(201,169,110,.1); border-color: var(--gold); }
+
     @media (max-width: 900px) {
       .burger-btn { display: flex; }
       .sidebar { transform: translateX(-100%); }
@@ -814,6 +825,12 @@
           </svg>
           Mes factures
         </div>
+        <div class="sidebar-nav-item" data-panel="contrats" onclick="switchPanel('contrats', this)">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+            <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/>
+          </svg>
+          Mes contrats
+        </div>
         <div class="sidebar-nav-item" data-panel="forfaits" onclick="switchPanel('forfaits', this)" id="nav-forfaits">
           <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
             <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
@@ -913,6 +930,15 @@
         </table>
       </div>
 
+      <!-- ── Panel Contrats ─────────────────────── -->
+      <div class="panel" id="panel-contrats">
+        <div class="panel-header">
+          <div class="panel-tag">✦ Harmonya</div>
+          <h2 class="panel-title">Mes contrats</h2>
+        </div>
+        <div id="contrats-list"></div>
+      </div>
+
       <!-- ── Panel Forfaits ─────────────────────── -->
       <div class="panel" id="panel-forfaits">
         <div class="panel-header">
@@ -986,7 +1012,7 @@
     d.classList.remove('hidden');
     d.style.display = 'flex';
     updateUserInfo();
-    await Promise.all([loadRDV(), loadDocuments(), loadMessages(), loadFactures(), loadForfaits()]);
+    await Promise.all([loadRDV(), loadDocuments(), loadMessages(), loadFactures(), loadForfaits(), loadContrats()]);
     subscribeMessages();
   }
 
@@ -1481,6 +1507,129 @@
         ${bookBtn}
         ${f.notes ? `<div class="forfait-notes">${f.notes}</div>` : ''}
       </div>`;
+  }
+
+  // ── CONTRATS ─────────────────────────────────────
+  async function loadContrats() {
+    const { data, error } = await supabase
+      .from('contrats')
+      .select('*')
+      .eq('client_id', currentUser.id)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      document.getElementById('contrats-list').innerHTML = '<div class="empty-state"><div class="empty-state-icon">📄</div><div class="empty-state-text">Erreur chargement contrats</div></div>';
+      return;
+    }
+
+    if (!data || !data.length) {
+      document.getElementById('contrats-list').innerHTML = '<div class="empty-state"><div class="empty-state-icon">📄</div><div class="empty-state-text">Aucun contrat</div></div>';
+      return;
+    }
+
+    const html = data.map(c => {
+      const isSigned = c.statut === 'signé';
+      const statusBadge = isSigned
+        ? '<span class="contrat-statut signe">✓ Signé</span>'
+        : '<span class="contrat-statut">En attente</span>';
+      return `<div class="contrat-card">
+        <div class="contrat-header">
+          <div>
+            <div class="contrat-title">${(c.prestation || '—').substring(0, 40)}</div>
+            <div style="font-size:.75rem;color:var(--text-dim);margin-top:4px;">${c.plan_paiement} · ${c.montant}€</div>
+          </div>
+          ${statusBadge}
+        </div>
+        ${!isSigned ? `<button class="btn-sm-gold" onclick="openSignatureModal('${c.id}')">Signer le contrat</button>` : `<div style="font-size:.75rem;color:var(--text-dim);">Signé le ${formatDate(c.signe_le)}</div>`}
+      </div>`;
+    }).join('');
+
+    document.getElementById('contrats-list').innerHTML = html;
+  }
+
+  function openSignatureModal(contratId) {
+    const sigCanvas = document.createElement('canvas');
+    sigCanvas.className = 'signature-canvas';
+    sigCanvas.id = 'sig-canvas-' + contratId;
+
+    const modal = document.createElement('div');
+    modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.8);display:flex;align-items:center;justify-content:center;z-index:9999;padding:20px;';
+    modal.innerHTML = `
+      <div style="background:var(--dark-card);border:1px solid var(--dark-border);border-radius:4px;padding:28px;max-width:500px;width:100%;">
+        <h3 style="font-family:var(--serif);font-size:1.2rem;margin-bottom:16px;">Signature du contrat</h3>
+        <div style="margin-bottom:12px;font-size:.9rem;color:var(--text-dim);">
+          <label style="display:flex;align-items:center;gap:8px;margin-bottom:14px;">
+            <input type="checkbox" id="agree-${contratId}" style="width:18px;height:18px;cursor:pointer;">
+            <span>J'accepte les conditions du contrat</span>
+          </label>
+        </div>
+        <div style="margin-bottom:14px;border:2px dashed var(--dark-border);border-radius:4px;"><canvas id="sig-canvas-${contratId}" style="width:100%;height:120px;display:block;cursor:crosshair;background:rgba(255,255,255,.02);"></canvas></div>
+        <div style="display:flex;gap:10px;margin-bottom:14px;">
+          <button class="btn-sig" onclick="clearSignature('sig-canvas-${contratId}')">Effacer</button>
+          <button class="btn-sig" onclick="closeSignatureModal()">Fermer</button>
+        </div>
+        <button class="btn-action" style="width:100%;" onclick="submitSignature('${contratId}')">Confirmer la signature</button>
+      </div>
+    `;
+    document.body.appendChild(modal);
+
+    const canvas = sigCanvas || document.getElementById('sig-canvas-' + contratId);
+    const ctx = canvas.getContext('2d');
+    let isDrawing = false;
+
+    canvas.addEventListener('mousedown', () => { isDrawing = true; });
+    canvas.addEventListener('mouseup', () => { isDrawing = false; });
+    canvas.addEventListener('mousemove', (e) => {
+      if (!isDrawing) return;
+      const rect = canvas.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      ctx.strokeStyle = '#c9a96e';
+      ctx.lineWidth = 2;
+      ctx.lineTo(x, y);
+      ctx.stroke();
+    });
+
+    window._signModal = modal;
+  }
+
+  function closeSignatureModal() {
+    if (window._signModal) {
+      window._signModal.remove();
+      window._signModal = null;
+    }
+  }
+
+  function clearSignature(canvasId) {
+    const canvas = document.getElementById(canvasId);
+    if (canvas) {
+      const ctx = canvas.getContext('2d');
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+  }
+
+  async function submitSignature(contratId) {
+    const agreed = document.getElementById('agree-' + contratId);
+    if (!agreed || !agreed.checked) {
+      alert('Vous devez accepter les conditions');
+      return;
+    }
+
+    const canvas = document.getElementById('sig-canvas-' + contratId);
+    const signatureData = canvas ? canvas.toDataURL() : '';
+
+    const { error } = await supabase.from('contrats').update({
+      signature_data: signatureData,
+      signe_le: new Date().toISOString(),
+      statut: 'signé'
+    }).eq('id', contratId);
+
+    if (!error) {
+      closeSignatureModal();
+      loadContrats();
+    } else {
+      alert('Erreur signature: ' + error.message);
+    }
   }
 
   // ── Start ────────────────────────────────────────

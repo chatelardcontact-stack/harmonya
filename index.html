@@ -73,6 +73,7 @@
       .bk-drain-card:hover{border-color:rgba(201,169,110,0.4);background:rgba(201,169,110,0.05);}
       .bk-drain-name{font-family:'Playfair Display',serif;font-size:15px;color:#fff;margin-bottom:5px;}
       .bk-drain-info{font-size:11.5px;color:rgba(201,169,110,0.7);}
+      .form-field{margin-bottom:14px;}
       @media(max-width:480px){#bk-card{padding:36px 22px 28px;} .bk-massage-grid,.bk-cat-grid,.bk-drain-grid{grid-template-columns:1fr;}}
     </style>
 </head>
@@ -1039,7 +1040,7 @@
       },
       'immersion': {
         name: 'Immersion',
-        duration: '60 min', price: '60€',
+        duration: '60 · 90 min', price: '60€ · 85€ (90 min)',
         desc: 'Laissez-vous porter par la magie du massage sensoriel. Chaque thème vous plongera dans une ambiance propice à un doux voyage, loin du stress.',
         themes: [
           { name: 'Les Îles', sub: 'Lomi-lomi polynésien', zones: 'Cervicales · Dos · Épaules · Visage · Jambes · Pieds' },
@@ -1051,7 +1052,7 @@
       },
       'evasion': {
         name: 'Évasion',
-        duration: '90 min', price: '95€',
+        duration: '100 min', price: '95€',
         desc: 'Le tour du monde en un soin — les 4 thèmes réunis. Enrichi de réflexologie pour un lâché prise total.',
         zones: 'Cervicales · Dos · Épaules · Abdomen · Jambes',
         url: 'https://calendly.com/massage-harmonya/massage-evasion'
@@ -1072,14 +1073,16 @@
       },
       'drainage-classique': {
         name: 'Drainage Lymphatique',
-        duration: 'Dès 45 min', price: 'Dès 50€',
+        duration: 'Voir ci-dessous', price: 'Voir ci-dessous',
         desc: "Drainage lymphatique manuel méthode Vodder. Indiqué pour la rétention d'eau, lymphœdème, jambes lourdes. Disponible à domicile.",
+        isPicker: true,
         url: 'https://calendly.com/massage-harmonya/drainage-lymphatique-classique'
       },
       'post-op': {
         name: 'Drainage Post-Opératoire',
-        duration: '60–70 min', price: 'Dès 80€',
+        duration: 'Voir ci-dessous', price: 'Voir ci-dessous',
         desc: 'Protocole spécialisé après liposuccion 360°, BBL, abdominoplastie, rhinoplastie. En collaboration avec des infirmières certifiées.',
+        isPicker: true,
         url: 'https://calendly.com/massage-harmonya/drainage-post-operatoire'
       },
       'post-natal': {
@@ -1178,6 +1181,216 @@
     function closeBtn() {
       return '<button onclick="closeBookingModal()" class="bk-close" aria-label="Fermer"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>';
     }
+
+    // Drain & Sculpt, Post-op, Post-natal drain picker
+    function renderPostOpPicker() {
+      var html = closeBtn();
+      html += '<button class="bk-back" onclick="renderDrainagePicker()">← Retour</button>';
+      html += '<p class="bk-eyebrow">Drainage Post-Opératoire</p>';
+      html += '<h2 class="bk-title">Choisissez votre option</h2>';
+      html += '<div class="bk-drain-grid">';
+      html += '<button class="bk-drain-card" onclick="selectPostOpOption(\'standard\')">';
+      html += '<div class="bk-drain-name">Standard</div>';
+      html += '<div class="bk-drain-info">60 min · 80€</div>';
+      html += '</button>';
+      html += '<button class="bk-drain-card" onclick="selectPostOpOption(\'complexe\')">';
+      html += '<div class="bk-drain-name">Complexe</div>';
+      html += '<div class="bk-drain-info">70 min · 95€</div>';
+      html += '</button>';
+      html += '<button class="bk-drain-card" onclick="selectPostOpOption(\'cure5\')">';
+      html += '<div class="bk-drain-name">Cure 5 séances</div>';
+      html += '<div class="bk-drain-info">340€ · 400€</div>';
+      html += '</button>';
+      html += '<button class="bk-drain-card" onclick="selectPostOpOption(\'cure10\')">';
+      html += '<div class="bk-drain-name">Cure 10 séances</div>';
+      html += '<div class="bk-drain-info">660€ · 760€</div>';
+      html += '</button>';
+      html += '</div>';
+      document.getElementById('bk-card').innerHTML = html;
+    }
+
+    function selectPostOpOption(opt) {
+      var titles = {
+        'standard': 'Standard (60 min · 80€)',
+        'complexe': 'Complexe (70 min · 95€)',
+        'cure5': 'Cure 5 séances (340€ Standard / 400€ Complexe)',
+        'cure10': 'Cure 10 séances (660€ Standard / 760€ Complexe)'
+      };
+      window.selectedPostOpOption = opt;
+      showLocationPicker('post-op', titles[opt]);
+    }
+
+    function renderDrainageClassiquePicker() {
+      var html = closeBtn();
+      html += '<button class="bk-back" onclick="renderDrainagePicker()">← Retour</button>';
+      html += '<p class="bk-eyebrow">Drainage Lymphatique</p>';
+      html += '<h2 class="bk-title">Choisissez votre option</h2>';
+      html += '<div class="bk-drain-grid">';
+      html += '<button class="bk-drain-card" onclick="selectDrainageOption(\'bas\')">';
+      html += '<div class="bk-drain-name">Bas du corps</div>';
+      html += '<div class="bk-drain-info">45 min · 50€</div>';
+      html += '</button>';
+      html += '<button class="bk-drain-card" onclick="selectDrainageOption(\'haut\')">';
+      html += '<div class="bk-drain-name">Haut du corps</div>';
+      html += '<div class="bk-drain-info">60 min · 60€</div>';
+      html += '</button>';
+      html += '<button class="bk-drain-card" onclick="selectDrainageOption(\'bas-abdomen\')">';
+      html += '<div class="bk-drain-name">Bas + abdomen</div>';
+      html += '<div class="bk-drain-info">80 min · 80€</div>';
+      html += '</button>';
+      html += '<button class="bk-drain-card" onclick="selectDrainageOption(\'complet\')">';
+      html += '<div class="bk-drain-name">Corps complet</div>';
+      html += '<div class="bk-drain-info">120 min · 140€</div>';
+      html += '</button>';
+      html += '</div>';
+      document.getElementById('bk-card').innerHTML = html;
+    }
+
+    function selectDrainageOption(opt) {
+      var titles = {
+        'bas': 'Bas du corps (45 min · 50€)',
+        'haut': 'Haut du corps (60 min · 60€)',
+        'bas-abdomen': 'Bas + abdomen (80 min · 80€)',
+        'complet': 'Corps complet (120 min · 140€)'
+      };
+      var prices = { 'bas': 50, 'haut': 60, 'bas-abdomen': 80, 'complet': 140 };
+      window.selectedDrainageOption = opt;
+      window.selectedServicePrice = prices[opt];
+      showLocationPicker('drainage-classique', titles[opt]);
+    }
+
+    function showLocationPicker(serviceId, title) {
+      var html = closeBtn();
+      html += '<button class="bk-back" onclick="renderServiceDetail(\'' + serviceId + '\', true)">← Retour</button>';
+      html += '<p class="bk-eyebrow">Réservation</p>';
+      html += '<h2 class="bk-title">Où souhaitez-vous être reçue ?</h2>';
+      html += '<div style="margin-top:16px;margin-bottom:20px;font-size:13px;color:rgba(255,255,255,.6);">' + title + '</div>';
+      html += '<div class="bk-drain-grid">';
+      html += '<button class="bk-drain-card" onclick="selectLocation(\'cabinet\')">';
+      html += '<div class="bk-drain-name">Au cabinet</div>';
+      html += '<div class="bk-drain-info">1A rue de la poste<br>67400 Illkirch</div>';
+      html += '</button>';
+      html += '<button class="bk-drain-card" onclick="selectLocation(\'domicile\')">';
+      html += '<div class="bk-drain-name">À domicile</div>';
+      html += '<div class="bk-drain-info">Saisir votre adresse</div>';
+      html += '</button>';
+      html += '</div>';
+      document.getElementById('bk-card').innerHTML = html;
+    }
+
+    function selectLocation(loc) {
+      if (loc === 'cabinet') {
+        window.selectedLocation = 'cabinet';
+        window.locationFees = 0;
+        proceedToCalendly();
+      } else {
+        showAddressInput();
+      }
+    }
+
+    function showAddressInput() {
+      var html = closeBtn();
+      html += '<button class="bk-back" onclick="showLocationPicker(window.selectedServiceId, window.selectedServiceTitle)">← Retour</button>';
+      html += '<p class="bk-eyebrow">Réservation</p>';
+      html += '<h2 class="bk-title">Saisissez votre adresse</h2>';
+      html += '<div class="form-field" style="margin-top:20px;">';
+      html += '<input type="text" id="address-input" placeholder="Adresse complète" style="width:100%;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:6px;padding:11px 14px;color:#fff;font-size:.9rem;outline:none;transition:border-color .2s;margin-bottom:12px;">';
+      html += '<div id="address-suggestions" style="max-height:200px;overflow-y:auto;margin-bottom:14px;"></div>';
+      html += '</div>';
+      html += '<button class="bk-cta" id="confirm-address" style="width:100%;cursor:pointer;" disabled>Confirmer l\'adresse</button>';
+      html += '<p class="bk-note">Autocomplétude via OpenStreetMap</p>';
+      document.getElementById('bk-card').innerHTML = html;
+
+      var addrInput = document.getElementById('address-input');
+      var suggestions = document.getElementById('address-suggestions');
+      var confirmBtn = document.getElementById('confirm-address');
+
+      addrInput.addEventListener('input', debounce(async function(e) {
+        var query = e.target.value.trim();
+        if (query.length < 3) { suggestions.innerHTML = ''; return; }
+        try {
+          var res = await fetch('https://nominatim.openstreetmap.org/search?q=' + encodeURIComponent(query) + '&format=json&limit=5&countrycodes=fr');
+          var data = await res.json();
+          suggestions.innerHTML = '';
+          if (data.length === 0) {
+            suggestions.innerHTML = '<div style="padding:8px;color:rgba(255,255,255,.4);font-size:.8rem;">Aucun résultat trouvé</div>';
+            return;
+          }
+          data.forEach(function(place) {
+            var div = document.createElement('div');
+            div.style.cssText = 'padding:10px;border:1px solid rgba(201,169,110,.15);margin-bottom:6px;border-radius:4px;cursor:pointer;transition:background .2s;font-size:.85rem;';
+            div.textContent = place.display_name;
+            div.onmouseover = function() { this.style.background = 'rgba(201,169,110,.1)'; };
+            div.onmouseout = function() { this.style.background = 'transparent'; };
+            div.onclick = function() {
+              addrInput.value = place.display_name;
+              window.selectedAddress = place.display_name;
+              window.selectedLat = parseFloat(place.lat);
+              window.selectedLon = parseFloat(place.lon);
+              suggestions.innerHTML = '';
+              confirmBtn.disabled = false;
+            };
+            suggestions.appendChild(div);
+          });
+        } catch (err) { console.error('Nominatim error:', err); }
+      }, 400));
+
+      confirmBtn.addEventListener('click', function() {
+        if (!window.selectedAddress) return;
+        calculateDistanceAndProceeds();
+      });
+
+      addrInput.focus();
+    }
+
+    function debounce(fn, ms) {
+      var timer;
+      return function() {
+        clearTimeout(timer);
+        var args = arguments;
+        timer = setTimeout(function() { fn.apply(null, args); }, ms);
+      };
+    }
+
+    function calculateDistanceAndProceeds() {
+      var harmoniaLat = 48.5316, harmoniaLon = 7.7125;
+      var lat2 = window.selectedLat, lon2 = window.selectedLon;
+      var dLat = (lat2 - harmoniaLat) * Math.PI / 180;
+      var dLon = (lon2 - harmoniaLon) * Math.PI / 180;
+      var a = Math.sin(dLat/2)*Math.sin(dLat/2) + Math.cos(harmoniaLat*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)*Math.sin(dLon/2);
+      var c = 2*Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+      var distance = 6371*c;
+      var fee = 5;
+      if (distance > 10) fee = 10 + (distance - 10) * 0.50;
+      else if (distance > 0 && distance <= 10) fee = 10;
+      window.locationFees = fee;
+      window.selectedLocation = 'domicile';
+      window.selectedAddress = document.getElementById('address-input').value;
+      proceedToCalendly();
+    }
+
+    function proceedToCalendly() {
+      var s = BK_SERVICES['post-op'] || BK_SERVICES['drainage-classique'];
+      var html = closeBtn();
+      html += '<p class="bk-eyebrow">Réservation</p>';
+      html += '<h2 class="bk-title">Résumé</h2>';
+      if (window.selectedLocation === 'domicile') {
+        html += '<div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:14px;margin-bottom:16px;font-size:.85rem;">';
+        html += '<div style="margin-bottom:8px;"><strong>Lieu :</strong> À domicile</div>';
+        html += '<div style="margin-bottom:8px;"><strong>Adresse :</strong> ' + window.selectedAddress + '</div>';
+        html += '<div><strong>Frais km :</strong> ' + window.locationFees.toFixed(2) + '€</div>';
+        html += '</div>';
+      } else {
+        html += '<div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:14px;margin-bottom:16px;font-size:.85rem;">';
+        html += '<div><strong>Lieu :</strong> Au cabinet (1A rue de la poste, 67400 Illkirch)</div>';
+        html += '<div style="margin-top:8px;"><strong>Frais km :</strong> 0€</div>';
+        html += '</div>';
+      }
+      html += '<a href="' + s.url + '" target="_blank" rel="noopener" class="bk-cta" onclick="closeBookingModal()">Choisir mon créneau <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></a>';
+      html += '<p class="bk-note">Vous serez redirigée vers Calendly pour choisir votre créneau.</p>';
+      document.getElementById('bk-card').innerHTML = html;
+    }
+
     function renderServiceDetail(id, fromDrain) {
       var s = BK_SERVICES[id];
       if (!s) return;
@@ -1190,17 +1403,25 @@
       html += '<h2 class="bk-title">' + s.name + '</h2>';
       html += '<div class="bk-meta"><span>' + s.duration + '</span><span class="bk-meta-sep">·</span><span>' + s.price + '</span></div>';
       html += '<p class="bk-desc">' + s.desc + '</p>';
-      if (s.themes) {
-        html += '<div class="bk-themes"><p class="bk-themes-label">Choisissez votre thème :</p>';
-        s.themes.forEach(function(t) {
-          html += '<div class="bk-theme-row"><strong>' + t.name + '</strong> <em>— ' + t.sub + '</em><span class="bk-theme-zones">' + t.zones + '</span></div>';
-        });
-        html += '</div>';
-      } else if (s.zones) {
-        html += '<div class="bk-zones">' + s.zones + '</div>';
+
+      // Handle special pickers
+      if (id === 'post-op') {
+        html += '<a href="javascript:void(0)" class="bk-cta" onclick="renderPostOpPicker()">Sélectionner une option <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></a>';
+      } else if (id === 'drainage-classique') {
+        html += '<a href="javascript:void(0)" class="bk-cta" onclick="renderDrainageClassiquePicker()">Sélectionner une option <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></a>';
+      } else {
+        if (s.themes) {
+          html += '<div class="bk-themes"><p class="bk-themes-label">Choisissez votre thème :</p>';
+          s.themes.forEach(function(t) {
+            html += '<div class="bk-theme-row"><strong>' + t.name + '</strong> <em>— ' + t.sub + '</em><span class="bk-theme-zones">' + t.zones + '</span></div>';
+          });
+          html += '</div>';
+        } else if (s.zones) {
+          html += '<div class="bk-zones">' + s.zones + '</div>';
+        }
+        html += '<a href="' + s.url + '" target="_blank" rel="noopener" class="bk-cta" onclick="closeBookingModal()">Choisir mon créneau <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></a>';
+        html += '<p class="bk-note">Vous serez redirigée vers Calendly pour choisir votre créneau.</p>';
       }
-      html += '<a href="' + s.url + '" target="_blank" rel="noopener" class="bk-cta" onclick="closeBookingModal()">Choisir mon créneau <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></a>';
-      html += '<p class="bk-note">Vous serez redirigée vers Calendly pour choisir votre créneau.</p>';
       document.getElementById('bk-card').innerHTML = html;
     }
     document.getElementById('bk-overlay').addEventListener('click', function(e) {
