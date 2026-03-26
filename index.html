@@ -1546,8 +1546,10 @@
           heure: (window.selectedTime ? window.selectedTime + ':00' : null),
           statut: 'en_attente'
         });
-        // Send magic link (creates account or logs in)
-        sbk.auth.signInWithOtp({ email: email, options: { emailRedirectTo: window.location.origin + '/espace-client.html', data: { full_name: prenom } } });
+        // Send branded magic link via our Edge Function (uses notifications@harmonyamassage.fr)
+        sbk.functions.invoke('send-magic-link', {
+          body: { email, prenom, redirectTo: window.location.origin + '/espace-client.html' }
+        });
         // Send branded confirmation email
         await sbk.functions.invoke('send-email', {
           body: {

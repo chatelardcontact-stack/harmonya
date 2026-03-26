@@ -1141,11 +1141,17 @@
 
   // ── RDV ─────────────────────────────────────────
   async function loadRDV() {
-    const { data, error } = await supabase
-      .from('rendez_vous')
-      .select('*')
-      .eq('client_id', currentUser.id)
-      .order('date', { ascending: false });
+    // Fetch by client_id (logged-in) OR by client_email (anonymous booking)
+    const email = currentUser.email;
+    const { data: byId } = await supabase
+      .from('rendez_vous').select('*').eq('client_id', currentUser.id).order('date', { ascending: false });
+    const { data: byEmail } = await supabase
+      .from('rendez_vous').select('*').eq('client_email', email).is('client_id', null).order('date', { ascending: false });
+    // Merge, deduplicate by id
+    const seen = new Set();
+    const merged = [...(byId||[]), ...(byEmail||[])].filter(r => { if (seen.has(r.id)) return false; seen.add(r.id); return true; });
+    const data = merged.sort((a,b) => (b.date||'').localeCompare(a.date||''));
+    const error = null;
 
     if (error) { renderRDVEmpty(); return; }
 
@@ -1356,7 +1362,7 @@
     const { data, error } = await supabase
       .from('factures')
       .select('*')
-      .eq('client_id', currentUser.id)
+      .or(`client_id.eq.${currentUser.id},client_id.is.null`)
       .order('date', { ascending: false });
 
     const tbody = document.getElementById('factures-tbody');

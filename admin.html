@@ -708,16 +708,56 @@ function switchPanel(id, el) {
 
 // ── CLIENTS ───────────────────────────────────────────
 async function loadClients() {
-  const { data } = await sb.from('profiles').select('*').not('id', 'eq', adminUser?.id).order('created_at', { ascending: false });
-  allClients = data || [];
+  // 1. Load registered profiles (excluding admin)
+  const { data: profiles } = await sb.from('profiles').select('*').not('id', 'eq', adminUser?.id).order('created_at', { ascending: false });
+  const profileClients = (profiles || []).map(c => ({ ...c, isAnonymous: false }));
 
-  // Attach counts
+  // 2. Load anonymous bookings (client_email set but no client_id)
+  const { data: anonRdvs } = await sb.from('rendez_vous')
+    .select('client_email,client_prenom,client_phone,created_at')
+    .is('client_id', null)
+    .not('client_email', 'is', null)
+    .order('created_at', { ascending: false });
+
+  // Deduplicate anonymous clients by email (keep earliest created_at as "registration")
+  const anonMap = {};
+  for (const r of (anonRdvs || [])) {
+    const key = r.client_email.toLowerCase();
+    if (!anonMap[key]) {
+      anonMap[key] = {
+        id: null,
+        email: r.client_email,
+        full_name: r.client_prenom || '',
+        prenom: r.client_prenom || '',
+        nom: '',
+        telephone: r.client_phone || '',
+        avatar_url: null,
+        created_at: r.created_at,
+        isAnonymous: true,
+        _forfaits: 0,
+        _rdv: 0
+      };
+    }
+  }
+
+  // Remove anonymous entries that already have a profile (matched by email)
+  const profileEmails = new Set(profileClients.map(c => (c.email||'').toLowerCase()));
+  const anonClients = Object.values(anonMap).filter(a => !profileEmails.has(a.email.toLowerCase()));
+
+  // 3. Merge
+  allClients = [...profileClients, ...anonClients];
+
+  // 4. Attach counts from rendez_vous
   const { data: fData } = await sb.from('forfaits').select('user_id,statut');
-  const { data: rData } = await sb.from('rendez_vous').select('client_id');
+  const { data: rData } = await sb.from('rendez_vous').select('client_id,client_email');
 
   allClients.forEach(c => {
     c._forfaits = (fData||[]).filter(f => f.user_id === c.id && f.statut === 'actif').length;
-    c._rdv      = (rData||[]).filter(r => r.client_id === c.id).length;
+    if (c.isAnonymous) {
+      c._rdv = (rData||[]).filter(r => !r.client_id && r.client_email?.toLowerCase() === c.email?.toLowerCase()).length;
+    } else {
+      c._rdv = (rData||[]).filter(r => r.client_id === c.id).length;
+    }
   });
 
   const badge = document.getElementById('badge-clients');
@@ -732,27 +772,79 @@ function renderClientsTable(clients) {
     tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:48px;color:var(--text-dim);">Aucune cliente pour le moment</td></tr>`;
     return;
   }
-  tbody.innerHTML = clients.map(c => `
-    <tr class="clickable" onclick="openDrawer('${c.id}')">
+  tbody.innerHTML = clients.map(c => {
+    const displayName = c.full_name || c.prenom || c.email || '—';
+    const clickAttr   = c.isAnonymous ? '' : `onclick="openDrawer('${c.id}')"`;
+    const rowClass    = c.isAnonymous ? '' : 'clickable';
+    const anonBadge   = c.isAnonymous ? `<span style="font-size:.68rem;background:rgba(201,169,110,.15);color:var(--gold);border:1px solid rgba(201,169,110,.3);border-radius:4px;padding:1px 6px;margin-left:6px;">invité</span>` : '';
+    const btnHtml     = c.isAnonymous
+      ? `<button class="btn-sm btn-sm-outline" onclick="openAnonDrawer('${esc(c.email)}')">Voir RDVs →</button>`
+      : `<button class="btn-sm btn-sm-outline" onclick="event.stopPropagation();openDrawer('${c.id}')">Voir fiche →</button>`;
+    return `
+    <tr class="${rowClass}" ${clickAttr}>
       <td>
         <div style="display:flex;align-items:center;gap:10px;">
           <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--gold-dark),var(--gold));display:flex;align-items:center;justify-content:center;font-size:.78rem;color:var(--ink);flex-shrink:0;overflow:hidden;">
-            ${c.avatar_url ? `<img src="${c.avatar_url}" style="width:100%;height:100%;object-fit:cover;">` : esc(initials(c.full_name||c.email))}
+            ${c.avatar_url ? `<img src="${c.avatar_url}" style="width:100%;height:100%;object-fit:cover;">` : esc(initials(displayName))}
           </div>
-          <div style="font-size:.85rem;color:#fff;">${esc(c.full_name || '—')}</div>
+          <div style="font-size:.85rem;color:#fff;">${esc(displayName)}${anonBadge}</div>
         </div>
       </td>
       <td style="color:var(--text-dim);font-size:.8rem;">${esc(c.email||'—')}</td>
       <td style="color:var(--text-dim);font-size:.78rem;">${fmtDateShort(c.created_at)}</td>
       <td>${c._forfaits > 0 ? `<span class="badge actif">${c._forfaits} actif${c._forfaits>1?'s':''}</span>` : '<span style="color:rgba(255,255,255,.2);">—</span>'}</td>
       <td style="color:var(--text-dim);font-size:.82rem;">${c._rdv}</td>
-      <td><button class="btn-sm btn-sm-outline" onclick="event.stopPropagation();openDrawer('${c.id}')">Voir fiche →</button></td>
+      <td>${btnHtml}</td>
+    </tr>`;
+  }).join('');
+}
+
+// Show RDVs for anonymous (guest) clients in a simple modal
+async function openAnonDrawer(email) {
+  const { data: rdvs } = await sb.from('rendez_vous')
+    .select('*')
+    .is('client_id', null)
+    .eq('client_email', email)
+    .order('date', { ascending: false });
+
+  const rows = (rdvs||[]).map(r => `
+    <tr>
+      <td style="color:var(--text-dim);font-size:.82rem;">${fmtDateShort(r.date)}</td>
+      <td style="font-size:.82rem;">${esc(r.prestation||'—')}</td>
+      <td style="font-size:.82rem;">${r.heure ? r.heure.substring(0,5) : '—'}</td>
+      <td><span class="badge ${r.statut||''}">${r.statut||'—'}</span></td>
+      <td style="font-size:.78rem;color:var(--text-dim);">${r.lieu === 'domicile' ? '🏠 Domicile' : '🏛 Cabinet'}</td>
     </tr>`).join('');
+
+  const html = `
+    <div style="position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:1000;display:flex;align-items:center;justify-content:center;" id="anon-modal" onclick="if(event.target.id==='anon-modal')this.remove()">
+      <div style="background:#1e1a17;border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:32px;max-width:640px;width:90%;max-height:80vh;overflow-y:auto;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+          <div>
+            <div style="font-size:1rem;color:#fff;font-weight:600;">${esc(email)}</div>
+            <div style="font-size:.78rem;color:var(--text-dim);margin-top:2px;">Cliente invitée · ${(rdvs||[]).length} rendez-vous</div>
+          </div>
+          <button onclick="document.getElementById('anon-modal').remove()" style="background:none;border:none;color:var(--text-dim);font-size:1.4rem;cursor:pointer;">✕</button>
+        </div>
+        <table style="width:100%;border-collapse:collapse;">
+          <thead><tr style="border-bottom:1px solid rgba(255,255,255,.08);">
+            <th style="text-align:left;padding:8px 4px;font-size:.75rem;color:var(--text-dim);font-weight:500;">Date</th>
+            <th style="text-align:left;padding:8px 4px;font-size:.75rem;color:var(--text-dim);font-weight:500;">Prestation</th>
+            <th style="text-align:left;padding:8px 4px;font-size:.75rem;color:var(--text-dim);font-weight:500;">Heure</th>
+            <th style="text-align:left;padding:8px 4px;font-size:.75rem;color:var(--text-dim);font-weight:500;">Statut</th>
+            <th style="text-align:left;padding:8px 4px;font-size:.75rem;color:var(--text-dim);font-weight:500;">Lieu</th>
+          </tr></thead>
+          <tbody>${rows || '<tr><td colspan="5" style="text-align:center;padding:24px;color:var(--text-dim);">Aucun rendez-vous</td></tr>'}</tbody>
+        </table>
+      </div>
+    </div>`;
+  document.body.insertAdjacentHTML('beforeend', html);
 }
 
 function filterClients(q) {
   const filtered = q ? allClients.filter(c =>
     (c.full_name||'').toLowerCase().includes(q.toLowerCase()) ||
+    (c.prenom||'').toLowerCase().includes(q.toLowerCase()) ||
     (c.email||'').toLowerCase().includes(q.toLowerCase())
   ) : allClients;
   renderClientsTable(filtered);
