@@ -268,7 +268,7 @@
     <h1 class="auth-title">Accès réservé</h1>
     <div class="auth-field">
       <label>Email</label>
-      <input type="email" id="auth-email" placeholder="massage.harmonya@gmail.com" autocomplete="email">
+      <input type="email" id="auth-email" placeholder="contact@harmonyamassage.fr" autocomplete="email">
     </div>
     <div class="auth-field">
       <label>Mot de passe</label>
@@ -533,7 +533,8 @@
 // ── CONFIG ────────────────────────────────────────────
 const SUPA_URL  = 'https://qewdympkbxbevgmbfxfd.supabase.co';
 const SUPA_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFld2R5bXBrYnhiZXZnbWJmeGZkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyOTM0NDMsImV4cCI6MjA4OTg2OTQ0M30.LMHNi_cP5klEHTPn-HrY2LDjwJLEq_LbVZSnLJrATY4';
-const ADMIN_EMAIL = 'massage.harmonya@gmail.com';
+const ADMIN_EMAILS = ['massage.harmonya@gmail.com', 'contact@harmonyamassage.fr'];
+const isAdmin = (email) => ADMIN_EMAILS.includes(email);
 const sb = window.supabase.createClient(SUPA_URL, SUPA_KEY);
 
 let adminUser = null;
@@ -565,7 +566,7 @@ async function doSignIn() {
 
   const { data, error } = await sb.auth.signInWithPassword({ email, password: pass });
   if (error) { errEl.textContent = 'Email ou mot de passe incorrect.'; return; }
-  if (data.user.email !== ADMIN_EMAIL) {
+  if (!isAdmin(data.user.email)) {
     await sb.auth.signOut();
     errEl.textContent = "Accès réservé à l'administratrice.";
     return;
@@ -575,7 +576,7 @@ async function doSignIn() {
 }
 
 async function doForgotPassword() {
-  const email = document.getElementById('auth-email').value.trim() || ADMIN_EMAIL;
+  const email = document.getElementById('auth-email').value.trim() || ADMIN_EMAILS[1];
   const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: window.location.href });
   const errEl = document.getElementById('auth-error');
   if (error) { errEl.textContent = 'Erreur : ' + error.message; }
@@ -590,12 +591,12 @@ async function doSignOut() {
 
 async function init() {
   const { data: { session } } = await sb.auth.getSession();
-  if (session && session.user.email === ADMIN_EMAIL) {
+  if (session && isAdmin(session.user.email)) {
     adminUser = session.user;
     showDashboard();
   }
   sb.auth.onAuthStateChange((event, session) => {
-    if (event === 'SIGNED_IN' && session?.user.email === ADMIN_EMAIL) {
+    if (event === 'SIGNED_IN' && isAdmin(session?.user.email)) {
       adminUser = session.user;
       showDashboard();
     }
@@ -627,7 +628,7 @@ function switchPanel(id, el) {
 
 // ── CLIENTS ───────────────────────────────────────────
 async function loadClients() {
-  const { data } = await sb.from('profiles').select('*').neq('email', ADMIN_EMAIL).order('created_at', { ascending: false });
+  const { data } = await sb.from('profiles').select('*').not('id', 'eq', adminUser?.id).order('created_at', { ascending: false });
   allClients = data || [];
 
   // Attach counts
