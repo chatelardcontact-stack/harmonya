@@ -492,13 +492,16 @@
           <div class="panel-tag">✦ Harmonya · Admin</div>
           <h2 class="panel-title">Calendrier</h2>
         </div>
-        <div style="display:flex;gap:10px;">
+        <div style="display:flex;gap:10px;align-items:center;">
           <button class="btn-outline" onclick="prevWeek()">
             <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
-            Semaine précédente
+            Précédente
+          </button>
+          <button class="btn-outline" onclick="goToToday()" style="color:var(--gold-light);border-color:rgba(201,169,110,.3);">
+            Aujourd'hui
           </button>
           <button class="btn-outline" onclick="nextWeek()">
-            Semaine suivante
+            Suivante
             <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
           </button>
         </div>
@@ -894,14 +897,26 @@ function renderRDVTable(data) {
   }
   tbody.innerHTML = data.map(r => {
     const client = allClients.find(c => c.id === r.client_id);
-    const name   = client ? (client.full_name || client.email) : r.client_id?.slice(0,8)+'…';
-    const sc     = statutClass(r.statut);
+    // Show client name: from profile, or from anonymous booking fields
+    let name = '—';
+    let emailHint = '';
+    if (client) {
+      name = client.full_name || client.email || '—';
+    } else if (r.client_prenom || r.client_email) {
+      name = [r.client_prenom, r.client_email].filter(Boolean).join(' · ');
+      if (r.client_phone) emailHint = `<div style="font-size:.72rem;color:var(--text-dim);">${esc(r.client_phone)}</div>`;
+    } else if (r.client_id) {
+      name = r.client_id.slice(0,8)+'…';
+    }
+    const sc = statutClass(r.statut);
+    const lieuBadge = r.lieu === 'domicile'
+      ? `<span style="font-size:.68rem;background:rgba(126,184,200,.1);color:var(--blue);padding:2px 6px;border-radius:3px;margin-left:4px;">🏠 Domicile</span>`
+      : '';
     return `<tr>
-      <td style="color:var(--gold-light);font-size:.8rem;white-space:nowrap;">${fmtDate(r.date)} ${r.heure ? '· '+r.heure.substring(0,5) : ''}</td>
-      <td style="font-size:.83rem;">${esc(name)}</td>
-      <td>${esc(r.prestation||'—')}</td>
-      <td style="color:var(--text-dim);font-size:.8rem;">${r.duree_minutes ? r.duree_minutes+'min' : '—'}</td>
-      <td style="font-size:.83rem;">${r.prix ? r.prix+'€' : '—'}</td>
+      <td style="color:var(--gold-light);font-size:.8rem;white-space:nowrap;">${fmtDate(r.date)||'—'} ${r.heure ? '· '+r.heure.substring(0,5) : ''}</td>
+      <td style="font-size:.83rem;">${esc(name)}${emailHint}</td>
+      <td>${esc(r.prestation||'—')}${lieuBadge}</td>
+      <td style="font-size:.83rem;">${r.prix ? r.prix+'€' : '—'}${r.frais_km ? ' <span style="color:var(--text-dim);font-size:.75rem;">(+'+r.frais_km+'€ km)</span>' : ''}</td>
       <td><span class="badge ${sc}">${r.statut}</span></td>
       <td>
         <select class="form-select" style="padding:4px 8px;font-size:.72rem;width:auto;" onchange="updateRDVStatut('${r.id}',this.value)">
@@ -922,8 +937,8 @@ function filterRDV(q) {
   if (search) {
     filtered = filtered.filter(r => {
       const c = allClients.find(x => x.id === r.client_id);
-      const name = (c ? (c.full_name||c.email) : '').toLowerCase();
-      return name.includes(search) || (r.prestation||'').toLowerCase().includes(search);
+      const name = (c ? (c.full_name||c.email) : ((r.client_prenom||'') + ' ' + (r.client_email||''))).toLowerCase();
+      return name.includes(search) || (r.prestation||'').toLowerCase().includes(search) || (r.client_email||'').toLowerCase().includes(search);
     });
   }
   if (statut) filtered = filtered.filter(r => r.statut === statut);
@@ -1483,7 +1498,19 @@ function applyPreset(sel) {
 }
 
 // ── CALENDAR MANAGEMENT ───────────────────────────
-let currentWeekStart = new Date(new Date().setDate(new Date().getDate() - new Date().getDay() + 1));
+// Calendar — current week start (always Monday)
+function getMonday(d) {
+  const dt = new Date(d);
+  const day = dt.getDay(); // 0=Sun, 1=Mon...
+  const diff = (day === 0) ? -6 : 1 - day; // offset to Monday
+  dt.setDate(dt.getDate() + diff);
+  dt.setHours(0,0,0,0);
+  return dt;
+}
+let currentWeekStart = getMonday(new Date());
+
+const FR_MONTHS = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+const FR_DAYS   = ['Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi','Dimanche'];
 
 async function loadAvailabilites(weekStart) {
   const weekEnd = new Date(weekStart);
@@ -1500,45 +1527,68 @@ async function loadAvailabilites(weekStart) {
   }
 }
 
+function calDateStr(d) {
+  // Returns YYYY-MM-DD in LOCAL time (avoids UTC offset issues)
+  const yr = d.getFullYear();
+  const mo = String(d.getMonth()+1).padStart(2,'0');
+  const da = String(d.getDate()).padStart(2,'0');
+  return `${yr}-${mo}-${da}`;
+}
+
 function renderCalendarWeek() {
   const weekStart = new Date(currentWeekStart);
-  const weekEnd = new Date(weekStart);
-  weekEnd.setDate(weekEnd.getDate() + 6);
+  // Compute month/year label for the header
+  const endDay = new Date(weekStart); endDay.setDate(endDay.getDate()+6);
+  const monthLabel = weekStart.getMonth() === endDay.getMonth()
+    ? `${FR_MONTHS[weekStart.getMonth()]} ${weekStart.getFullYear()}`
+    : `${FR_MONTHS[weekStart.getMonth()]} — ${FR_MONTHS[endDay.getMonth()]} ${endDay.getFullYear()}`;
+
+  // Show loading
+  document.getElementById('calendar-view').innerHTML = `<p style="color:var(--text-dim);text-align:center;padding:20px;">${monthLabel} — Chargement…</p>`;
 
   loadAvailabilites(weekStart).then(bloques => {
-    let html = '<div class="calendar-week">';
+    let html = `<div style="text-align:center;font-size:1.1rem;color:var(--gold-light);font-family:var(--serif);margin-bottom:16px;letter-spacing:.04em;">${monthLabel}</div>`;
+    html += '<div class="calendar-week">';
+
     for (let i = 0; i < 7; i++) {
       const d = new Date(weekStart);
       d.setDate(d.getDate() + i);
-      const dateStr = d.toISOString().split('T')[0];
-      const dayName = ['Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi','Dimanche'][i];
+      const dateStr = calDateStr(d);
+      const dayName = FR_DAYS[i];
       const dayNum = d.getDate();
+      const isToday = calDateStr(new Date()) === dateStr;
 
-      html += '<div class="calendar-day">';
-      html += `<div class="calendar-day-header">${dayName} ${dayNum}</div>`;
+      html += `<div class="calendar-day" style="${isToday?'border-color:rgba(201,169,110,.4);':''}">`;
+      html += `<div class="calendar-day-header" style="${isToday?'color:var(--gold-light);':''}">${dayName} <span style="font-size:.85rem;">${dayNum}</span></div>`;
       html += '<div class="calendar-slots">';
 
+      let blockedCount = 0;
       for (let h = 8; h < 20; h++) {
-        const slot = `${h.toString().padStart(2,'0')}:00`;
-        const isBlocked = bloques.some(b => b.date === dateStr && b.heure_debut <= slot);
-        html += `<div class="calendar-slot ${isBlocked?'blocked':'free'}" onclick="toggleSlot('${dateStr}','${slot}')">${slot}</div>`;
+        const slot = `${String(h).padStart(2,'0')}:00`;
+        const isBlocked = bloques.some(b => b.date === dateStr && b.heure_debut === slot + ':00');
+        if (isBlocked) blockedCount++;
+        html += `<div class="calendar-slot ${isBlocked?'blocked':'free'}" onclick="toggleSlot('${dateStr}','${slot}')" title="${isBlocked?'Cliquer pour débloquer':'Cliquer pour bloquer'}">${slot}${isBlocked?' 🔒':''}</div>`;
       }
+
       html += '</div>';
-      html += `<div class="calendar-info">${isBlocked?'Bloquée':'Disponible'}</div>`;
+      html += `<div class="calendar-info">${blockedCount > 0 ? blockedCount + ' créneau(x) bloqué(s)' : 'Tous disponibles'}</div>`;
       html += '</div>';
     }
+
     html += '</div>';
     document.getElementById('calendar-view').innerHTML = html;
   });
 }
 
 async function toggleSlot(date, time) {
+  const timeWithSec = time + ':00';
   try {
-    const existing = await sb.from('disponibilites').select('id').eq('date', date).eq('heure_debut', time).single();
-    if (existing.data) {
-      await sb.from('disponibilites').delete().eq('id', existing.data.id);
+    const {data: existing} = await sb.from('disponibilites').select('id').eq('date', date).eq('heure_debut', timeWithSec);
+    if (existing && existing.length > 0) {
+      await sb.from('disponibilites').delete().eq('id', existing[0].id);
     } else {
-      await sb.from('disponibilites').insert({date, heure_debut: time, heure_fin: time, type: 'bloquee'});
+      const hEnd = String(parseInt(time.split(':')[0]) + 1).padStart(2,'0') + ':00:00';
+      await sb.from('disponibilites').insert({date, heure_debut: timeWithSec, heure_fin: hEnd, type: 'bloquee'});
     }
     renderCalendarWeek();
   } catch (err) {
@@ -1547,12 +1597,19 @@ async function toggleSlot(date, time) {
 }
 
 function prevWeek() {
+  currentWeekStart = new Date(currentWeekStart);
   currentWeekStart.setDate(currentWeekStart.getDate() - 7);
   renderCalendarWeek();
 }
 
 function nextWeek() {
+  currentWeekStart = new Date(currentWeekStart);
   currentWeekStart.setDate(currentWeekStart.getDate() + 7);
+  renderCalendarWeek();
+}
+
+function goToToday() {
+  currentWeekStart = getMonday(new Date());
   renderCalendarWeek();
 }
 

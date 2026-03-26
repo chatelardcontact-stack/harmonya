@@ -356,7 +356,7 @@
             <!-- MASSAGES -->
             <div class="tab-panel active" id="panel-massages">
                 <div class="cards-grid">
-                    <div class="soin-card reveal-up" style="--d:0ms" data-magnetic>
+                    <div class="soin-card reveal-up" style="--d:0ms;cursor:pointer" data-magnetic onclick="openBookingModal('decouverte')">
                         <div class="soin-card-inner">
                             <div class="soin-top">
                                 <div class="soin-num">01</div>
@@ -377,7 +377,7 @@
                         </div>
                     </div>
 
-                    <div class="soin-card reveal-up" style="--d:80ms" data-magnetic>
+                    <div class="soin-card reveal-up" style="--d:80ms;cursor:pointer" data-magnetic onclick="openBookingModal('immersion')">
                         <div class="soin-card-inner">
                             <div class="soin-top">
                                 <div class="soin-num">02</div>
@@ -398,7 +398,7 @@
                         </div>
                     </div>
 
-                    <div class="soin-card soin-featured reveal-up" style="--d:160ms" data-magnetic>
+                    <div class="soin-card soin-featured reveal-up" style="--d:160ms;cursor:pointer" data-magnetic onclick="openBookingModal('evasion')">
                         <div class="soin-label">Meilleure vente</div>
                         <div class="soin-card-inner">
                             <div class="soin-top">
@@ -420,7 +420,7 @@
                         </div>
                     </div>
 
-                    <div class="soin-card reveal-up" style="--d:240ms" data-magnetic>
+                    <div class="soin-card reveal-up" style="--d:240ms;cursor:pointer" data-magnetic onclick="openBookingModal('cocooning')">
                         <div class="soin-card-inner">
                             <div class="soin-top">
                                 <div class="soin-num">04</div>
@@ -441,7 +441,7 @@
                         </div>
                     </div>
 
-                    <div class="soin-card soin-featured reveal-up" style="--d:320ms" data-magnetic>
+                    <div class="soin-card soin-featured reveal-up" style="--d:320ms;cursor:pointer" data-magnetic onclick="openBookingModal('duo')">
                         <div class="soin-label">En duo · Partenariat</div>
                         <div class="soin-card-inner">
                             <div class="soin-top">
@@ -472,7 +472,7 @@
                     Tous les drainages sont également disponibles à domicile (+5€ / +10€)
                 </div>
                 <div class="cards-grid">
-                    <div class="soin-card reveal-up" style="--d:0ms" data-magnetic>
+                    <div class="soin-card reveal-up" style="--d:0ms;cursor:pointer" data-magnetic onclick="openAndSelectDrainage('bas')">
                         <div class="soin-card-inner">
                             <div class="soin-top">
                                 <div class="soin-num">01</div>
@@ -488,7 +488,7 @@
                         </div>
                     </div>
 
-                    <div class="soin-card reveal-up" style="--d:80ms" data-magnetic>
+                    <div class="soin-card reveal-up" style="--d:80ms;cursor:pointer" data-magnetic onclick="openAndSelectDrainage('haut')">
                         <div class="soin-card-inner">
                             <div class="soin-top">
                                 <div class="soin-num">02</div>
@@ -504,7 +504,7 @@
                         </div>
                     </div>
 
-                    <div class="soin-card reveal-up" style="--d:160ms" data-magnetic>
+                    <div class="soin-card reveal-up" style="--d:160ms;cursor:pointer" data-magnetic onclick="openAndSelectDrainage('bas-abdomen')">
                         <div class="soin-card-inner">
                             <div class="soin-top">
                                 <div class="soin-num">03</div>
@@ -520,7 +520,7 @@
                         </div>
                     </div>
 
-                    <div class="soin-card soin-featured reveal-up" style="--d:240ms" data-magnetic>
+                    <div class="soin-card soin-featured reveal-up" style="--d:240ms;cursor:pointer" data-magnetic onclick="openAndSelectDrainage('complet')">
                         <div class="soin-label">Corps complet</div>
                         <div class="soin-card-inner">
                             <div class="soin-top">
@@ -546,7 +546,7 @@
                     En collaboration avec des infirmières libérales certifiées · Disponible à domicile (+5€ / +10€ hors secteur)
                 </div>
                 <div class="cards-grid">
-                    <div class="soin-card reveal-up" style="--d:0ms" data-magnetic>
+                    <div class="soin-card reveal-up" style="--d:0ms;cursor:pointer" data-magnetic onclick="openAndSelectPostOp('standard')">
                         <div class="soin-card-inner">
                             <div class="soin-top">
                                 <div class="soin-num">01</div>
@@ -565,7 +565,7 @@
                         </div>
                     </div>
 
-                    <div class="soin-card reveal-up" style="--d:80ms" data-magnetic>
+                    <div class="soin-card reveal-up" style="--d:80ms;cursor:pointer" data-magnetic onclick="openAndSelectPostOp('complexe')">
                         <div class="soin-card-inner">
                             <div class="soin-top">
                                 <div class="soin-num">02</div>
@@ -584,7 +584,7 @@
                         </div>
                     </div>
 
-                    <div class="soin-card soin-featured reveal-up" style="--d:160ms" data-magnetic>
+                    <div class="soin-card soin-featured reveal-up" style="--d:160ms;cursor:pointer" data-magnetic onclick="openAndSelectPostOp('cure5')">
                         <div class="soin-label">Bilan 20€ non inclus</div>
                         <div class="soin-card-inner">
                             <div class="soin-top">
@@ -614,7 +614,7 @@
                         </div>
                     </div>
 
-                    <div class="soin-card soin-featured reveal-up" style="--d:240ms" data-magnetic>
+                    <div class="soin-card soin-featured reveal-up" style="--d:240ms;cursor:pointer" data-magnetic onclick="openAndSelectPostOp('cure10')">
                         <div class="soin-label">Bilan offert</div>
                         <div class="soin-card-inner">
                             <div class="soin-top">
@@ -653,7 +653,7 @@
                     Protocole doux dédié à la récupération maternité · Disponible à domicile (+5€ / +10€ hors secteur)
                 </div>
                 <div class="cards-grid">
-                    <div class="soin-card reveal-up" style="--d:0ms" data-magnetic>
+                    <div class="soin-card reveal-up" style="--d:0ms;cursor:pointer" data-magnetic onclick="openBookingModal('post-natal')">
                         <div class="soin-card-inner">
                             <div class="soin-top">
                                 <div class="soin-num">01</div>
@@ -672,7 +672,7 @@
                         </div>
                     </div>
 
-                    <div class="soin-card soin-featured reveal-up" style="--d:80ms" data-magnetic>
+                    <div class="soin-card soin-featured reveal-up" style="--d:80ms;cursor:pointer" data-magnetic onclick="openBookingModal('post-natal')">
                         <div class="soin-label">Bilan inclus</div>
                         <div class="soin-card-inner">
                             <div class="soin-top">
@@ -692,7 +692,7 @@
                         </div>
                     </div>
 
-                    <div class="soin-card soin-featured reveal-up" style="--d:160ms" data-magnetic>
+                    <div class="soin-card soin-featured reveal-up" style="--d:160ms;cursor:pointer" data-magnetic onclick="openBookingModal('post-natal')">
                         <div class="soin-label">Bilan inclus</div>
                         <div class="soin-card-inner">
                             <div class="soin-top">
@@ -721,7 +721,7 @@
                     Drainage lymphatique combiné au modelissage sculpt pour un résultat drainant et remodelant
                 </div>
                 <div class="cards-grid">
-                    <div class="soin-card reveal-up" style="--d:0ms" data-magnetic>
+                    <div class="soin-card reveal-up" style="--d:0ms;cursor:pointer" data-magnetic onclick="openBookingModal('drain-sculpt')">
                         <div class="soin-card-inner">
                             <div class="soin-top">
                                 <div class="soin-num">01</div>
@@ -740,7 +740,7 @@
                         </div>
                     </div>
 
-                    <div class="soin-card reveal-up" style="--d:80ms" data-magnetic>
+                    <div class="soin-card reveal-up" style="--d:80ms;cursor:pointer" data-magnetic onclick="openBookingModal('drain-sculpt')">
                         <div class="soin-card-inner">
                             <div class="soin-top">
                                 <div class="soin-num">02</div>
@@ -759,7 +759,7 @@
                         </div>
                     </div>
 
-                    <div class="soin-card soin-featured reveal-up" style="--d:160ms" data-magnetic>
+                    <div class="soin-card soin-featured reveal-up" style="--d:160ms;cursor:pointer" data-magnetic onclick="openBookingModal('drain-sculpt')">
                         <div class="soin-label">Meilleure formule</div>
                         <div class="soin-card-inner">
                             <div class="soin-top">
@@ -1033,14 +1033,14 @@
     const BK_SERVICES = {
       'decouverte': {
         name: 'Découverte',
-        duration: '30 min', price: '45€',
+        duration: '30 min', price: '45€', minPrice: 45,
         desc: 'Initiation au massage sensoriel. Une invitation à la sérénité.',
         zones: 'Cervicales · Dos · Épaules · Jambes',
         url: 'https://calendly.com/massage-harmonya/massage-decouverte'
       },
       'immersion': {
         name: 'Immersion',
-        duration: '60 · 90 min', price: '60€ · 85€ (90 min)',
+        duration: '60 · 90 min', price: '60€ · 85€ (90 min)', minPrice: 60,
         desc: 'Laissez-vous porter par la magie du massage sensoriel. Chaque thème vous plongera dans une ambiance propice à un doux voyage, loin du stress.',
         themes: [
           { name: 'Les Îles', sub: 'Lomi-lomi polynésien', zones: 'Cervicales · Dos · Épaules · Visage · Jambes · Pieds' },
@@ -1052,21 +1052,21 @@
       },
       'evasion': {
         name: 'Évasion',
-        duration: '100 min', price: '95€',
+        duration: '100 min', price: '95€', minPrice: 95,
         desc: 'Le tour du monde en un soin — les 4 thèmes réunis. Enrichi de réflexologie pour un lâché prise total.',
         zones: 'Cervicales · Dos · Épaules · Abdomen · Jambes',
         url: 'https://calendly.com/massage-harmonya/massage-evasion'
       },
       'cocooning': {
         name: 'Cocooning',
-        duration: '60 ou 90 min', price: '95€ — 115€',
+        duration: '60 ou 90 min', price: '95€ — 115€', minPrice: 95,
         desc: 'Massage aux pierres chaudes alliant chaleur et douceur pour un moment de pure relaxation.',
         zones: 'Dos · Épaules · Visage · Jambes · Pieds',
         url: 'https://calendly.com/massage-harmonya/massage-cocooning'
       },
       'duo': {
         name: 'Massage Duo',
-        duration: '90 min', price: '190€',
+        duration: '90 min', price: '190€', minPrice: 190,
         desc: 'Un moment de bien-être à deux, en partenariat avec @evasionlomilomi. Massage sensoriel pour les couples.',
         duo: true,
         url: 'https://calendly.com/massage-harmonya/massage-duo'
@@ -1087,13 +1087,13 @@
       },
       'post-natal': {
         name: 'Drainage Post-Natal',
-        duration: '60 min', price: '75€',
+        duration: '60 min', price: '75€', minPrice: 75,
         desc: 'Protocole doux dédié à la récupération maternité. Réduit les œdèmes, soutient la cicatrisation et le retour à soi.',
         url: 'https://calendly.com/massage-harmonya/drainage-post-natal'
       },
       'drain-sculpt': {
         name: 'Drain & Sculpt',
-        duration: '70 min', price: 'Dès 85€',
+        duration: '70 min', price: 'Dès 85€', minPrice: 85,
         desc: 'Protocole exclusif alliant drainage lymphatique et modelage sculptant. Corps affiné, peau lissée, silhouette redessinée.',
         url: 'https://calendly.com/massage-harmonya/drain-sculpt'
       }
@@ -1282,7 +1282,7 @@
       if (loc === 'cabinet') {
         window.selectedLocation = 'cabinet';
         window.locationFees = 0;
-        proceedToCalendly();
+        renderEmailStep();
       } else {
         showAddressInput();
       }
@@ -1366,28 +1366,111 @@
       window.locationFees = fee;
       window.selectedLocation = 'domicile';
       window.selectedAddress = document.getElementById('address-input').value;
-      proceedToCalendly();
+      renderEmailStep();
     }
 
-    function proceedToCalendly() {
-      var s = BK_SERVICES['post-op'] || BK_SERVICES['drainage-classique'];
+    var BK_SUPA_URL = 'https://qewdympkbxbevgmbfxfd.supabase.co';
+    var BK_SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFld2R5bXBrYnhiZXZnbWJmeGZkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyOTM0NDMsImV4cCI6MjA4OTg2OTQ0M30.LMHNi_cP5klEHTPn-HrY2LDjwJLEq_LbVZSnLJrATY4';
+
+    function inputStyle() {
+      return 'width:100%;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:12px 16px;color:#fff;font-size:.9rem;outline:none;box-sizing:border-box;font-family:inherit;';
+    }
+
+    function renderEmailStep() {
+      var serviceLabel = window.selectedServiceTitle || window.selectedServiceId || 'Soin';
+      var locLabel = window.selectedLocation === 'domicile'
+        ? 'À domicile — ' + (window.selectedAddress || '') + ' (+' + (window.locationFees||0).toFixed(2) + '€ frais km)'
+        : 'Au cabinet · 1A rue de la Poste, 67400 Illkirch';
       var html = closeBtn();
-      html += '<p class="bk-eyebrow">Réservation</p>';
-      html += '<h2 class="bk-title">Résumé</h2>';
-      if (window.selectedLocation === 'domicile') {
-        html += '<div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:14px;margin-bottom:16px;font-size:.85rem;">';
-        html += '<div style="margin-bottom:8px;"><strong>Lieu :</strong> À domicile</div>';
-        html += '<div style="margin-bottom:8px;"><strong>Adresse :</strong> ' + window.selectedAddress + '</div>';
-        html += '<div><strong>Frais km :</strong> ' + window.locationFees.toFixed(2) + '€</div>';
-        html += '</div>';
-      } else {
-        html += '<div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:14px;margin-bottom:16px;font-size:.85rem;">';
-        html += '<div><strong>Lieu :</strong> Au cabinet (1A rue de la poste, 67400 Illkirch)</div>';
-        html += '<div style="margin-top:8px;"><strong>Frais km :</strong> 0€</div>';
-        html += '</div>';
+      html += '<p class="bk-eyebrow">Réservation — dernière étape</p>';
+      html += '<h2 class="bk-title">Vos coordonnées</h2>';
+      html += '<div style="background:rgba(201,169,110,.07);border:1px solid rgba(201,169,110,.2);border-radius:8px;padding:12px 16px;margin-bottom:20px;font-size:.82rem;line-height:1.6;">';
+      html += '<div style="color:var(--gold-light);font-weight:600;margin-bottom:4px;">' + serviceLabel + '</div>';
+      html += '<div style="color:rgba(255,255,255,.6);">' + locLabel + '</div>';
+      html += '</div>';
+      html += '<div style="display:flex;flex-direction:column;gap:10px;margin-bottom:18px;">';
+      html += '<input type="text" id="bk-prenom" placeholder="Prénom *" style="' + inputStyle() + '">';
+      html += '<input type="email" id="bk-email" placeholder="Email *" style="' + inputStyle() + '">';
+      html += '<input type="tel" id="bk-phone" placeholder="Téléphone (optionnel)" style="' + inputStyle() + '">';
+      html += '</div>';
+      html += '<p style="font-size:.75rem;color:rgba(255,255,255,.4);margin-bottom:16px;">Vous recevrez un email avec un lien pour choisir votre créneau et accéder à votre espace client.</p>';
+      html += '<button class="bk-cta" id="bk-submit-btn" style="width:100%;cursor:pointer;border:none;">Confirmer ma réservation <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></button>';
+      document.getElementById('bk-card').innerHTML = html;
+      document.getElementById('bk-submit-btn').addEventListener('click', submitBooking);
+      document.getElementById('bk-prenom').focus();
+    }
+
+    async function submitBooking() {
+      var prenom = (document.getElementById('bk-prenom').value || '').trim();
+      var email  = (document.getElementById('bk-email').value  || '').trim();
+      var phone  = (document.getElementById('bk-phone').value  || '').trim();
+      if (!prenom || !email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        document.getElementById('bk-prenom').style.borderColor = prenom ? 'rgba(255,255,255,.12)' : '#e57373';
+        document.getElementById('bk-email').style.borderColor  = (email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) ? 'rgba(255,255,255,.12)' : '#e57373';
+        return;
       }
-      html += '<a href="' + s.url + '" target="_blank" rel="noopener" class="bk-cta" onclick="closeBookingModal()">Choisir mon créneau <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></a>';
-      html += '<p class="bk-note">Vous serez redirigée vers Calendly pour choisir votre créneau.</p>';
+      var btn = document.getElementById('bk-submit-btn');
+      btn.textContent = 'Enregistrement…';
+      btn.disabled = true;
+      try {
+        var sbk = window.supabase.createClient(BK_SUPA_URL, BK_SUPA_KEY);
+        var serviceId = window.selectedServiceId || '';
+        var serviceUrl = (BK_SERVICES[serviceId] && BK_SERVICES[serviceId].url) || 'https://calendly.com/massage-harmonya';
+        var calendlyLink = serviceUrl + '?name=' + encodeURIComponent(prenom) + '&email=' + encodeURIComponent(email);
+        // Insert pending RDV
+        await sbk.from('rendez_vous').insert({
+          client_email: email,
+          client_prenom: prenom,
+          client_phone: phone || null,
+          prestation: window.selectedServiceTitle || serviceId,
+          lieu: window.selectedLocation || 'cabinet',
+          adresse_domicile: window.selectedAddress || null,
+          frais_km: window.locationFees || 0,
+          prix: window.selectedServicePrice || 0,
+          statut: 'en_attente'
+        });
+        // Send magic link (creates account or logs in)
+        sbk.auth.signInWithOtp({ email: email, options: { emailRedirectTo: window.location.origin + '/espace-client.html', data: { full_name: prenom } } });
+        // Send branded confirmation email
+        await sbk.functions.invoke('send-email', {
+          body: {
+            to: email,
+            subject: '✨ Votre réservation Harmonya est enregistrée',
+            html: '<div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;background:#1a1614;color:#e8ddd0;padding:40px 32px;border-radius:12px;">' +
+              '<div style="text-align:center;margin-bottom:28px;"><span style="font-size:1.6rem;letter-spacing:.12em;color:#c9a96e;">HARMONYA</span></div>' +
+              '<h2 style="font-size:1.4rem;margin-bottom:8px;">Bonjour ' + prenom + ' 🌿</h2>' +
+              '<p style="color:rgba(232,221,208,.7);line-height:1.7;">Votre demande de réservation a bien été reçue. Il ne vous reste qu\'une étape : choisir votre créneau.</p>' +
+              '<div style="background:rgba(201,169,110,.1);border:1px solid rgba(201,169,110,.25);border-radius:8px;padding:16px;margin:20px 0;font-size:.9rem;">' +
+              '<div style="color:#c9a96e;font-weight:600;margin-bottom:6px;">' + (window.selectedServiceTitle||serviceId) + '</div>' +
+              '<div style="color:rgba(232,221,208,.6);">' + (window.selectedLocation==='domicile' ? 'À domicile (+'+((window.locationFees||0).toFixed(2))+'€)' : 'Au cabinet · 1A rue de la Poste, Illkirch') + '</div>' +
+              '</div>' +
+              '<a href="' + calendlyLink + '" style="display:block;background:#c9a96e;color:#1a1614;text-align:center;padding:14px 24px;border-radius:8px;text-decoration:none;font-weight:600;font-size:1rem;margin:20px 0;">Choisir mon créneau →</a>' +
+              '<p style="color:rgba(232,221,208,.5);font-size:.85rem;text-align:center;">Un email séparé vous a été envoyé pour créer votre espace client Harmonya.</p>' +
+              '<p style="color:rgba(232,221,208,.3);font-size:.75rem;text-align:center;margin-top:24px;border-top:1px solid rgba(255,255,255,.06);padding-top:20px;">© 2026 Harmonya · Institut de massage premium · Illkirch-Graffenstaden</p>' +
+              '</div>'
+          }
+        });
+        showBookingSuccess(prenom, calendlyLink);
+      } catch(e) {
+        console.error('Booking error:', e);
+        btn.textContent = 'Confirmer ma réservation';
+        btn.disabled = false;
+        btn.style.borderColor = '#e57373';
+      }
+    }
+
+    function showBookingSuccess(prenom, calendlyLink) {
+      var html = closeBtn();
+      html += '<div style="text-align:center;padding:12px 0;">';
+      html += '<div style="width:56px;height:56px;background:rgba(201,169,110,.15);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 18px;font-size:1.6rem;">✓</div>';
+      html += '<h2 class="bk-title" style="margin-bottom:10px;">Parfait, ' + prenom + ' !</h2>';
+      html += '<p class="bk-desc">Votre réservation est enregistrée 🌿<br>Vérifiez votre boîte email — vous avez reçu :</p>';
+      html += '<ul style="text-align:left;margin:16px 0;padding-left:20px;color:rgba(255,255,255,.7);font-size:.88rem;line-height:2;">';
+      html += '<li>Un lien pour <strong>choisir votre créneau</strong></li>';
+      html += '<li>Un lien pour <strong>créer votre espace client</strong></li>';
+      html += '</ul>';
+      html += '<a href="' + calendlyLink + '" target="_blank" class="bk-cta" style="display:block;text-align:center;margin-top:8px;" onclick="closeBookingModal()">Choisir mon créneau maintenant <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></a>';
+      html += '</div>';
       document.getElementById('bk-card').innerHTML = html;
     }
 
@@ -1419,10 +1502,46 @@
         } else if (s.zones) {
           html += '<div class="bk-zones">' + s.zones + '</div>';
         }
-        html += '<a href="' + s.url + '" target="_blank" rel="noopener" class="bk-cta" onclick="closeBookingModal()">Choisir mon créneau <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></a>';
-        html += '<p class="bk-note">Vous serez redirigée vers Calendly pour choisir votre créneau.</p>';
+        var minP = s.minPrice || 0;
+        var ctaFn = minP >= 50
+          ? 'openServiceLocStep(\'' + id + '\',\'' + s.name + ' — ' + s.price + '\',' + minP + ')'
+          : 'window.selectedServiceId=\'' + id + '\';window.selectedServiceTitle=\'' + s.name + '\';window.selectedServicePrice=' + minP + ';window.selectedLocation=\'cabinet\';window.locationFees=0;renderEmailStep()';
+        html += '<a href="javascript:void(0)" class="bk-cta" onclick="' + ctaFn + '">Réserver ce soin <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></a>';
       }
       document.getElementById('bk-card').innerHTML = html;
+    }
+
+    function openServiceLocStep(id, title, minPrice) {
+      window.selectedServiceId = id;
+      window.selectedServiceTitle = title;
+      window.selectedServicePrice = minPrice;
+      showLocationPicker(id, title);
+    }
+
+    function openAndSelectDrainage(opt) {
+      var overlay = document.getElementById('bk-overlay');
+      overlay.style.display = 'flex';
+      document.body.style.overflow = 'hidden';
+      var titles = {'bas':'Bas du corps (45 min · 50€)','haut':'Haut du corps (60 min · 60€)','bas-abdomen':'Bas + abdomen (80 min · 80€)','complet':'Corps complet (120 min · 140€)'};
+      var prices = {'bas':50,'haut':60,'bas-abdomen':80,'complet':140};
+      window.selectedDrainageOption = opt;
+      window.selectedServicePrice = prices[opt];
+      window.selectedServiceId = 'drainage-classique';
+      window.selectedServiceTitle = titles[opt];
+      showLocationPicker('drainage-classique', titles[opt]);
+    }
+
+    function openAndSelectPostOp(opt) {
+      var overlay = document.getElementById('bk-overlay');
+      overlay.style.display = 'flex';
+      document.body.style.overflow = 'hidden';
+      var titles = {'standard':'Séance Standard Post-Op (60 min · 80€)','complexe':'Séance Complexe Post-Op (70 min · 95€)','cure5':'Cure 5 séances Post-Op','cure10':'Cure 10 séances Post-Op'};
+      var prices = {'standard':80,'complexe':95,'cure5':340,'cure10':660};
+      window.selectedPostOpOption = opt;
+      window.selectedServicePrice = prices[opt];
+      window.selectedServiceId = 'post-op';
+      window.selectedServiceTitle = titles[opt];
+      showLocationPicker('post-op', titles[opt]);
     }
     document.getElementById('bk-overlay').addEventListener('click', function(e) {
       if (e.target === this) closeBookingModal();
