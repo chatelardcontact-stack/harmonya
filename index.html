@@ -791,26 +791,26 @@
                     <span class="eyebrow">Bon cadeau</span>
                     <h2>Offrez un moment<br><em>d'exception</em></h2>
                     <p>Faites plaisir à un proche avec un bon cadeau Harmonya. Valable 1 an à compter de la date d'achat.</p>
-                    <a href="tel:0626142589" class="btn-gold">Commander par téléphone</a>
+                    <button class="btn-gold" onclick="openGiftModal(null)">Commander une carte cadeau</button>
                 </div>
                 <div class="gift-values reveal-right">
-                    <div class="gift-item" data-value="45">
+                    <div class="gift-item" data-value="45" onclick="openGiftModal(this.dataset.value)" style="cursor:pointer">
                         <span class="gift-eur">45€</span>
                         <span class="gift-label">Découverte 30'</span>
                     </div>
-                    <div class="gift-item" data-value="60">
+                    <div class="gift-item" data-value="60" onclick="openGiftModal(this.dataset.value)" style="cursor:pointer">
                         <span class="gift-eur">60€</span>
                         <span class="gift-label">Immersion 60'</span>
                     </div>
-                    <div class="gift-item" data-value="85">
+                    <div class="gift-item" data-value="85" onclick="openGiftModal(this.dataset.value)" style="cursor:pointer">
                         <span class="gift-eur">85€</span>
                         <span class="gift-label">Immersion 90'</span>
                     </div>
-                    <div class="gift-item featured" data-value="95">
+                    <div class="gift-item featured" data-value="95" onclick="openGiftModal(this.dataset.value)" style="cursor:pointer">
                         <span class="gift-eur">95€</span>
                         <span class="gift-label">Évasion · Cocooning 60'</span>
                     </div>
-                    <div class="gift-item" data-value="115">
+                    <div class="gift-item" data-value="115" onclick="openGiftModal(this.dataset.value)" style="cursor:pointer">
                         <span class="gift-eur">115€</span>
                         <span class="gift-label">Cocooning 90'</span>
                     </div>
@@ -1282,7 +1282,7 @@
       if (loc === 'cabinet') {
         window.selectedLocation = 'cabinet';
         window.locationFees = 0;
-        renderEmailStep();
+        renderDateTimePicker();
       } else {
         showAddressInput();
       }
@@ -1366,14 +1366,124 @@
       window.locationFees = fee;
       window.selectedLocation = 'domicile';
       window.selectedAddress = document.getElementById('address-input').value;
-      renderEmailStep();
+      renderDateTimePicker();
     }
 
     var BK_SUPA_URL = 'https://qewdympkbxbevgmbfxfd.supabase.co';
     var BK_SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFld2R5bXBrYnhiZXZnbWJmeGZkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyOTM0NDMsImV4cCI6MjA4OTg2OTQ0M30.LMHNi_cP5klEHTPn-HrY2LDjwJLEq_LbVZSnLJrATY4';
 
+    function renderDateTimePicker() {
+      var html = closeBtn();
+      html += '<button class="bk-back" onclick="showLocationPicker(window.selectedServiceId, window.selectedServiceTitle)">← Retour</button>';
+      html += '<p class="bk-eyebrow">Réservation</p>';
+      html += '<h2 class="bk-title">Choisissez votre créneau</h2>';
+      html += '<div id="date-picker-container" style="margin-bottom:20px;"></div>';
+      html += '<div id="time-picker-container" style="margin-bottom:20px;display:none;"></div>';
+      document.getElementById('bk-card').innerHTML = html;
+
+      renderDatePickerGrid();
+    }
+
+    function renderDatePickerGrid() {
+      var today = new Date();
+      var tomorrow = new Date(today);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+
+      var html = '<div style="margin-bottom:16px;"><p style="font-size:12px;color:rgba(255,255,255,.4);margin:0 0 12px;text-transform:uppercase;letter-spacing:.1em;">Sélectionnez une date</p>';
+      html += '<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:6px;">';
+
+      for (var i = 0; i < 30; i++) {
+        var d = new Date(tomorrow);
+        d.setDate(d.getDate() + i);
+
+        // Skip Sundays (day 0)
+        if (d.getDay() === 0) continue;
+
+        var dateStr = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+        var dayName = ['Dim','Lun','Mar','Mer','Jeu','Ven','Sam'][d.getDay()];
+        var dayNum = d.getDate();
+
+        html += '<button onclick="renderTimePickerForDate(\'' + dateStr + '\')" ';
+        html += 'style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:10px 4px;color:#fff;cursor:pointer;transition:border-color .2s,background .2s;font-size:.75rem;text-align:center;">';
+        html += '<div style="font-weight:600;">' + dayNum + '</div>';
+        html += '<div style="font-size:.65rem;color:rgba(255,255,255,.5);">' + dayName + '</div>';
+        html += '</button>';
+      }
+
+      html += '</div></div>';
+      document.getElementById('date-picker-container').innerHTML = html;
+    }
+
+    function renderTimePickerForDate(dateStr) {
+      var html = '<p style="font-size:12px;color:rgba(255,255,255,.4);margin:0 0 12px;text-transform:uppercase;letter-spacing:.1em;">Créneaux disponibles</p>';
+      html += '<div id="time-slots-container" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;"></div>';
+
+      document.getElementById('time-picker-container').style.display = 'block';
+      document.getElementById('time-picker-container').innerHTML = html;
+
+      // Fetch existing RDV for this date
+      var sbk = window.supabase.createClient(BK_SUPA_URL, BK_SUPA_KEY);
+      sbk.from('rendez_vous')
+        .select('heure')
+        .eq('date', dateStr)
+        .in('statut', ['en_attente','confirmé'])
+        .then(function(res) {
+          var bookedTimes = {};
+          if (res.data) {
+            res.data.forEach(function(rdv) {
+              if (rdv.heure) {
+                var timeStr = rdv.heure.substring(0, 5);
+                bookedTimes[timeStr] = true;
+                // Block next 90 minutes (next slot)
+                var h = parseInt(timeStr.split(':')[0]);
+                var nextHour = h + 2; // ~90 min = roughly 2 slots
+                if (nextHour < 24) {
+                  bookedTimes[String(nextHour).padStart(2,'0') + ':00'] = true;
+                }
+              }
+            });
+          }
+          renderTimeSlots(dateStr, bookedTimes);
+        })
+        .catch(function(err) { console.error('Fetch error:', err); renderTimeSlots(dateStr, {}); });
+    }
+
+    function renderTimeSlots(dateStr, bookedTimes) {
+      var times = ['09:00','10:00','11:00','12:00','14:00','15:00','16:00','17:00','18:00'];
+      var container = document.getElementById('time-slots-container');
+      container.innerHTML = '';
+
+      times.forEach(function(time) {
+        var isBooked = bookedTimes[time];
+        var btn = document.createElement('button');
+        btn.textContent = time;
+        btn.style.cssText = 'background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:12px 8px;color:#fff;cursor:' + (isBooked ? 'default' : 'pointer') + ';transition:border-color .2s,background .2s;font-size:.9rem;';
+        if (isBooked) {
+          btn.style.opacity = '0.3';
+          btn.disabled = true;
+        } else {
+          btn.onmouseover = function() { this.style.background = 'rgba(201,169,110,.15)'; this.style.borderColor = 'rgba(201,169,110,.4)'; };
+          btn.onmouseout = function() { this.style.background = 'rgba(255,255,255,.03)'; this.style.borderColor = 'rgba(255,255,255,.1)'; };
+          btn.onclick = function() {
+            window.selectedDate = dateStr;
+            window.selectedTime = time;
+            renderEmailStep();
+          };
+        }
+        container.appendChild(btn);
+      });
+    }
+
     function inputStyle() {
       return 'width:100%;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:12px 16px;color:#fff;font-size:.9rem;outline:none;box-sizing:border-box;font-family:inherit;';
+    }
+
+    function frenchDate(dateStr) {
+      if (!dateStr) return '';
+      var d = new Date(dateStr + 'T12:00:00');
+      var days = ['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'];
+      var months = ['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
+      return days[d.getDay()] + ' ' + d.getDate() + ' ' + months[d.getMonth()] + ' ' + d.getFullYear();
     }
 
     function renderEmailStep() {
@@ -1381,12 +1491,17 @@
       var locLabel = window.selectedLocation === 'domicile'
         ? 'À domicile — ' + (window.selectedAddress || '') + ' (+' + (window.locationFees||0).toFixed(2) + '€ frais km)'
         : 'Au cabinet · 1A rue de la Poste, 67400 Illkirch';
+      var dateTimeLabel = '';
+      if (window.selectedDate && window.selectedTime) {
+        dateTimeLabel = '<div style="color:rgba(255,255,255,.6);">' + frenchDate(window.selectedDate) + ' à ' + window.selectedTime + '</div>';
+      }
       var html = closeBtn();
       html += '<p class="bk-eyebrow">Réservation — dernière étape</p>';
       html += '<h2 class="bk-title">Vos coordonnées</h2>';
       html += '<div style="background:rgba(201,169,110,.07);border:1px solid rgba(201,169,110,.2);border-radius:8px;padding:12px 16px;margin-bottom:20px;font-size:.82rem;line-height:1.6;">';
       html += '<div style="color:var(--gold-light);font-weight:600;margin-bottom:4px;">' + serviceLabel + '</div>';
       html += '<div style="color:rgba(255,255,255,.6);">' + locLabel + '</div>';
+      if (dateTimeLabel) html += dateTimeLabel;
       html += '</div>';
       html += '<div style="display:flex;flex-direction:column;gap:10px;margin-bottom:18px;">';
       html += '<input type="text" id="bk-prenom" placeholder="Prénom *" style="' + inputStyle() + '">';
@@ -1427,6 +1542,8 @@
           adresse_domicile: window.selectedAddress || null,
           frais_km: window.locationFees || 0,
           prix: window.selectedServicePrice || 0,
+          date: window.selectedDate || null,
+          heure: (window.selectedTime ? window.selectedTime + ':00' : null),
           statut: 'en_attente'
         });
         // Send magic link (creates account or logs in)
@@ -1447,6 +1564,31 @@
               '<a href="' + calendlyLink + '" style="display:block;background:#c9a96e;color:#1a1614;text-align:center;padding:14px 24px;border-radius:8px;text-decoration:none;font-weight:600;font-size:1rem;margin:20px 0;">Choisir mon créneau →</a>' +
               '<p style="color:rgba(232,221,208,.5);font-size:.85rem;text-align:center;">Un email séparé vous a été envoyé pour créer votre espace client Harmonya.</p>' +
               '<p style="color:rgba(232,221,208,.3);font-size:.75rem;text-align:center;margin-top:24px;border-top:1px solid rgba(255,255,255,.06);padding-top:20px;">© 2026 Harmonya · Institut de massage premium · Illkirch-Graffenstaden</p>' +
+              '</div>'
+          }
+        });
+        // Send admin notification email
+        var adminDateTimeInfo = '';
+        if (window.selectedDate && window.selectedTime) {
+          adminDateTimeInfo = '<div style="color:rgba(232,221,208,.6);">Créneau : ' + frenchDate(window.selectedDate) + ' à ' + window.selectedTime + '</div>';
+        }
+        await sbk.functions.invoke('send-email', {
+          body: {
+            to: 'contact@harmonyamassage.fr',
+            subject: '🔔 Nouvelle réservation — ' + (window.selectedServiceTitle || serviceId),
+            html: '<div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;background:#1a1614;color:#e8ddd0;padding:40px 32px;border-radius:12px;">' +
+              '<div style="text-align:center;margin-bottom:28px;"><span style="font-size:1.6rem;letter-spacing:.12em;color:#c9a96e;">HARMONYA</span></div>' +
+              '<h2 style="font-size:1.4rem;margin-bottom:8px;">🔔 Nouvelle réservation</h2>' +
+              '<div style="background:rgba(201,169,110,.1);border:1px solid rgba(201,169,110,.25);border-radius:8px;padding:16px;margin:20px 0;font-size:.9rem;line-height:1.8;">' +
+              '<div style="color:#c9a96e;font-weight:600;margin-bottom:8px;">Détails du client</div>' +
+              '<div style="color:rgba(232,221,208,.8);"><strong>Nom :</strong> ' + prenom + '</div>' +
+              '<div style="color:rgba(232,221,208,.8);"><strong>Email :</strong> ' + email + '</div>' +
+              (phone ? '<div style="color:rgba(232,221,208,.8);"><strong>Téléphone :</strong> ' + phone + '</div>' : '') +
+              '<div style="color:rgba(232,221,208,.8);"><strong>Service :</strong> ' + (window.selectedServiceTitle||serviceId) + '</div>' +
+              '<div style="color:rgba(232,221,208,.8);"><strong>Lieu :</strong> ' + (window.selectedLocation==='domicile' ? 'À domicile — ' + (window.selectedAddress || '') : 'Au cabinet') + '</div>' +
+              (window.selectedLocation==='domicile' ? '<div style="color:rgba(232,221,208,.8);"><strong>Frais km :</strong> ' + (window.locationFees||0).toFixed(2) + '€</div>' : '') +
+              (adminDateTimeInfo || '') +
+              '</div>' +
               '</div>'
           }
         });
@@ -1621,6 +1763,238 @@
         updateNav(session ? session.user : null);
       });
     })();
+    </script>
+
+    <!-- Gift Card Modal -->
+    <div id="gift-overlay" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(10,8,6,.85);backdrop-filter:blur(8px);align-items:center;justify-content:center;">
+      <div id="gift-card" style="background:#1e1a17;border:1px solid rgba(201,169,110,.15);border-radius:16px;width:min(480px,90vw);max-height:90vh;overflow-y:auto;padding:32px 28px;position:relative;">
+      </div>
+    </div>
+
+    <script>
+    function openGiftModal(value) {
+      document.getElementById('gift-overlay').style.display = 'flex';
+      document.body.style.overflow = 'hidden';
+      renderGiftStep1(value);
+    }
+
+    function closeGiftModal() {
+      document.getElementById('gift-overlay').style.display = 'none';
+      document.body.style.overflow = '';
+    }
+
+    function renderGiftStep1(preselectedValue) {
+      var html = '<button onclick="closeGiftModal()" style="position:absolute;top:16px;right:16px;width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .2s;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>';
+      html += '<h2 style="font-family:\'Playfair Display\',serif;font-size:22px;color:#fff;margin:0 0 20px;">Offrir une carte cadeau Harmonya</h2>';
+      html += '<div style="margin-bottom:24px;">';
+      html += '<p style="font-size:12px;color:rgba(255,255,255,.4);margin:0 0 12px;text-transform:uppercase;letter-spacing:.1em;">Montant</p>';
+      var amounts = [45, 60, 85, 95, 115];
+      amounts.forEach(function(amt) {
+        var isSelected = (preselectedValue && parseInt(preselectedValue) === amt);
+        var btnStyle = isSelected
+          ? 'background:transparent;border:2px solid #c9a96e;color:#c9a96e;'
+          : 'background:rgba(255,255,255,.03);border:2px solid rgba(255,255,255,.1);color:#fff;';
+        html += '<button onclick="selectGiftAmount(' + amt + ')" style="width:100%;padding:12px 14px;margin-bottom:8px;border-radius:8px;font-size:.9rem;cursor:pointer;transition:.2s;' + btnStyle + '">' + amt + '€</button>';
+      });
+      html += '</div>';
+
+      html += '<div style="margin-bottom:24px;">';
+      html += '<p style="font-size:12px;color:rgba(255,255,255,.4);margin:0 0 12px;text-transform:uppercase;letter-spacing:.1em;">Livraison</p>';
+      html += '<button onclick="selectGiftDelivery(\'email\')" id="gift-delivery-email" style="width:100%;padding:14px;margin-bottom:10px;border:1px solid rgba(255,255,255,.1);border-radius:8px;background:rgba(255,255,255,.03);color:#fff;cursor:pointer;transition:.2s;text-align:left;">📧 Par email (numérique)</button>';
+      html += '<button onclick="selectGiftDelivery(\'cabinet\')" id="gift-delivery-cabinet" style="width:100%;padding:14px;margin-bottom:10px;border:1px solid rgba(255,255,255,.1);border-radius:8px;background:rgba(255,255,255,.03);color:#fff;cursor:pointer;transition:.2s;text-align:left;">🏠 À retirer au cabinet (1A rue de la Poste, Illkirch)</button>';
+      html += '</div>';
+
+      html += '<button onclick="renderGiftStep2()" id="gift-next-btn" style="width:100%;padding:12px;background:#c9a96e;color:#0a0a0a;border:none;border-radius:8px;font-weight:600;cursor:pointer;transition:.2s;" disabled>Continuer</button>';
+
+      document.getElementById('gift-card').innerHTML = html;
+      if (preselectedValue) {
+        window.giftAmount = parseInt(preselectedValue);
+      }
+    }
+
+    function selectGiftAmount(amt) {
+      window.giftAmount = amt;
+      var btns = document.querySelectorAll('#gift-card > button:nth-child(4), #gift-card > button:nth-child(5), #gift-card > button:nth-child(6), #gift-card > button:nth-child(7), #gift-card > button:nth-child(8)');
+      btns.forEach(function(b) {
+        var isThis = b.textContent.includes(amt + '€');
+        b.style.background = isThis ? 'transparent' : 'rgba(255,255,255,.03)';
+        b.style.borderColor = isThis ? '#c9a96e' : 'rgba(255,255,255,.1)';
+        b.style.color = isThis ? '#c9a96e' : '#fff';
+      });
+      checkGiftFormComplete();
+    }
+
+    function selectGiftDelivery(type) {
+      window.giftDelivery = type;
+      var emailBtn = document.getElementById('gift-delivery-email');
+      var cabinetBtn = document.getElementById('gift-delivery-cabinet');
+      if (type === 'email') {
+        emailBtn.style.borderColor = '#c9a96e';
+        emailBtn.style.background = 'rgba(201,169,110,.1)';
+        emailBtn.style.color = '#fff';
+        cabinetBtn.style.borderColor = 'rgba(255,255,255,.1)';
+        cabinetBtn.style.background = 'rgba(255,255,255,.03)';
+        cabinetBtn.style.color = '#fff';
+      } else {
+        cabinetBtn.style.borderColor = '#c9a96e';
+        cabinetBtn.style.background = 'rgba(201,169,110,.1)';
+        cabinetBtn.style.color = '#fff';
+        emailBtn.style.borderColor = 'rgba(255,255,255,.1)';
+        emailBtn.style.background = 'rgba(255,255,255,.03)';
+        emailBtn.style.color = '#fff';
+      }
+      checkGiftFormComplete();
+    }
+
+    function checkGiftFormComplete() {
+      var btn = document.getElementById('gift-next-btn');
+      if (window.giftAmount && window.giftDelivery) {
+        btn.disabled = false;
+        btn.style.opacity = '1';
+      } else {
+        btn.disabled = true;
+        btn.style.opacity = '0.5';
+      }
+    }
+
+    function renderGiftStep2() {
+      var html = '<button onclick="closeGiftModal()" style="position:absolute;top:16px;right:16px;width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .2s;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>';
+      html += '<h2 style="font-family:\'Playfair Display\',serif;font-size:22px;color:#fff;margin:0 0 20px;">Finaliser votre commande</h2>';
+
+      if (window.giftDelivery === 'email') {
+        html += '<div style="margin-bottom:14px;">';
+        html += '<label style="font-size:.9rem;color:rgba(255,255,255,.6);display:block;margin-bottom:6px;">Prénom du bénéficiaire *</label>';
+        html += '<input type="text" id="gift-recipient-name" placeholder="Prénom" style="' + inputStyle() + '">';
+        html += '</div>';
+        html += '<div style="margin-bottom:14px;">';
+        html += '<label style="font-size:.9rem;color:rgba(255,255,255,.6);display:block;margin-bottom:6px;">Email du bénéficiaire *</label>';
+        html += '<input type="email" id="gift-recipient-email" placeholder="Email" style="' + inputStyle() + '">';
+        html += '</div>';
+      }
+
+      html += '<div style="margin-bottom:14px;">';
+      html += '<label style="font-size:.9rem;color:rgba(255,255,255,.6);display:block;margin-bottom:6px;">Votre prénom *</label>';
+      html += '<input type="text" id="gift-buyer-name" placeholder="Prénom" style="' + inputStyle() + '">';
+      html += '</div>';
+      html += '<div style="margin-bottom:14px;">';
+      html += '<label style="font-size:.9rem;color:rgba(255,255,255,.6);display:block;margin-bottom:6px;">Votre email (confirmation) *</label>';
+      html += '<input type="email" id="gift-buyer-email" placeholder="Email" style="' + inputStyle() + '">';
+      html += '</div>';
+      html += '<div style="margin-bottom:14px;">';
+      html += '<label style="font-size:.9rem;color:rgba(255,255,255,.6);display:block;margin-bottom:6px;">Message personnalisé (optionnel)</label>';
+      html += '<textarea id="gift-message" placeholder="Votre message…" style="' + inputStyle() + 'min-height:90px;resize:vertical;"></textarea>';
+      html += '</div>';
+
+      html += '<button onclick="submitGiftOrder()" id="gift-submit-btn" style="width:100%;padding:12px;background:#c9a96e;color:#0a0a0a;border:none;border-radius:8px;font-weight:600;cursor:pointer;transition:.2s;">Valider ma commande</button>';
+
+      document.getElementById('gift-card').innerHTML = html;
+    }
+
+    async function submitGiftOrder() {
+      var recipientName = window.giftDelivery === 'email' ? (document.getElementById('gift-recipient-name').value || '').trim() : '';
+      var recipientEmail = window.giftDelivery === 'email' ? (document.getElementById('gift-recipient-email').value || '').trim() : '';
+      var buyerName = (document.getElementById('gift-buyer-name').value || '').trim();
+      var buyerEmail = (document.getElementById('gift-buyer-email').value || '').trim();
+      var message = (document.getElementById('gift-message').value || '').trim();
+
+      // Validation
+      var emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (window.giftDelivery === 'email') {
+        if (!recipientName || !recipientEmail || !emailRegex.test(recipientEmail)) {
+          alert('Veuillez remplir les informations du bénéficiaire');
+          return;
+        }
+      }
+      if (!buyerName || !buyerEmail || !emailRegex.test(buyerEmail)) {
+        alert('Veuillez remplir vos coordonnées');
+        return;
+      }
+
+      var btn = document.getElementById('gift-submit-btn');
+      btn.textContent = 'Enregistrement…';
+      btn.disabled = true;
+
+      try {
+        var sbk = window.supabase.createClient(BK_SUPA_URL, BK_SUPA_KEY);
+
+        // Email to buyer
+        await sbk.functions.invoke('send-email', {
+          body: {
+            to: buyerEmail,
+            subject: '✨ Votre commande de carte cadeau Harmonya est enregistrée',
+            html: '<div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;background:#1a1614;color:#e8ddd0;padding:40px 32px;border-radius:12px;">' +
+              '<div style="text-align:center;margin-bottom:28px;"><span style="font-size:1.6rem;letter-spacing:.12em;color:#c9a96e;">HARMONYA</span></div>' +
+              '<h2 style="font-size:1.4rem;margin-bottom:8px;">Bonjour ' + buyerName + ' 🎁</h2>' +
+              '<p style="color:rgba(232,221,208,.7);line-height:1.7;">Votre commande de carte cadeau a bien été enregistrée.</p>' +
+              '<div style="background:rgba(201,169,110,.1);border:1px solid rgba(201,169,110,.25);border-radius:8px;padding:16px;margin:20px 0;font-size:.9rem;">' +
+              '<div style="color:#c9a96e;font-weight:600;margin-bottom:6px;">Résumé de votre commande</div>' +
+              '<div style="color:rgba(232,221,208,.8);margin-bottom:4px;"><strong>Montant :</strong> ' + window.giftAmount + '€</div>' +
+              '<div style="color:rgba(232,221,208,.8);margin-bottom:4px;"><strong>Livraison :</strong> ' + (window.giftDelivery === 'email' ? 'Par email (numérique)' : 'À retirer au cabinet') + '</div>' +
+              (window.giftDelivery === 'email' ? '<div style="color:rgba(232,221,208,.8);"><strong>Destinataire :</strong> ' + recipientName + ' (' + recipientEmail + ')</div>' : '') +
+              '</div>' +
+              '<p style="color:rgba(232,221,208,.7);">Hélène vous contactera sous 24h pour confirmer votre commande.</p>' +
+              '<p style="color:rgba(232,221,208,.3);font-size:.75rem;text-align:center;margin-top:24px;border-top:1px solid rgba(255,255,255,.06);padding-top:20px;">© 2026 Harmonya · Institut de massage premium · Illkirch-Graffenstaden</p>' +
+              '</div>'
+          }
+        });
+
+        // Email to admin
+        await sbk.functions.invoke('send-email', {
+          body: {
+            to: 'contact@harmonyamassage.fr',
+            subject: '🎁 Nouvelle commande carte cadeau — ' + window.giftAmount + '€',
+            html: '<div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;background:#1a1614;color:#e8ddd0;padding:40px 32px;border-radius:12px;">' +
+              '<div style="text-align:center;margin-bottom:28px;"><span style="font-size:1.6rem;letter-spacing:.12em;color:#c9a96e;">HARMONYA</span></div>' +
+              '<h2 style="font-size:1.4rem;margin-bottom:8px;">🎁 Nouvelle commande carte cadeau</h2>' +
+              '<div style="background:rgba(201,169,110,.1);border:1px solid rgba(201,169,110,.25);border-radius:8px;padding:16px;margin:20px 0;font-size:.9rem;line-height:1.8;">' +
+              '<div style="color:#c9a96e;font-weight:600;margin-bottom:8px;">Détails de la commande</div>' +
+              '<div style="color:rgba(232,221,208,.8);"><strong>Montant :</strong> ' + window.giftAmount + '€</div>' +
+              '<div style="color:rgba(232,221,208,.8);"><strong>Livraison :</strong> ' + (window.giftDelivery === 'email' ? 'Par email' : 'À retirer au cabinet') + '</div>' +
+              '<div style="color:rgba(232,221,208,.8);margin-top:12px;"><strong>Acheteur :</strong> ' + buyerName + ' — ' + buyerEmail + '</div>' +
+              (window.giftDelivery === 'email' ? '<div style="color:rgba(232,221,208,.8);"><strong>Bénéficiaire :</strong> ' + recipientName + ' — ' + recipientEmail + '</div>' : '') +
+              '</div>' +
+              '</div>'
+          }
+        });
+
+        // If by email, send email to recipient
+        if (window.giftDelivery === 'email') {
+          await sbk.functions.invoke('send-email', {
+            body: {
+              to: recipientEmail,
+              subject: '🎁 Quelqu\'un vous a offert un soin Harmonya !',
+              html: '<div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;background:#1a1614;color:#e8ddd0;padding:40px 32px;border-radius:12px;">' +
+                '<div style="text-align:center;margin-bottom:28px;"><span style="font-size:1.6rem;letter-spacing:.12em;color:#c9a96e;">HARMONYA</span></div>' +
+                '<h2 style="font-size:1.4rem;margin-bottom:8px;">Bonjour ' + recipientName + ' 🌿</h2>' +
+                '<p style="color:rgba(232,221,208,.7);line-height:1.7;">' + buyerName + ' vous a offert un soin Harmonya d\'une valeur de ' + window.giftAmount + '€.</p>' +
+                '<p style="color:rgba(232,221,208,.7);line-height:1.7;">Votre carte cadeau vous permet de réserver un massage de votre choix directement sur notre site.</p>' +
+                '<div style="background:rgba(201,169,110,.1);border:1px solid rgba(201,169,110,.25);border-radius:8px;padding:16px;margin:20px 0;font-size:.9rem;">' +
+                '<div style="color:#c9a96e;font-weight:600;margin-bottom:6px;">Valeur de votre carte cadeau</div>' +
+                '<div style="color:rgba(232,221,208,.8);font-size:1.2rem;font-weight:600;">' + window.giftAmount + '€</div>' +
+                '</div>' +
+                '<p style="color:rgba(232,221,208,.5);font-size:.85rem;text-align:center;">À bientôt chez Harmonya ✨</p>' +
+                '<p style="color:rgba(232,221,208,.3);font-size:.75rem;text-align:center;margin-top:24px;border-top:1px solid rgba(255,255,255,.06);padding-top:20px;">© 2026 Harmonya · Institut de massage premium · Illkirch-Graffenstaden</p>' +
+                '</div>'
+            }
+          });
+        }
+
+        // Success message
+        var html = '<div style="text-align:center;padding:20px 0;">';
+        html += '<div style="width:56px;height:56px;background:rgba(201,169,110,.15);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 18px;font-size:1.6rem;">✓</div>';
+        html += '<h2 style="font-family:\'Playfair Display\',serif;font-size:24px;color:#fff;margin-bottom:10px;">Commande enregistrée !</h2>';
+        html += '<p style="color:rgba(255,255,255,.6);margin-bottom:20px;">Votre commande est enregistrée. Hélène vous contactera sous 24h.</p>';
+        html += '<button onclick="closeGiftModal()" style="padding:12px 28px;background:#c9a96e;color:#0a0a0a;border:none;border-radius:8px;font-weight:600;cursor:pointer;">Fermer</button>';
+        html += '</div>';
+        document.getElementById('gift-card').innerHTML = html;
+
+      } catch(e) {
+        console.error('Gift error:', e);
+        btn.textContent = 'Valider ma commande';
+        btn.disabled = false;
+        alert('Une erreur est survenue. Veuillez réessayer.');
+      }
+    }
     </script>
 </body>
 </html>

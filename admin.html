@@ -945,8 +945,41 @@ function filterRDV(q) {
   renderRDVTable(filtered);
 }
 
+const GOOGLE_REVIEW_URL = 'https://g.page/r/CharmonyamassageILLKIRCH/review'; // ← remplacer par le vrai lien Google
+
 async function updateRDVStatut(id, statut) {
   await sb.from('rendez_vous').update({ statut }).eq('id', id);
+  // Send satisfaction email when service is marked as completed
+  if (statut === 'terminé') {
+    try {
+      const { data: rdv } = await sb.from('rendez_vous').select('*').eq('id', id).single();
+      const clientEmail = rdv?.client_email || null;
+      const clientPrenom = rdv?.client_prenom || 'Cliente';
+      if (clientEmail) {
+        await sb.functions.invoke('send-email', {
+          body: {
+            to: clientEmail,
+            subject: '🌿 Comment s\'est passée votre séance chez Harmonya ?',
+            html: `<div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;background:#1a1614;color:#e8ddd0;padding:40px 32px;border-radius:12px;">
+              <div style="text-align:center;margin-bottom:28px;"><span style="font-size:1.6rem;letter-spacing:.12em;color:#c9a96e;">HARMONYA</span></div>
+              <h2 style="font-size:1.3rem;margin-bottom:8px;">Merci, ${clientPrenom} 🌿</h2>
+              <p style="color:rgba(232,221,208,.75);line-height:1.8;">Nous espérons que votre séance <strong>${rdv?.prestation || ''}</strong> vous a apporté toute la détente et le bien-être que vous méritez.</p>
+              <p style="color:rgba(232,221,208,.75);line-height:1.8;">Votre avis compte énormément pour nous — et pour les futures clientes qui cherchent une parenthèse de soin authentique.</p>
+              <a href="${GOOGLE_REVIEW_URL}" style="display:block;background:#c9a96e;color:#1a1614;text-align:center;padding:16px 24px;border-radius:8px;text-decoration:none;font-weight:600;font-size:1rem;margin:24px 0;">⭐ Laisser un avis Google →</a>
+              <p style="color:rgba(232,221,208,.5);font-size:.82rem;text-align:center;">Il suffit de quelques secondes et cela nous aide énormément. Merci du fond du cœur !</p>
+              <div style="margin-top:28px;padding-top:20px;border-top:1px solid rgba(255,255,255,.06);text-align:center;">
+                <p style="color:rgba(232,221,208,.4);font-size:.75rem;">Harmonya · Institut de massage premium · Illkirch-Graffenstaden</p>
+                <p style="color:rgba(232,221,208,.4);font-size:.75rem;">À bientôt pour une prochaine séance 💛</p>
+              </div>
+            </div>`
+          }
+        });
+        console.log('Email de satisfaction envoyé à', clientEmail);
+      }
+    } catch(e) {
+      console.error('Erreur envoi email satisfaction:', e);
+    }
+  }
   loadAllRDVData();
 }
 
