@@ -1,10 +1,11 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
-const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY')!
-const SUPABASE_URL   = Deno.env.get('SUPABASE_URL')!
-const SUPABASE_KEY   = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-const FROM_EMAIL     = 'Harmonya <notifications@harmonyamassage.fr>'
+const RESEND_API_KEY  = Deno.env.get('RESEND_API_KEY')!
+const SUPABASE_URL    = Deno.env.get('SUPABASE_URL')!
+const SUPABASE_KEY    = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+const CRON_SECRET     = Deno.env.get('CRON_SECRET') || ''
+const FROM_EMAIL      = 'Harmonya <notifications@harmonyamassage.fr>'
 
 async function sendEmail(to: string, subject: string, html: string) {
   const res = await fetch('https://api.resend.com/emails', {
@@ -26,14 +27,23 @@ function frenchDate(dateStr: string): string {
 }
 
 serve(async (req) => {
-  // Allow GET for manual triggering from cron, POST for webhook
+  // Allow GET for pg_cron trigger, POST for webhook — both require CRON_SECRET
   if (req.method !== 'GET' && req.method !== 'POST') {
     return new Response('Method not allowed', { status: 405 })
   }
 
+  // Verify secret token — prevents unauthorized triggering of mass emails
+  const providedSecret =
+    req.headers.get('x-cron-secret') ||
+    new URL(req.url).searchParams.get('secret') || ''
+  if (CRON_SECRET && providedSecret !== CRON_SECRET) {
+    return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 })
+  }
+
   const corsHeaders = {
-    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Origin': 'https://www.harmonyamassage.fr',
     'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+    'Vary': 'Origin',
   }
 
   try {

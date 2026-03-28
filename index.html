@@ -1371,6 +1371,8 @@
 
     var BK_SUPA_URL = 'https://qewdympkbxbevgmbfxfd.supabase.co';
     var BK_SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFld2R5bXBrYnhiZXZnbWJmeGZkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyOTM0NDMsImV4cCI6MjA4OTg2OTQ0M30.LMHNi_cP5klEHTPn-HrY2LDjwJLEq_LbVZSnLJrATY4';
+    // HTML escaper — used when injecting user data into email HTML bodies
+    function escHtml(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
     function renderDateTimePicker() {
       var html = closeBtn();
@@ -1557,10 +1559,10 @@
             subject: '✨ Votre réservation Harmonya est enregistrée',
             html: '<div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;background:#1a1614;color:#e8ddd0;padding:40px 32px;border-radius:12px;">' +
               '<div style="text-align:center;margin-bottom:28px;"><span style="font-size:1.6rem;letter-spacing:.12em;color:#c9a96e;">HARMONYA</span></div>' +
-              '<h2 style="font-size:1.4rem;margin-bottom:8px;">Bonjour ' + prenom + ' 🌿</h2>' +
+              '<h2 style="font-size:1.4rem;margin-bottom:8px;">Bonjour ' + escHtml(prenom) + ' 🌿</h2>' +
               '<p style="color:rgba(232,221,208,.7);line-height:1.7;">Votre demande de réservation a bien été reçue. Il ne vous reste qu\'une étape : choisir votre créneau.</p>' +
               '<div style="background:rgba(201,169,110,.1);border:1px solid rgba(201,169,110,.25);border-radius:8px;padding:16px;margin:20px 0;font-size:.9rem;">' +
-              '<div style="color:#c9a96e;font-weight:600;margin-bottom:6px;">' + (window.selectedServiceTitle||serviceId) + '</div>' +
+              '<div style="color:#c9a96e;font-weight:600;margin-bottom:6px;">' + escHtml(window.selectedServiceTitle||serviceId) + '</div>' +
               '<div style="color:rgba(232,221,208,.6);">' + (window.selectedLocation==='domicile' ? 'À domicile (+'+((window.locationFees||0).toFixed(2))+'€)' : 'Au cabinet · 1A rue de la Poste, Illkirch') + '</div>' +
               '</div>' +
               '<a href="' + calendlyLink + '" style="display:block;background:#c9a96e;color:#1a1614;text-align:center;padding:14px 24px;border-radius:8px;text-decoration:none;font-weight:600;font-size:1rem;margin:20px 0;">Choisir mon créneau →</a>' +
@@ -1703,6 +1705,11 @@
       var SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFld2R5bXBrYnhiZXZnbWJmeGZkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyOTM0NDMsImV4cCI6MjA4OTg2OTQ0M30.LMHNi_cP5klEHTPn-HrY2LDjwJLEq_LbVZSnLJrATY4';
       var sb = window.supabase.createClient(SUPA_URL, SUPA_KEY);
 
+      // HTML escaper — prevents XSS when rendering user data into innerHTML
+      function esc(s) {
+        return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+      }
+
       function initials(name, email) {
         if (name) {
           var p = name.trim().split(/\s+/);
@@ -1727,9 +1734,9 @@
         li.innerHTML =
           '<div class="nav-user-pill" id="navPill">' +
             '<div class="nav-user-avatar">' +
-              (pic ? '<img src="'+pic+'" alt="'+first+'" onerror="this.style.display=\'none\';this.parentElement.textContent=\''+ini+'\'">' : ini) +
+              (pic ? '<img src="'+esc(pic)+'" alt="'+esc(first)+'" onerror="this.style.display=\'none\';this.parentElement.textContent=\''+esc(ini)+'\'">' : esc(ini)) +
             '</div>' +
-            '<span class="nav-user-name">'+first+'</span>' +
+            '<span class="nav-user-name">'+esc(first)+'</span>' +
             '<svg class="nav-user-caret" viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 1l4 4 4-4"/></svg>' +
             '<div class="nav-user-dropdown">' +
               '<a href="espace-client.html">' +
@@ -1926,13 +1933,13 @@
             subject: '✨ Votre commande de carte cadeau Harmonya est enregistrée',
             html: '<div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;background:#1a1614;color:#e8ddd0;padding:40px 32px;border-radius:12px;">' +
               '<div style="text-align:center;margin-bottom:28px;"><span style="font-size:1.6rem;letter-spacing:.12em;color:#c9a96e;">HARMONYA</span></div>' +
-              '<h2 style="font-size:1.4rem;margin-bottom:8px;">Bonjour ' + buyerName + ' 🎁</h2>' +
+              '<h2 style="font-size:1.4rem;margin-bottom:8px;">Bonjour ' + escHtml(buyerName) + ' 🎁</h2>' +
               '<p style="color:rgba(232,221,208,.7);line-height:1.7;">Votre commande de carte cadeau a bien été enregistrée.</p>' +
               '<div style="background:rgba(201,169,110,.1);border:1px solid rgba(201,169,110,.25);border-radius:8px;padding:16px;margin:20px 0;font-size:.9rem;">' +
               '<div style="color:#c9a96e;font-weight:600;margin-bottom:6px;">Résumé de votre commande</div>' +
               '<div style="color:rgba(232,221,208,.8);margin-bottom:4px;"><strong>Montant :</strong> ' + window.giftAmount + '€</div>' +
               '<div style="color:rgba(232,221,208,.8);margin-bottom:4px;"><strong>Livraison :</strong> ' + (window.giftDelivery === 'email' ? 'Par email (numérique)' : 'À retirer au cabinet') + '</div>' +
-              (window.giftDelivery === 'email' ? '<div style="color:rgba(232,221,208,.8);"><strong>Destinataire :</strong> ' + recipientName + ' (' + recipientEmail + ')</div>' : '') +
+              (window.giftDelivery === 'email' ? '<div style="color:rgba(232,221,208,.8);"><strong>Destinataire :</strong> ' + escHtml(recipientName) + ' (' + escHtml(recipientEmail) + ')</div>' : '') +
               '</div>' +
               '<p style="color:rgba(232,221,208,.7);">Hélène vous contactera sous 24h pour confirmer votre commande.</p>' +
               '<p style="color:rgba(232,221,208,.3);font-size:.75rem;text-align:center;margin-top:24px;border-top:1px solid rgba(255,255,255,.06);padding-top:20px;">© 2026 Harmonya · Institut de massage premium · Illkirch-Graffenstaden</p>' +
@@ -1952,8 +1959,8 @@
               '<div style="color:#c9a96e;font-weight:600;margin-bottom:8px;">Détails de la commande</div>' +
               '<div style="color:rgba(232,221,208,.8);"><strong>Montant :</strong> ' + window.giftAmount + '€</div>' +
               '<div style="color:rgba(232,221,208,.8);"><strong>Livraison :</strong> ' + (window.giftDelivery === 'email' ? 'Par email' : 'À retirer au cabinet') + '</div>' +
-              '<div style="color:rgba(232,221,208,.8);margin-top:12px;"><strong>Acheteur :</strong> ' + buyerName + ' — ' + buyerEmail + '</div>' +
-              (window.giftDelivery === 'email' ? '<div style="color:rgba(232,221,208,.8);"><strong>Bénéficiaire :</strong> ' + recipientName + ' — ' + recipientEmail + '</div>' : '') +
+              '<div style="color:rgba(232,221,208,.8);margin-top:12px;"><strong>Acheteur :</strong> ' + escHtml(buyerName) + ' — ' + escHtml(buyerEmail) + '</div>' +
+              (window.giftDelivery === 'email' ? '<div style="color:rgba(232,221,208,.8);"><strong>Bénéficiaire :</strong> ' + escHtml(recipientName) + ' — ' + escHtml(recipientEmail) + '</div>' : '') +
               '</div>' +
               '</div>'
           }
@@ -1967,8 +1974,8 @@
               subject: '🎁 Quelqu\'un vous a offert un soin Harmonya !',
               html: '<div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;background:#1a1614;color:#e8ddd0;padding:40px 32px;border-radius:12px;">' +
                 '<div style="text-align:center;margin-bottom:28px;"><span style="font-size:1.6rem;letter-spacing:.12em;color:#c9a96e;">HARMONYA</span></div>' +
-                '<h2 style="font-size:1.4rem;margin-bottom:8px;">Bonjour ' + recipientName + ' 🌿</h2>' +
-                '<p style="color:rgba(232,221,208,.7);line-height:1.7;">' + buyerName + ' vous a offert un soin Harmonya d\'une valeur de ' + window.giftAmount + '€.</p>' +
+                '<h2 style="font-size:1.4rem;margin-bottom:8px;">Bonjour ' + escHtml(recipientName) + ' 🌿</h2>' +
+                '<p style="color:rgba(232,221,208,.7);line-height:1.7;">' + escHtml(buyerName) + ' vous a offert un soin Harmonya d\'une valeur de ' + Number(window.giftAmount) + '€.</p>' +
                 '<p style="color:rgba(232,221,208,.7);line-height:1.7;">Votre carte cadeau vous permet de réserver un massage de votre choix directement sur notre site.</p>' +
                 '<div style="background:rgba(201,169,110,.1);border:1px solid rgba(201,169,110,.25);border-radius:8px;padding:16px;margin:20px 0;font-size:.9rem;">' +
                 '<div style="color:#c9a96e;font-weight:600;margin-bottom:6px;">Valeur de votre carte cadeau</div>' +
