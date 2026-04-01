@@ -1607,8 +1607,11 @@
         var sbk = window.supabase.createClient(BK_SUPA_URL, BK_SUPA_KEY);
         var serviceId = window.selectedServiceId || '';
         var totalPrice = (window.selectedServicePrice || 0) + (window.locationFees || 0);
+        // Générer l'UUID côté client pour contourner la restriction RLS sur SELECT
+        var rdvId = crypto.randomUUID();
         // Insert pending RDV — statut en_attente_paiement jusqu'au paiement Stripe
-        var { data: rdvData, error: rdvError } = await sbk.from('rendez_vous').insert({
+        var { error: rdvError } = await sbk.from('rendez_vous').insert({
+          id: rdvId,
           client_email: email,
           client_prenom: prenom,
           client_phone: phone || null,
@@ -1624,10 +1627,9 @@
           decharge_signee: window._bkDechargeSigned || false,
           decharge_date: window._bkDechargeSigned ? new Date().toISOString() : null,
           decharge_nom: window._bkDechargeNom || null
-        }).select('id').single();
+        });
 
         if (rdvError) throw rdvError;
-        var rdvId = rdvData.id;
 
         // Réinitialiser les variables temporaires
         window._bkPrenom = null; window._bkEmail = null; window._bkPhone = null;
