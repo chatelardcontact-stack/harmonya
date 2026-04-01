@@ -1048,35 +1048,78 @@ const GOOGLE_REVIEW_URL = 'https://g.page/r/CharmonyamassageILLKIRCH/review'; //
 
 async function updateRDVStatut(id, statut) {
   await sb.from('rendez_vous').update({ statut }).eq('id', id);
-  // Send satisfaction email when service is marked as completed
-  if (statut === 'terminé') {
+
+  if (statut === 'confirmé' || statut === 'terminé') {
     try {
       const { data: rdv } = await sb.from('rendez_vous').select('*').eq('id', id).single();
       const clientEmail = rdv?.client_email || null;
       const clientPrenom = rdv?.client_prenom || 'Cliente';
+
       if (clientEmail) {
-        await sb.functions.invoke('send-email', {
-          body: {
-            to: clientEmail,
-            subject: '🌿 Comment s\'est passée votre séance chez Harmonya ?',
-            html: `<div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;background:#1a1614;color:#e8ddd0;padding:40px 32px;border-radius:12px;">
-              <div style="text-align:center;margin-bottom:28px;"><span style="font-size:1.6rem;letter-spacing:.12em;color:#c9a96e;">HARMONYA</span></div>
-              <h2 style="font-size:1.3rem;margin-bottom:8px;">Merci, ${clientPrenom} 🌿</h2>
-              <p style="color:rgba(232,221,208,.75);line-height:1.8;">Nous espérons que votre séance <strong>${rdv?.prestation || ''}</strong> vous a apporté toute la détente et le bien-être que vous méritez.</p>
-              <p style="color:rgba(232,221,208,.75);line-height:1.8;">Votre avis compte énormément pour nous — et pour les futures clientes qui cherchent une parenthèse de soin authentique.</p>
-              <a href="${GOOGLE_REVIEW_URL}" style="display:block;background:#c9a96e;color:#1a1614;text-align:center;padding:16px 24px;border-radius:8px;text-decoration:none;font-weight:600;font-size:1rem;margin:24px 0;">⭐ Laisser un avis Google →</a>
-              <p style="color:rgba(232,221,208,.5);font-size:.82rem;text-align:center;">Il suffit de quelques secondes et cela nous aide énormément. Merci du fond du cœur !</p>
-              <div style="margin-top:28px;padding-top:20px;border-top:1px solid rgba(255,255,255,.06);text-align:center;">
-                <p style="color:rgba(232,221,208,.4);font-size:.75rem;">Harmonya · Institut de massage premium · Illkirch-Graffenstaden</p>
-                <p style="color:rgba(232,221,208,.4);font-size:.75rem;">À bientôt pour une prochaine séance 💛</p>
-              </div>
-            </div>`
-          }
-        });
-        console.log('Email de satisfaction envoyé à', clientEmail);
+        if (statut === 'confirmé') {
+          // ── Email de confirmation du RDV ──────────────────────────────
+          const days = ['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'];
+          const months = ['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
+          const fmtFr = (ds) => { const d = new Date(ds+'T12:00:00Z'); return `${days[d.getDay()]} ${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`; };
+          const heureLabel = rdv?.heure ? rdv.heure.substring(0,5) : '—';
+          const dateLabel  = rdv?.date  ? fmtFr(rdv.date) : '—';
+          const lieu = rdv?.lieu === 'domicile'
+            ? `À domicile — ${rdv.adresse_domicile || 'votre adresse'}`
+            : 'Au cabinet · 1A rue de la Poste, 67400 Illkirch-Graffenstaden';
+          await sb.functions.invoke('send-email', {
+            body: {
+              to: clientEmail,
+              subject: `✅ RDV confirmé — Harmonya ${heureLabel} le ${dateLabel}`,
+              html: `<div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;background:#1a1614;color:#e8ddd0;padding:40px 32px;border-radius:12px;">
+                <div style="text-align:center;margin-bottom:28px;"><span style="font-size:1.6rem;letter-spacing:.12em;color:#c9a96e;">HARMONYA</span></div>
+                <h2 style="font-size:1.3rem;margin-bottom:8px;">Votre rendez-vous est confirmé ✅</h2>
+                <p style="color:rgba(232,221,208,.75);line-height:1.8;">Bonjour <strong>${clientPrenom}</strong>,</p>
+                <p style="color:rgba(232,221,208,.75);line-height:1.8;">Nous avons le plaisir de vous confirmer votre séance Harmonya.</p>
+                <div style="background:rgba(201,169,110,.08);border:1px solid rgba(201,169,110,.2);border-radius:8px;padding:18px 20px;margin:20px 0;">
+                  <div style="color:#c9a96e;font-weight:600;font-size:1rem;margin-bottom:10px;">${rdv?.prestation || 'Soin Harmonya'}</div>
+                  <div style="display:flex;flex-direction:column;gap:8px;font-size:.88rem;color:rgba(232,221,208,.75);">
+                    <div>📅 <strong>${dateLabel}</strong></div>
+                    <div>🕐 <strong>${heureLabel}</strong></div>
+                    <div>📍 ${lieu}</div>
+                    ${rdv?.frais_km ? `<div>🚗 Frais de déplacement : ${rdv.frais_km}€</div>` : ''}
+                  </div>
+                </div>
+                <p style="color:rgba(232,221,208,.6);font-size:.85rem;line-height:1.7;">En cas d'empêchement, merci de nous prévenir au <a href="tel:0626142589" style="color:#c9a96e;">06 26 14 25 89</a>.</p>
+                <div style="margin-top:28px;padding-top:20px;border-top:1px solid rgba(255,255,255,.06);text-align:center;">
+                  <p style="color:rgba(232,221,208,.4);font-size:.75rem;">Harmonya · Institut de massage premium · Illkirch-Graffenstaden</p>
+                  <p style="color:rgba(232,221,208,.4);font-size:.75rem;">À très bientôt 💛</p>
+                </div>
+              </div>`
+            }
+          });
+          console.log('Email de confirmation envoyé à', clientEmail);
+        }
+
+        if (statut === 'terminé') {
+          // ── Email de satisfaction post-séance ─────────────────────────
+          await sb.functions.invoke('send-email', {
+            body: {
+              to: clientEmail,
+              subject: '🌿 Comment s\'est passée votre séance chez Harmonya ?',
+              html: `<div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;background:#1a1614;color:#e8ddd0;padding:40px 32px;border-radius:12px;">
+                <div style="text-align:center;margin-bottom:28px;"><span style="font-size:1.6rem;letter-spacing:.12em;color:#c9a96e;">HARMONYA</span></div>
+                <h2 style="font-size:1.3rem;margin-bottom:8px;">Merci, ${clientPrenom} 🌿</h2>
+                <p style="color:rgba(232,221,208,.75);line-height:1.8;">Nous espérons que votre séance <strong>${rdv?.prestation || ''}</strong> vous a apporté toute la détente et le bien-être que vous méritez.</p>
+                <p style="color:rgba(232,221,208,.75);line-height:1.8;">Votre avis compte énormément pour nous — et pour les futures clientes qui cherchent une parenthèse de soin authentique.</p>
+                <a href="${GOOGLE_REVIEW_URL}" style="display:block;background:#c9a96e;color:#1a1614;text-align:center;padding:16px 24px;border-radius:8px;text-decoration:none;font-weight:600;font-size:1rem;margin:24px 0;">⭐ Laisser un avis Google →</a>
+                <p style="color:rgba(232,221,208,.5);font-size:.82rem;text-align:center;">Il suffit de quelques secondes et cela nous aide énormément. Merci du fond du cœur !</p>
+                <div style="margin-top:28px;padding-top:20px;border-top:1px solid rgba(255,255,255,.06);text-align:center;">
+                  <p style="color:rgba(232,221,208,.4);font-size:.75rem;">Harmonya · Institut de massage premium · Illkirch-Graffenstaden</p>
+                  <p style="color:rgba(232,221,208,.4);font-size:.75rem;">À bientôt pour une prochaine séance 💛</p>
+                </div>
+              </div>`
+            }
+          });
+          console.log('Email de satisfaction envoyé à', clientEmail);
+        }
       }
     } catch(e) {
-      console.error('Erreur envoi email satisfaction:', e);
+      console.error('Erreur envoi email statut:', e);
     }
   }
   loadAllRDVData();
@@ -1249,6 +1292,8 @@ async function loadAllDocuments() {
   el.innerHTML = docs.map(d => {
     const client = allClients.find(c => c.id === d.client_id);
     const name = client ? (client.full_name || client.email) : '—';
+    const isAnamnese = d.type === 'anamnese' && d.storage_path?.startsWith('anamnese:');
+    const anamneseId = isAnamnese ? d.storage_path.replace('anamnese:', '') : null;
     return `
       <div class="doc-row">
         <div class="doc-icon-sm"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/></svg></div>
@@ -1257,7 +1302,8 @@ async function loadAllDocuments() {
           <div style="font-size:.72rem;color:var(--text-dim);">${typeDoc(d.type)} · ${esc(name)}</div>
         </div>
         <div style="font-size:.72rem;color:var(--text-dim);white-space:nowrap;">${fmtDateShort(d.created_at)}</div>
-        ${d.storage_path ? `<button class="btn-sm btn-sm-outline" onclick="deleteDoc('${d.id}')">Supprimer</button>` : ''}
+        ${isAnamnese ? `<button class="btn-sm btn-sm-outline" onclick="openAnamneseFromId('${anamneseId}')">Voir</button>` : ''}
+        ${d.storage_path && !isAnamnese ? `<button class="btn-sm btn-sm-outline" onclick="deleteDoc('${d.id}')">Supprimer</button>` : ''}
       </div>`;
   }).join('');
 }
@@ -1279,12 +1325,26 @@ async function loadDrawerDocs(clientId) {
     el.innerHTML = `<div class="empty-state"><div class="empty-state-icon">📄</div><div class="empty-state-text">Aucun document</div></div>`;
     return;
   }
-  el.innerHTML = data.map(d => `
+  el.innerHTML = data.map(d => {
+    const isAnamnese = d.type === 'anamnese' && d.storage_path?.startsWith('anamnese:');
+    const anamneseId = isAnamnese ? d.storage_path.replace('anamnese:', '') : null;
+    return `
     <div class="doc-row">
       <div class="doc-icon-sm"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/></svg></div>
       <div style="flex:1;"><div style="font-size:.83rem;color:#fff;">${esc(d.nom)}</div><div style="font-size:.7rem;color:var(--text-dim);">${typeDoc(d.type)}</div></div>
       <div style="font-size:.7rem;color:var(--text-dim);">${fmtDateShort(d.created_at)}</div>
-    </div>`).join('');
+      ${isAnamnese ? `<button class="btn-sm btn-sm-outline" onclick="openAnamneseFromId('${anamneseId}')">Voir</button>` : ''}
+      ${d.storage_path && !isAnamnese ? `<a class="btn-sm btn-sm-outline" href="${esc(d.storage_path)}" target="_blank" rel="noopener">Voir</a>` : ''}
+    </div>`;
+  }).join('');
+}
+
+async function openAnamneseFromId(anamneseId) {
+  const { data } = await sb.from('anamneses').select('*').eq('id', anamneseId).single();
+  if (!data) { alert('Anamnèse introuvable.'); return; }
+  const c = allClients.find(x => x.id === data.client_id);
+  const clientName = c?.full_name || c?.prenom || data.client_email || 'Cliente';
+  openAnamnesePrint(data, clientName);
 }
 
 // ── FACTURES ──────────────────────────────────────────
@@ -1445,6 +1505,8 @@ async function loadDrawerAnamnese(clientId) {
     { key:'allergies',         label:'Allergies',               detail:'Lesquelles ?' },
     { key:'restrictions_sportives', label:'Restrictions médicales pour activité sportive', detail:'' },
     { key:'enceinte',          label:'Êtes-vous enceinte',      detail:'' },
+    { key:'varice',            label:'Varices',                 detail:'' },
+    { key:'lipodeme',          label:'Lipœdème',                detail:'' },
   ];
   const med_fields = [
     { key:'anticoagulants', label:'Anticoagulants' },
@@ -1466,11 +1528,15 @@ async function loadDrawerAnamnese(clientId) {
 
   let html = `<div style="padding:4px 0;">`;
 
-  // Bouton sauvegarder
-  html += `<div style="display:flex;justify-content:flex-end;margin-bottom:18px;">
-    <button class="btn-sm btn-sm-gold" id="btn-save-anamnese" onclick="saveAnamnese('${clientId}','${clientEmail||''}')">
+  // Boutons actions
+  html += `<div style="display:flex;justify-content:flex-end;gap:8px;margin-bottom:18px;">
+    <button class="btn-sm btn-sm-outline" id="btn-save-anamnese" onclick="saveAnamnese('${clientId}','${clientEmail||''}',false)">
       <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
       Sauvegarder
+    </button>
+    <button class="btn-sm btn-sm-gold" id="btn-validate-anamnese" onclick="saveAnamnese('${clientId}','${clientEmail||''}',true)">
+      <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="12" y1="13" x2="12" y2="17"/><line x1="10" y1="15" x2="14" y2="15"/></svg>
+      Valider &amp; générer le document
     </button>
   </div>`;
 
@@ -1558,6 +1624,10 @@ async function loadDrawerAnamnese(clientId) {
     <textarea id="an-autres" style="${inputSt}min-height:80px;resize:vertical;">${esc(data?.autres_details||'')}</textarea>
   </div>`;
 
+  html += `<div style="${sectionSt}"><h3 style="${h3St}">Observations (notes de praticienne)</h3>
+    <textarea id="an-observations" placeholder="Observations cliniques, notes de séance, remarques particulières…" style="${inputSt}min-height:90px;resize:vertical;">${esc(data?.observations||'')}</textarea>
+  </div>`;
+
   html += `<div id="anamnese-msg" style="font-size:.8rem;margin-top:8px;min-height:18px;"></div></div>`;
 
   el.innerHTML = html;
@@ -1570,15 +1640,18 @@ function toggleSanteDetail(key, show) {
   if (d) d.style.display = show ? 'block' : 'none';
 }
 
-async function saveAnamnese(clientId, clientEmail) {
-  const btn = document.getElementById('btn-save-anamnese');
-  btn.textContent = 'Sauvegarde…'; btn.disabled = true;
+async function saveAnamnese(clientId, clientEmail, generateDoc = false) {
+  const saveBtn     = document.getElementById('btn-save-anamnese');
+  const validateBtn = document.getElementById('btn-validate-anamnese');
+  const activeBtn   = generateDoc ? validateBtn : saveBtn;
+  const origText    = activeBtn?.innerHTML;
+  if (activeBtn) { activeBtn.innerHTML = generateDoc ? 'Génération…' : 'Sauvegarde…'; activeBtn.disabled = true; }
 
   // Objectifs
   const objectifs = [...document.querySelectorAll('.an-obj:checked')].map(c => c.value);
 
-  // Santé
-  const sante_keys = ['fumeur','activite_physique','chirurgie_recente','cancer','historique_avc','historique_thrombose','hypertension','hyperthyroidie','diabete','allergies','restrictions_sportives','enceinte'];
+  // Santé (inclut varice + lipodème)
+  const sante_keys = ['fumeur','activite_physique','chirurgie_recente','cancer','historique_avc','historique_thrombose','hypertension','hyperthyroidie','diabete','allergies','restrictions_sportives','enceinte','varice','lipodeme'];
   const sante = {};
   sante_keys.forEach(k => {
     const r = document.querySelector(`input[name="sante-${k}"]:checked`);
@@ -1613,17 +1686,18 @@ async function saveAnamnese(clientId, clientEmail) {
     posture:         (document.getElementById('an-posture')?.value || '').trim(),
     alimentation,
     autres_details:  (document.getElementById('an-autres')?.value || '').trim(),
+    observations:    (document.getElementById('an-observations')?.value || '').trim(),
   };
 
   const el = document.getElementById('drawer-anamnese');
   const existingId = el.dataset.anamneseId;
-  let err;
+  let err, savedId = existingId;
   if (existingId) {
     const r = await sb.from('anamneses').update(payload).eq('id', existingId);
     err = r.error;
   } else {
     const r = await sb.from('anamneses').insert(payload).select().single();
-    if (r.data) el.dataset.anamneseId = r.data.id;
+    if (r.data) { el.dataset.anamneseId = r.data.id; savedId = r.data.id; }
     err = r.error;
   }
 
@@ -1632,11 +1706,107 @@ async function saveAnamnese(clientId, clientEmail) {
     msg.style.color = '#e57373';
     msg.textContent = 'Erreur : ' + err.message;
   } else {
-    msg.style.color = 'var(--gold)';
-    msg.textContent = '✓ Anamnèse sauvegardée';
-    setTimeout(() => { msg.textContent = ''; }, 3000);
+    if (generateDoc && savedId) {
+      // Créer un document dans la liste documents du client
+      const c = allClients.find(x => x.id === clientId);
+      const clientName = c?.full_name || c?.prenom || clientEmail || 'Cliente';
+      const dateLabel = payload.date_entretien || new Date().toISOString().split('T')[0];
+      await sb.from('documents').insert({
+        client_id:    clientId || null,
+        nom:          `Anamnèse — ${clientName} — ${dateLabel}`,
+        type:         'anamnese',
+        storage_path: `anamnese:${savedId}`,
+      });
+      // Ouvrir la vue imprimable
+      openAnamnesePrint(payload, clientName);
+      msg.style.color = 'var(--gold)';
+      msg.textContent = '✓ Anamnèse validée — document généré et ajouté aux documents client';
+    } else {
+      msg.style.color = 'var(--gold)';
+      msg.textContent = '✓ Anamnèse sauvegardée';
+    }
+    setTimeout(() => { msg.textContent = ''; }, 4000);
   }
-  btn.textContent = 'Sauvegarder'; btn.disabled = false;
+  if (activeBtn) { activeBtn.innerHTML = origText; activeBtn.disabled = false; }
+}
+
+function openAnamnesePrint(payload, clientName) {
+  const yesno = v => v?.oui === true ? '<span style="color:#c9a96e;font-weight:600;">Oui</span>' : v?.oui === false ? 'Non' : '—';
+  const yesnoDetail = (v, label) => {
+    const yn = yesno(v);
+    const det = v?.details ? ` <span style="color:#999;font-size:.85em;">(${v.details})</span>` : '';
+    return `<tr><td style="padding:5px 8px;border-bottom:1px solid #f0e8dc;color:#555;">${label}</td><td style="padding:5px 8px;border-bottom:1px solid #f0e8dc;">${yn}${det}</td></tr>`;
+  };
+  const s = payload.sante || {};
+  const m = payload.medicaments || {};
+  const santeRows = [
+    ['Fumeur/se', s.fumeur], ['Activité physique', s.activite_physique], ['Chirurgie récente', s.chirurgie_recente],
+    ['Cancer', s.cancer], ['AVC', s.historique_avc], ['Thrombose', s.historique_thrombose],
+    ['Hypertension', s.hypertension], ['Hyperthyroïdie', s.hyperthyroidie], ['Diabète', s.diabete],
+    ['Allergies', s.allergies], ['Restrictions sportives', s.restrictions_sportives], ['Enceinte', s.enceinte],
+    ['Varices', s.varice], ['Lipœdème', s.lipodeme],
+  ].map(([label, v]) => yesnoDetail(v, label)).join('');
+
+  const medRows = [['Anticoagulants', m.anticoagulants], ['Hormonales', m.hormonales], ['Corticoïdes', m.corticoides], ['Autres', m.autres]]
+    .map(([label, v]) => yesnoDetail(v, label)).join('');
+
+  const alim = payload.alimentation || {};
+  const html = `<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><title>Anamnèse — ${clientName}</title>
+  <style>
+    body { font-family: Georgia, serif; max-width: 750px; margin: 0 auto; padding: 32px; color: #1a1a1a; font-size: 13px; }
+    h1 { font-size: 1.4rem; color: #1a1a1a; margin-bottom: 4px; }
+    .subtitle { color: #888; font-size: .85rem; margin-bottom: 28px; }
+    .section { margin-bottom: 22px; }
+    h2 { font-size: .75rem; letter-spacing: .12em; text-transform: uppercase; color: #c9a96e; border-bottom: 1px solid #f0e8dc; padding-bottom: 5px; margin-bottom: 10px; }
+    table { width: 100%; border-collapse: collapse; }
+    td { font-size: .88rem; }
+    .objectif { display: inline-block; background: #fdf5e8; border: 1px solid #e8d5a8; border-radius: 4px; padding: 3px 8px; font-size: .8rem; margin: 2px; }
+    .obs { background: #f8f4ef; border-left: 3px solid #c9a96e; padding: 10px 14px; border-radius: 0 4px 4px 0; font-size: .88rem; line-height: 1.6; white-space: pre-wrap; }
+    .logo { font-size: 1.5rem; letter-spacing: .15em; color: #c9a96e; text-align: center; margin-bottom: 16px; }
+    @media print { .no-print { display: none; } }
+  </style></head><body>
+  <div class="logo">HARMONYA</div>
+  <h1>Fiche Anamnèse</h1>
+  <div class="subtitle">Cliente : <strong>${clientName}</strong> &nbsp;·&nbsp; Entretien du : <strong>${payload.date_entretien || '—'}</strong></div>
+
+  <div class="section">
+    <h2>Objectifs</h2>
+    <div>${(payload.objectifs||[]).map(o => `<span class="objectif">${o}</span>`).join('') || '—'}</div>
+    ${payload.duree_cure ? `<p style="margin-top:8px;font-size:.85rem;color:#555;">Durée de cure envisagée : <strong>${payload.duree_cure}</strong></p>` : ''}
+  </div>
+
+  <div class="section">
+    <h2>Données de santé</h2>
+    <table>${santeRows}</table>
+  </div>
+
+  <div class="section">
+    <h2>Médicaments</h2>
+    <table>${medRows}</table>
+  </div>
+
+  <div class="section">
+    <h2>Alimentation</h2>
+    <table>
+      <tr><td style="padding:5px 8px;color:#555;">Habitudes saines</td><td style="padding:5px 8px;">${alim.habitudes_saines === true ? '<span style="color:#c9a96e;font-weight:600;">Oui</span>' : alim.habitudes_saines === false ? 'Non' : '—'}</td></tr>
+      <tr><td style="padding:5px 8px;color:#555;">Litres d'eau / jour</td><td style="padding:5px 8px;">${alim.litres_eau || '—'}</td></tr>
+    </table>
+  </div>
+
+  ${payload.posture ? `<div class="section"><h2>Posture quotidienne</h2><p style="font-size:.88rem;line-height:1.6;">${payload.posture}</p></div>` : ''}
+  ${payload.autres_details ? `<div class="section"><h2>Autres détails</h2><p style="font-size:.88rem;line-height:1.6;">${payload.autres_details}</p></div>` : ''}
+  ${payload.observations ? `<div class="section"><h2>Observations</h2><div class="obs">${payload.observations}</div></div>` : ''}
+
+  <div style="margin-top:32px;padding-top:16px;border-top:1px solid #eee;font-size:.75rem;color:#aaa;text-align:center;">
+    Harmonya · Institut de massage premium · Illkirch-Graffenstaden &nbsp;·&nbsp; Document confidentiel
+  </div>
+  <div class="no-print" style="text-align:center;margin-top:20px;">
+    <button onclick="window.print()" style="background:#c9a96e;color:#fff;border:none;padding:10px 24px;border-radius:6px;font-size:.9rem;cursor:pointer;">🖨️ Imprimer / Enregistrer en PDF</button>
+  </div>
+  </body></html>`;
+
+  const w = window.open('', '_blank');
+  if (w) { w.document.write(html); w.document.close(); }
 }
 
 // ── MENSURATIONS ───────────────────────────────────────
@@ -2059,12 +2229,13 @@ function renderCalendarWeek() {
       html += `<div class="calendar-day-header" style="${isToday?'color:var(--gold-light);':''}">${dayName} <span style="font-size:.85rem;">${dayNum}</span></div>`;
       html += '<div class="calendar-slots">';
 
+      // Créneaux Harmonya : 17h30 → 20h30 en incréments de 30 min
+      const SLOTS = ['17:30','18:00','18:30','19:00','19:30','20:00','20:30'];
       let blockedCount = 0;
-      for (let h = 8; h < 20; h++) {
-        const slot = `${String(h).padStart(2,'0')}:00`;
-        const isBlocked = bloques.some(b => b.date === dateStr && b.heure_debut === slot + ':00');
+      for (const slot of SLOTS) {
+        const isBlocked = bloques.some(b => b.date === dateStr && b.heure_debut && b.heure_debut.substring(0,5) === slot && b.type === 'bloquee');
         if (isBlocked) blockedCount++;
-        html += `<div class="calendar-slot ${isBlocked?'blocked':'free'}" onclick="toggleSlot('${dateStr}','${slot}')" title="${isBlocked?'Cliquer pour débloquer':'Cliquer pour bloquer'}">${slot}${isBlocked?' 🔒':''}</div>`;
+        html += `<div class="calendar-slot ${isBlocked?'blocked':'free'}" onclick="toggleSlot('${dateStr}','${slot}')" title="${isBlocked?'Débloquer ce créneau':'Bloquer ce créneau'}">${slot}${isBlocked?' 🔒':''}</div>`;
       }
 
       html += '</div>';
@@ -2078,13 +2249,19 @@ function renderCalendarWeek() {
 }
 
 async function toggleSlot(date, time) {
+  // time format: "HH:MM" (e.g. "17:30")
   const timeWithSec = time + ':00';
   try {
-    const {data: existing} = await sb.from('disponibilites').select('id').eq('date', date).eq('heure_debut', timeWithSec);
+    const {data: existing} = await sb.from('disponibilites').select('id')
+      .eq('date', date).eq('type', 'bloquee')
+      .filter('heure_debut', 'eq', timeWithSec);
     if (existing && existing.length > 0) {
       await sb.from('disponibilites').delete().eq('id', existing[0].id);
     } else {
-      const hEnd = String(parseInt(time.split(':')[0]) + 1).padStart(2,'0') + ':00:00';
+      // Compute end time (+30 min)
+      const [hh, mm] = time.split(':').map(Number);
+      const endMins = hh * 60 + mm + 30;
+      const hEnd = String(Math.floor(endMins / 60)).padStart(2,'0') + ':' + String(endMins % 60).padStart(2,'0') + ':00';
       await sb.from('disponibilites').insert({date, heure_debut: timeWithSec, heure_fin: hEnd, type: 'bloquee'});
     }
     renderCalendarWeek();
@@ -2155,7 +2332,7 @@ function subscribeRealtime() {
 // ── HELPERS ───────────────────────────────────────────
 function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 function initials(s) { const p = String(s||'').split(' '); return p.length >= 2 ? p[0][0]+p[1][0] : (s||'?')[0].toUpperCase(); }
-function typeDoc(t) { return {fiche_sante:'Fiche santé',consentement:'Consentement',compte_rendu:'Compte rendu',autre:'Document'}[t]||t; }
+function typeDoc(t) { return {fiche_sante:'Fiche santé',consentement:'Consentement',compte_rendu:'Compte rendu',anamnese:'Anamnèse',autre:'Document'}[t]||t; }
 function statutClass(s) { return {confirmé:'confirme',terminé:'termine',annulé:'annule',en_attente:'en_attente'}[s]||'confirme'; }
 function fmtDate(d) { if(!d)return'—'; return new Date(d).toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'}); }
 function fmtDateShort(d) { if(!d)return'—'; return new Date(d).toLocaleDateString('fr-FR',{day:'2-digit',month:'short',year:'numeric'}); }

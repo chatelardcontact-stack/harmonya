@@ -1382,98 +1382,116 @@
       html += '<div id="date-picker-container" style="margin-bottom:20px;"></div>';
       html += '<div id="time-picker-container" style="margin-bottom:20px;display:none;"></div>';
       document.getElementById('bk-card').innerHTML = html;
-
+      var now = new Date();
+      window._bkCalYear = now.getFullYear();
+      window._bkCalMonth = now.getMonth();
       renderDatePickerGrid();
     }
 
     function renderDatePickerGrid() {
-      var today = new Date();
-      var tomorrow = new Date(today);
-      tomorrow.setDate(tomorrow.getDate() + 1);
+      var today = new Date(); today.setHours(0,0,0,0);
+      var minDate = new Date(today); minDate.setDate(minDate.getDate() + 1);
+      var maxDate = new Date(today); maxDate.setDate(maxDate.getDate() + 60);
+      var year = window._bkCalYear, month = window._bkCalMonth;
+      var monthNames = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+      var dayNames = ['Lun','Mar','Mer','Jeu','Ven','Sam'];
+      var daysInMonth = new Date(year, month + 1, 0).getDate();
+      var canGoPrev = (year > today.getFullYear()) || (year === today.getFullYear() && month > today.getMonth());
 
-      var html = '<div style="margin-bottom:16px;"><p style="font-size:12px;color:rgba(255,255,255,.4);margin:0 0 12px;text-transform:uppercase;letter-spacing:.1em;">Sélectionnez une date</p>';
-      html += '<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:6px;">';
+      var html = '<p style="font-size:12px;color:rgba(255,255,255,.4);margin:0 0 12px;text-transform:uppercase;letter-spacing:.1em;">Sélectionnez une date</p>';
+      html += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">';
+      html += '<button onclick="bkCalNav(-1)" ' + (canGoPrev?'':'disabled') + ' style="background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:6px;padding:6px 14px;color:' + (canGoPrev?'#fff':'rgba(255,255,255,.2)') + ';cursor:' + (canGoPrev?'pointer':'default') + ';font-size:.85rem;">◀</button>';
+      html += '<span style="font-size:.9rem;font-weight:600;color:#e8ddd0;">' + monthNames[month] + ' ' + year + '</span>';
+      html += '<button onclick="bkCalNav(1)" style="background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:6px;padding:6px 14px;color:#fff;cursor:pointer;font-size:.85rem;">▶</button>';
+      html += '</div>';
 
-      for (var i = 0; i < 30; i++) {
-        var d = new Date(tomorrow);
-        d.setDate(d.getDate() + i);
+      html += '<div style="display:grid;grid-template-columns:repeat(6,1fr);gap:4px;margin-bottom:6px;">';
+      dayNames.forEach(function(n) { html += '<div style="text-align:center;font-size:.62rem;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:.05em;padding:3px 0;">' + n + '</div>'; });
+      html += '</div>';
 
-        // Skip Sundays (day 0)
-        if (d.getDay() === 0) continue;
-
-        var dateStr = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
-        var dayName = ['Dim','Lun','Mar','Mer','Jeu','Ven','Sam'][d.getDay()];
-        var dayNum = d.getDate();
-
-        html += '<button onclick="renderTimePickerForDate(\'' + dateStr + '\')" ';
-        html += 'style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:10px 4px;color:#fff;cursor:pointer;transition:border-color .2s,background .2s;font-size:.75rem;text-align:center;">';
-        html += '<div style="font-weight:600;">' + dayNum + '</div>';
-        html += '<div style="font-size:.65rem;color:rgba(255,255,255,.5);">' + dayName + '</div>';
-        html += '</button>';
+      html += '<div style="display:grid;grid-template-columns:repeat(6,1fr);gap:4px;">';
+      for (var d = 1; d <= daysInMonth; d++) {
+        var date = new Date(year, month, d);
+        var dow = date.getDay();
+        if (dow === 0) continue;
+        var col = dow;
+        var ds = year + '-' + String(month+1).padStart(2,'0') + '-' + String(d).padStart(2,'0');
+        var disabled = (date < minDate) || (date > maxDate);
+        if (disabled) {
+          html += '<div style="grid-column:' + col + ';text-align:center;padding:9px 2px;font-size:.78rem;color:rgba(255,255,255,.18);">' + d + '</div>';
+        } else {
+          html += '<button onclick="selectBkDate(\'' + ds + '\',this)" data-date="' + ds + '" style="grid-column:' + col + ';background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:7px;padding:9px 2px;color:#fff;cursor:pointer;font-size:.78rem;font-weight:600;transition:all .15s;">' + d + '</button>';
+        }
       }
-
-      html += '</div></div>';
+      html += '</div>';
       document.getElementById('date-picker-container').innerHTML = html;
     }
 
-    function renderTimePickerForDate(dateStr) {
-      var html = '<p style="font-size:12px;color:rgba(255,255,255,.4);margin:0 0 12px;text-transform:uppercase;letter-spacing:.1em;">Créneaux disponibles</p>';
-      html += '<div id="time-slots-container" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;"></div>';
-
-      document.getElementById('time-picker-container').style.display = 'block';
-      document.getElementById('time-picker-container').innerHTML = html;
-
-      // Fetch existing RDV for this date
-      var sbk = window.supabase.createClient(BK_SUPA_URL, BK_SUPA_KEY);
-      sbk.from('rendez_vous')
-        .select('heure')
-        .eq('date', dateStr)
-        .in('statut', ['en_attente','confirmé'])
-        .then(function(res) {
-          var bookedTimes = {};
-          if (res.data) {
-            res.data.forEach(function(rdv) {
-              if (rdv.heure) {
-                var timeStr = rdv.heure.substring(0, 5);
-                bookedTimes[timeStr] = true;
-                // Block next 90 minutes (next slot)
-                var h = parseInt(timeStr.split(':')[0]);
-                var nextHour = h + 2; // ~90 min = roughly 2 slots
-                if (nextHour < 24) {
-                  bookedTimes[String(nextHour).padStart(2,'0') + ':00'] = true;
-                }
-              }
-            });
-          }
-          renderTimeSlots(dateStr, bookedTimes);
-        })
-        .catch(function(err) { console.error('Fetch error:', err); renderTimeSlots(dateStr, {}); });
+    function bkCalNav(delta) {
+      window._bkCalMonth += delta;
+      if (window._bkCalMonth < 0) { window._bkCalMonth = 11; window._bkCalYear--; }
+      if (window._bkCalMonth > 11) { window._bkCalMonth = 0; window._bkCalYear++; }
+      document.getElementById('time-picker-container').style.display = 'none';
+      renderDatePickerGrid();
     }
 
-    function renderTimeSlots(dateStr, bookedTimes) {
-      var times = ['09:00','10:00','11:00','12:00','14:00','15:00','16:00','17:00','18:00'];
-      var container = document.getElementById('time-slots-container');
-      container.innerHTML = '';
-
-      times.forEach(function(time) {
-        var isBooked = bookedTimes[time];
-        var btn = document.createElement('button');
-        btn.textContent = time;
-        btn.style.cssText = 'background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:12px 8px;color:#fff;cursor:' + (isBooked ? 'default' : 'pointer') + ';transition:border-color .2s,background .2s;font-size:.9rem;';
-        if (isBooked) {
-          btn.style.opacity = '0.3';
-          btn.disabled = true;
-        } else {
-          btn.onmouseover = function() { this.style.background = 'rgba(201,169,110,.15)'; this.style.borderColor = 'rgba(201,169,110,.4)'; };
-          btn.onmouseout = function() { this.style.background = 'rgba(255,255,255,.03)'; this.style.borderColor = 'rgba(255,255,255,.1)'; };
-          btn.onclick = function() {
-            window.selectedDate = dateStr;
-            window.selectedTime = time;
-            renderEmailStep();
-          };
-        }
-        container.appendChild(btn);
+    function selectBkDate(dateStr, btn) {
+      document.querySelectorAll('#date-picker-container button[data-date]').forEach(function(b) {
+        b.style.background = 'rgba(255,255,255,.04)'; b.style.borderColor = 'rgba(255,255,255,.1)'; b.style.color = '#fff';
       });
+      btn.style.background = 'rgba(201,169,110,.18)'; btn.style.borderColor = '#c9a96e'; btn.style.color = '#c9a96e';
+      window.selectedDate = dateStr;
+      renderTimePickerForDate(dateStr);
+    }
+
+    function renderTimePickerForDate(dateStr) {
+      var container = document.getElementById('time-picker-container');
+      container.style.display = 'block';
+      container.innerHTML = '<p style="font-size:12px;color:rgba(255,255,255,.4);margin:0 0 12px;text-transform:uppercase;letter-spacing:.1em;">Créneaux disponibles</p><p style="color:rgba(255,255,255,.35);font-size:.82rem;">Chargement…</p>';
+      var sbk = window.supabase.createClient(BK_SUPA_URL, BK_SUPA_KEY);
+      Promise.all([
+        sbk.from('rendez_vous').select('heure').eq('date', dateStr).in('statut', ['en_attente','confirmé']),
+        sbk.from('disponibilites').select('heure_debut').eq('date', dateStr).eq('type', 'bloquee')
+      ]).then(function(results) {
+        var rdvList = (results[0].data || []).map(function(r) { return r.heure ? r.heure.substring(0,5) : null; }).filter(Boolean);
+        var blockedSet = {};
+        (results[1].data || []).forEach(function(d) { if (d.heure_debut) blockedSet[d.heure_debut.substring(0,5)] = true; });
+        renderTimeSlots(dateStr, rdvList, blockedSet);
+      }).catch(function() { renderTimeSlots(dateStr, [], {}); });
+    }
+
+    function renderTimeSlots(dateStr, bookedList, manualBlocked) {
+      var slots = ['17:30','18:00','18:30','19:00','19:30','20:00','20:30'];
+      var container = document.getElementById('time-picker-container');
+      var html = '<p style="font-size:12px;color:rgba(255,255,255,.4);margin:0 0 12px;text-transform:uppercase;letter-spacing:.1em;">Créneaux disponibles — ' + frenchDate(dateStr) + '</p>';
+      html += '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;">';
+      slots.forEach(function(slot) {
+        var sp = slot.split(':'); var sMins = parseInt(sp[0])*60 + parseInt(sp[1]);
+        var unavail = !!manualBlocked[slot];
+        if (!unavail) {
+          bookedList.forEach(function(t) {
+            var tp = t.split(':'); var tMins = parseInt(tp[0])*60 + parseInt(tp[1]);
+            if (Math.abs(sMins - tMins) < 90) unavail = true;
+          });
+        }
+        if (unavail) {
+          html += '<div style="background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.05);border-radius:8px;padding:12px 4px;color:rgba(255,255,255,.2);font-size:.88rem;text-align:center;">' + slot + '</div>';
+        } else {
+          html += '<button onclick="selectBkTime(\'' + slot + '\',\'' + dateStr + '\',this)" data-time="' + slot + '" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:12px 4px;color:#fff;cursor:pointer;font-size:.88rem;transition:all .15s;">' + slot + '</button>';
+        }
+      });
+      html += '</div>';
+      container.innerHTML = html;
+      container.scrollIntoView({ behavior:'smooth', block:'nearest' });
+    }
+
+    function selectBkTime(time, dateStr, btn) {
+      document.querySelectorAll('#time-picker-container button[data-time]').forEach(function(b) {
+        b.style.background = 'rgba(255,255,255,.04)'; b.style.borderColor = 'rgba(255,255,255,.12)'; b.style.color = '#fff';
+      });
+      btn.style.background = 'rgba(201,169,110,.18)'; btn.style.borderColor = '#c9a96e'; btn.style.color = '#c9a96e';
+      window.selectedDate = dateStr; window.selectedTime = time;
+      setTimeout(function() { renderEmailStep(); }, 160);
     }
 
     function inputStyle() {
@@ -1510,9 +1528,9 @@
       html += '<input type="email" id="bk-email" placeholder="Email *" style="' + inputStyle() + '">';
       html += '<input type="tel" id="bk-phone" placeholder="Téléphone (optionnel)" style="' + inputStyle() + '">';
       html += '</div>';
-      html += '<p style="font-size:.75rem;color:rgba(255,255,255,.4);margin-bottom:16px;">Vous recevrez un email avec un lien pour choisir votre créneau et accéder à votre espace client.</p>';
-      // Drain & Sculpt : bouton "Continuer" mène à la décharge, sinon soumet directement
-      var isDrainSculpt = (window.selectedServiceId === 'drain-sculpt');
+      html += '<p style="font-size:.75rem;color:rgba(255,255,255,.4);margin-bottom:16px;">Votre créneau est réservé — Hélène vous enverra un email de confirmation.</p>';
+      // Décharge requise pour drain-sculpt, drainage-classique et post-op
+      var isDrainSculpt = ['drain-sculpt','drainage-classique','post-op'].includes(window.selectedServiceId);
       if (isDrainSculpt) {
         html += '<button class="bk-cta" id="bk-submit-btn" style="width:100%;cursor:pointer;border:none;">Continuer vers la décharge <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></button>';
       } else {
@@ -1541,7 +1559,7 @@
       var html = closeBtn();
       html += '<button class="bk-back" onclick="renderEmailStep()">← Retour</button>';
       html += '<p class="bk-eyebrow">Décharge de responsabilité</p>';
-      html += '<h2 class="bk-title" style="font-size:1.3rem;">Drain &amp; Sculpt</h2>';
+      html += '<h2 class="bk-title" style="font-size:1.3rem;">' + escHtml(window.selectedServiceTitle || 'Soin') + '</h2>';
       html += '<div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:18px;margin-bottom:20px;font-size:.8rem;line-height:1.8;color:rgba(255,255,255,.65);max-height:260px;overflow-y:auto;">';
       html += '<p style="margin-bottom:10px;">Je soussigné(e), <strong style="color:#fff;">' + nom + '</strong> (Cliente), autorise <strong style="color:#fff;">Hélène CHATELARD</strong> (Praticienne) à pratiquer le <strong style="color:#c9a96e;">Drain &amp; Sculpt</strong>.</p>';
       html += '<p style="margin-bottom:10px;">Je déclare avoir pris connaissance des contre-indications liées à la pratique du Drain and Sculpt, et certifie n\'avoir aucun problème de santé et qu\'aucun professionnel qualifié de santé ne m\'a conseillé de ne pas réaliser ce type de soin.</p>';
@@ -1588,8 +1606,6 @@
       try {
         var sbk = window.supabase.createClient(BK_SUPA_URL, BK_SUPA_KEY);
         var serviceId = window.selectedServiceId || '';
-        var serviceUrl = (BK_SERVICES[serviceId] && BK_SERVICES[serviceId].url) || 'https://calendly.com/massage-harmonya';
-        var calendlyLink = serviceUrl + '?name=' + encodeURIComponent(prenom) + '&email=' + encodeURIComponent(email);
         // Insert pending RDV
         await sbk.from('rendez_vous').insert({
           client_email: email,
@@ -1614,21 +1630,27 @@
         sbk.functions.invoke('send-magic-link', {
           body: { email, prenom, redirectTo: window.location.origin + '/espace-client.html' }
         });
-        // Send branded confirmation email
+        // Send branded confirmation email to client
+        var creneau = window.selectedDate && window.selectedTime
+          ? '<div style="display:flex;gap:10px;font-size:.87rem;color:rgba(232,221,208,.65);"><span>📅</span><span>' + frenchDate(window.selectedDate) + ' à ' + window.selectedTime + '</span></div>'
+          : '';
+        var lieuLabel = window.selectedLocation === 'domicile'
+          ? 'À domicile — ' + escHtml(window.selectedAddress || '') + ' (+' + (window.locationFees||0).toFixed(2) + '€)'
+          : 'Au cabinet · 1A rue de la Poste, 67400 Illkirch';
         await sbk.functions.invoke('send-email', {
           body: {
             to: email,
-            subject: '✨ Votre réservation Harmonya est enregistrée',
+            subject: '🌿 Demande de RDV Harmonya enregistrée',
             html: '<div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;background:#1a1614;color:#e8ddd0;padding:40px 32px;border-radius:12px;">' +
               '<div style="text-align:center;margin-bottom:28px;"><span style="font-size:1.6rem;letter-spacing:.12em;color:#c9a96e;">HARMONYA</span></div>' +
               '<h2 style="font-size:1.4rem;margin-bottom:8px;">Bonjour ' + escHtml(prenom) + ' 🌿</h2>' +
-              '<p style="color:rgba(232,221,208,.7);line-height:1.7;">Votre demande de réservation a bien été reçue. Il ne vous reste qu\'une étape : choisir votre créneau.</p>' +
-              '<div style="background:rgba(201,169,110,.1);border:1px solid rgba(201,169,110,.25);border-radius:8px;padding:16px;margin:20px 0;font-size:.9rem;">' +
-              '<div style="color:#c9a96e;font-weight:600;margin-bottom:6px;">' + escHtml(window.selectedServiceTitle||serviceId) + '</div>' +
-              '<div style="color:rgba(232,221,208,.6);">' + (window.selectedLocation==='domicile' ? 'À domicile (+'+((window.locationFees||0).toFixed(2))+'€)' : 'Au cabinet · 1A rue de la Poste, Illkirch') + '</div>' +
+              '<p style="color:rgba(232,221,208,.7);line-height:1.7;">Votre demande de rendez-vous a bien été enregistrée. Hélène vous enverra un email de confirmation dès que votre créneau sera validé.</p>' +
+              '<div style="background:rgba(201,169,110,.08);border:1px solid rgba(201,169,110,.2);border-radius:8px;padding:16px 18px;margin:20px 0;display:flex;flex-direction:column;gap:8px;">' +
+              '<div style="color:#c9a96e;font-weight:600;font-size:.95rem;margin-bottom:4px;">' + escHtml(window.selectedServiceTitle||serviceId) + '</div>' +
+              creneau +
+              '<div style="display:flex;gap:10px;font-size:.87rem;color:rgba(232,221,208,.65);"><span>📍</span><span>' + lieuLabel + '</span></div>' +
               '</div>' +
-              '<a href="' + calendlyLink + '" style="display:block;background:#c9a96e;color:#1a1614;text-align:center;padding:14px 24px;border-radius:8px;text-decoration:none;font-weight:600;font-size:1rem;margin:20px 0;">Choisir mon créneau →</a>' +
-              '<p style="color:rgba(232,221,208,.5);font-size:.85rem;text-align:center;">Un email séparé vous a été envoyé pour créer votre espace client Harmonya.</p>' +
+              '<p style="color:rgba(232,221,208,.5);font-size:.82rem;text-align:center;">Un email séparé vous a été envoyé pour accéder à votre espace client Harmonya.</p>' +
               '<p style="color:rgba(232,221,208,.3);font-size:.75rem;text-align:center;margin-top:24px;border-top:1px solid rgba(255,255,255,.06);padding-top:20px;">© 2026 Harmonya · Institut de massage premium · Illkirch-Graffenstaden</p>' +
               '</div>'
           }
@@ -1658,7 +1680,7 @@
               '</div>'
           }
         });
-        showBookingSuccess(prenom, calendlyLink);
+        showBookingSuccess(prenom);
       } catch(e) {
         console.error('Booking error:', e);
         btn.textContent = 'Confirmer ma réservation';
@@ -1667,17 +1689,20 @@
       }
     }
 
-    function showBookingSuccess(prenom, calendlyLink) {
+    function showBookingSuccess(prenom) {
+      var creneauLabel = (window.selectedDate && window.selectedTime)
+        ? frenchDate(window.selectedDate) + ' à ' + window.selectedTime
+        : '';
       var html = closeBtn();
       html += '<div style="text-align:center;padding:12px 0;">';
-      html += '<div style="width:56px;height:56px;background:rgba(201,169,110,.15);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 18px;font-size:1.6rem;">✓</div>';
-      html += '<h2 class="bk-title" style="margin-bottom:10px;">Parfait, ' + prenom + ' !</h2>';
-      html += '<p class="bk-desc">Votre réservation est enregistrée 🌿<br>Vérifiez votre boîte email — vous avez reçu :</p>';
-      html += '<ul style="text-align:left;margin:16px 0;padding-left:20px;color:rgba(255,255,255,.7);font-size:.88rem;line-height:2;">';
-      html += '<li>Un lien pour <strong>choisir votre créneau</strong></li>';
-      html += '<li>Un lien pour <strong>créer votre espace client</strong></li>';
-      html += '</ul>';
-      html += '<a href="' + calendlyLink + '" target="_blank" class="bk-cta" style="display:block;text-align:center;margin-top:8px;" onclick="closeBookingModal()">Choisir mon créneau maintenant <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></a>';
+      html += '<div style="width:64px;height:64px;background:rgba(201,169,110,.15);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 18px;font-size:1.8rem;">🌿</div>';
+      html += '<h2 class="bk-title" style="margin-bottom:10px;">Merci, ' + escHtml(prenom) + ' !</h2>';
+      html += '<p class="bk-desc" style="margin-bottom:16px;">Votre demande de rendez-vous a bien été enregistrée.</p>';
+      if (creneauLabel) {
+        html += '<div style="background:rgba(201,169,110,.08);border:1px solid rgba(201,169,110,.2);border-radius:8px;padding:14px 18px;margin:0 0 20px;font-size:.88rem;color:rgba(232,221,208,.75);">📅 ' + creneauLabel + '</div>';
+      }
+      html += '<p style="font-size:.83rem;color:rgba(255,255,255,.5);line-height:1.7;margin-bottom:20px;">Hélène examinera votre demande et vous enverra un <strong style="color:rgba(255,255,255,.75);">email de confirmation</strong>.<br>Vérifiez aussi votre boîte mail pour accéder à votre espace client.</p>';
+      html += '<button class="bk-cta" onclick="closeBookingModal()" style="width:100%;cursor:pointer;border:none;">Fermer <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></button>';
       html += '</div>';
       document.getElementById('bk-card').innerHTML = html;
     }
