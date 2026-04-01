@@ -1511,24 +1511,80 @@
       html += '<input type="tel" id="bk-phone" placeholder="Téléphone (optionnel)" style="' + inputStyle() + '">';
       html += '</div>';
       html += '<p style="font-size:.75rem;color:rgba(255,255,255,.4);margin-bottom:16px;">Vous recevrez un email avec un lien pour choisir votre créneau et accéder à votre espace client.</p>';
-      html += '<button class="bk-cta" id="bk-submit-btn" style="width:100%;cursor:pointer;border:none;">Confirmer ma réservation <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></button>';
+      // Drain & Sculpt : bouton "Continuer" mène à la décharge, sinon soumet directement
+      var isDrainSculpt = (window.selectedServiceId === 'drain-sculpt');
+      if (isDrainSculpt) {
+        html += '<button class="bk-cta" id="bk-submit-btn" style="width:100%;cursor:pointer;border:none;">Continuer vers la décharge <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></button>';
+      } else {
+        html += '<button class="bk-cta" id="bk-submit-btn" style="width:100%;cursor:pointer;border:none;">Confirmer ma réservation <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></button>';
+      }
       document.getElementById('bk-card').innerHTML = html;
-      document.getElementById('bk-submit-btn').addEventListener('click', submitBooking);
+      document.getElementById('bk-submit-btn').addEventListener('click', function() {
+        var prenom = (document.getElementById('bk-prenom').value || '').trim();
+        var email  = (document.getElementById('bk-email').value  || '').trim();
+        var phone  = (document.getElementById('bk-phone').value  || '').trim();
+        if (!prenom || !email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+          document.getElementById('bk-prenom').style.borderColor = prenom ? 'rgba(255,255,255,.12)' : '#e57373';
+          document.getElementById('bk-email').style.borderColor  = (email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) ? 'rgba(255,255,255,.12)' : '#e57373';
+          return;
+        }
+        // Stocker temporairement pour l'étape suivante ou la soumission
+        window._bkPrenom = prenom; window._bkEmail = email; window._bkPhone = phone;
+        if (isDrainSculpt) { renderDechargeStep(); } else { submitBooking(); }
+      });
       document.getElementById('bk-prenom').focus();
     }
 
+    function renderDechargeStep() {
+      var today = new Date().toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+      var nom = escHtml(window._bkPrenom || '');
+      var html = closeBtn();
+      html += '<button class="bk-back" onclick="renderEmailStep()">← Retour</button>';
+      html += '<p class="bk-eyebrow">Décharge de responsabilité</p>';
+      html += '<h2 class="bk-title" style="font-size:1.3rem;">Drain &amp; Sculpt</h2>';
+      html += '<div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:18px;margin-bottom:20px;font-size:.8rem;line-height:1.8;color:rgba(255,255,255,.65);max-height:260px;overflow-y:auto;">';
+      html += '<p style="margin-bottom:10px;">Je soussigné(e), <strong style="color:#fff;">' + nom + '</strong> (Cliente), autorise <strong style="color:#fff;">Hélène CHATELARD</strong> (Praticienne) à pratiquer le <strong style="color:#c9a96e;">Drain &amp; Sculpt</strong>.</p>';
+      html += '<p style="margin-bottom:10px;">Je déclare avoir pris connaissance des contre-indications liées à la pratique du Drain and Sculpt, et certifie n\'avoir aucun problème de santé et qu\'aucun professionnel qualifié de santé ne m\'a conseillé de ne pas réaliser ce type de soin.</p>';
+      html += '<p style="margin-bottom:10px;">Je m\'engage en toute conscience des risques encourus sur ma santé, suite aux mises en garde énoncées ce jour, et décharge la praticienne de toutes responsabilités.</p>';
+      html += '<p>Je renonce donc à engager toute poursuite contre <strong style="color:#fff;">Hélène CHATELARD</strong> s\'il survenait un accident.</p>';
+      html += '</div>';
+      html += '<div style="margin-bottom:14px;">';
+      html += '<label style="font-size:.82rem;color:rgba(255,255,255,.7);display:block;margin-bottom:6px;">Votre nom complet (tel qu\'il apparaîtra sur la décharge) *</label>';
+      html += '<input type="text" id="decharge-nom" value="' + escHtml(window._bkPrenom || '') + '" placeholder="Prénom NOM" style="' + inputStyle() + '">';
+      html += '</div>';
+      html += '<div style="margin-bottom:20px;">';
+      html += '<label style="font-size:.82rem;color:rgba(255,255,255,.7);display:block;margin-bottom:6px;">Date *</label>';
+      html += '<input type="text" id="decharge-date" value="' + today + '" readonly style="' + inputStyle() + 'opacity:.7;cursor:not-allowed;">';
+      html += '</div>';
+      html += '<label style="display:flex;align-items:flex-start;gap:12px;padding:14px 16px;background:rgba(201,169,110,.06);border:1px solid rgba(201,169,110,.2);border-radius:8px;cursor:pointer;margin-bottom:20px;">';
+      html += '<input type="checkbox" id="decharge-check" style="margin-top:2px;width:16px;height:16px;flex-shrink:0;accent-color:#c9a96e;">';
+      html += '<span style="font-size:.82rem;color:rgba(255,255,255,.75);line-height:1.6;">J\'ai lu et j\'approuve la décharge de responsabilité ci-dessus. Je comprends les conditions et les risques liés à la pratique du Drain &amp; Sculpt.</span>';
+      html += '</label>';
+      html += '<button class="bk-cta" id="bk-decharge-btn" style="width:100%;cursor:pointer;border:none;opacity:.5;" disabled>Valider et confirmer ma réservation <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></button>';
+      document.getElementById('bk-card').innerHTML = html;
+      document.getElementById('decharge-check').addEventListener('change', function() {
+        var btn = document.getElementById('bk-decharge-btn');
+        btn.disabled = !this.checked;
+        btn.style.opacity = this.checked ? '1' : '.5';
+      });
+      document.getElementById('bk-decharge-btn').addEventListener('click', function() {
+        var nom = (document.getElementById('decharge-nom').value || '').trim();
+        if (!nom) { document.getElementById('decharge-nom').style.borderColor = '#e57373'; return; }
+        window._bkDechargeNom  = nom;
+        window._bkDechargeDate = document.getElementById('decharge-date').value;
+        window._bkDechargeSigned = true;
+        submitBooking();
+      });
+    }
+
     async function submitBooking() {
-      var prenom = (document.getElementById('bk-prenom').value || '').trim();
-      var email  = (document.getElementById('bk-email').value  || '').trim();
-      var phone  = (document.getElementById('bk-phone').value  || '').trim();
-      if (!prenom || !email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-        document.getElementById('bk-prenom').style.borderColor = prenom ? 'rgba(255,255,255,.12)' : '#e57373';
-        document.getElementById('bk-email').style.borderColor  = (email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) ? 'rgba(255,255,255,.12)' : '#e57373';
-        return;
-      }
-      var btn = document.getElementById('bk-submit-btn');
-      btn.textContent = 'Enregistrement…';
-      btn.disabled = true;
+      // Les coordonnées sont soit dans les champs (appel direct) soit en mémoire (après décharge)
+      var prenom = window._bkPrenom || (document.getElementById('bk-prenom') ? document.getElementById('bk-prenom').value.trim() : '');
+      var email  = window._bkEmail  || (document.getElementById('bk-email')  ? document.getElementById('bk-email').value.trim()  : '');
+      var phone  = window._bkPhone  || (document.getElementById('bk-phone')  ? document.getElementById('bk-phone').value.trim()  : '');
+      if (!prenom || !email) return;
+      var btn = document.getElementById('bk-decharge-btn') || document.getElementById('bk-submit-btn');
+      if (btn) { btn.textContent = 'Enregistrement…'; btn.disabled = true; }
       try {
         var sbk = window.supabase.createClient(BK_SUPA_URL, BK_SUPA_KEY);
         var serviceId = window.selectedServiceId || '';
@@ -1546,8 +1602,14 @@
           prix: window.selectedServicePrice || 0,
           date: window.selectedDate || null,
           heure: (window.selectedTime ? window.selectedTime + ':00' : null),
-          statut: 'en_attente'
+          statut: 'en_attente',
+          decharge_signee: window._bkDechargeSigned || false,
+          decharge_date: window._bkDechargeSigned ? new Date().toISOString() : null,
+          decharge_nom: window._bkDechargeNom || null
         });
+        // Réinitialiser les variables temporaires
+        window._bkPrenom = null; window._bkEmail = null; window._bkPhone = null;
+        window._bkDechargeSigned = false; window._bkDechargeNom = null; window._bkDechargeDate = null;
         // Send branded magic link via our Edge Function (uses notifications@harmonyamassage.fr)
         sbk.functions.invoke('send-magic-link', {
           body: { email, prenom, redirectTo: window.location.origin + '/espace-client.html' }

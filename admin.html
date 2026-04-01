@@ -548,6 +548,8 @@
     <div class="drawer-tab active" onclick="switchDrawerTab('forfaits',this)">Forfaits</div>
     <div class="drawer-tab" onclick="switchDrawerTab('suivi',this)" id="tab-suivi">Suivi</div>
     <div class="drawer-tab" onclick="switchDrawerTab('rdv-client',this)">RDV</div>
+    <div class="drawer-tab" onclick="switchDrawerTab('anamnese',this)">Anamnèse</div>
+    <div class="drawer-tab" onclick="switchDrawerTab('mensurations',this)">Mensurations</div>
     <div class="drawer-tab" onclick="switchDrawerTab('msg-client',this)">Messages</div>
     <div class="drawer-tab" onclick="switchDrawerTab('docs-client',this)">Documents</div>
     <div class="drawer-tab" onclick="switchDrawerTab('fact-client',this)">Factures</div>
@@ -564,6 +566,8 @@
     </div>
     <div class="drawer-tab-content" id="dt-suivi"><div id="drawer-suivi"></div></div>
     <div class="drawer-tab-content" id="dt-rdv-client"><div id="drawer-rdv"></div></div>
+    <div class="drawer-tab-content" id="dt-anamnese"><div id="drawer-anamnese"></div></div>
+    <div class="drawer-tab-content" id="dt-mensurations"><div id="drawer-mensurations"></div></div>
     <div class="drawer-tab-content" id="dt-msg-client"><div id="drawer-msgs"></div></div>
     <div class="drawer-tab-content" id="dt-docs-client">
       <div style="display:flex;justify-content:flex-end;margin-bottom:16px;">
@@ -888,12 +892,14 @@ function switchDrawerTab(tabId, el) {
   el.classList.add('active');
   document.getElementById('dt-' + tabId).classList.add('active');
 
-  if (tabId === 'forfaits')    loadDrawerForfaits(selectedClientId);
-  if (tabId === 'suivi')       loadDrawerSuivi(selectedClientId);
-  if (tabId === 'rdv-client')  loadDrawerRDV(selectedClientId);
-  if (tabId === 'msg-client')  loadDrawerMsgs(selectedClientId);
-  if (tabId === 'docs-client') loadDrawerDocs(selectedClientId);
-  if (tabId === 'fact-client') loadDrawerFacts(selectedClientId);
+  if (tabId === 'forfaits')     loadDrawerForfaits(selectedClientId);
+  if (tabId === 'suivi')        loadDrawerSuivi(selectedClientId);
+  if (tabId === 'rdv-client')   loadDrawerRDV(selectedClientId);
+  if (tabId === 'anamnese')     loadDrawerAnamnese(selectedClientId);
+  if (tabId === 'mensurations') loadDrawerMensurations(selectedClientId);
+  if (tabId === 'msg-client')   loadDrawerMsgs(selectedClientId);
+  if (tabId === 'docs-client')  loadDrawerDocs(selectedClientId);
+  if (tabId === 'fact-client')  loadDrawerFacts(selectedClientId);
 }
 
 // ── FORFAITS ──────────────────────────────────────────
@@ -1412,6 +1418,371 @@ async function loadDrawerFacts(clientId) {
         <span class="badge ${sc}">${f.statut}</span>
       </div>`;
   }).join('');
+}
+
+// ── ANAMNÈSE ──────────────────────────────────────────
+async function loadDrawerAnamnese(clientId) {
+  const el = document.getElementById('drawer-anamnese');
+  const c  = allClients.find(x => x.id === clientId);
+  const clientEmail = c?.email || null;
+
+  // Chercher une anamnèse existante
+  let query = sb.from('anamneses').select('*');
+  if (clientId) query = query.eq('client_id', clientId);
+  else if (clientEmail) query = query.eq('client_email', clientEmail);
+  const { data } = await query.order('created_at', { ascending: false }).limit(1).maybeSingle();
+
+  const sante_fields = [
+    { key:'fumeur',            label:'Fumeur/se',              detail:'Combien de cigarettes par jour ?' },
+    { key:'activite_physique', label:'Pratique d\'une activité physique', detail:'Laquelle ?' },
+    { key:'chirurgie_recente', label:'Chirurgie récente',       detail:'Laquelle et il y a combien de temps ?' },
+    { key:'cancer',            label:'Cancer',                  detail:'Lequel et depuis combien de temps ?' },
+    { key:'historique_avc',    label:'Historique d\'AVC',       detail:'Depuis combien de temps ?' },
+    { key:'historique_thrombose', label:'Historique de thrombose', detail:'Depuis combien de temps ?' },
+    { key:'hypertension',      label:'Hypertension',            detail:'Prenez-vous des médicaments ?' },
+    { key:'hyperthyroidie',    label:'Hyperthyroïdie',          detail:'' },
+    { key:'diabete',           label:'Diabète',                 detail:'Prenez-vous des médicaments ?' },
+    { key:'allergies',         label:'Allergies',               detail:'Lesquelles ?' },
+    { key:'restrictions_sportives', label:'Restrictions médicales pour activité sportive', detail:'' },
+    { key:'enceinte',          label:'Êtes-vous enceinte',      detail:'' },
+  ];
+  const med_fields = [
+    { key:'anticoagulants', label:'Anticoagulants' },
+    { key:'hormonales',     label:'Hormonales' },
+    { key:'corticoides',    label:'Corticoïdes' },
+    { key:'autres',         label:'Autres médicaments' },
+  ];
+  const objectifs_list = ['Perte de poids','Sculpter le corps','Perdre des centimètres','Bien-être physique','Gagner en masse musculaire','Perdre de la cellulite','Drainer les liquides','Autre'];
+
+  const sante  = data?.sante || {};
+  const meds   = data?.medicaments || {};
+  const obj    = data?.objectifs || [];
+  const alim   = data?.alimentation || {};
+
+  const inputSt = 'width:100%;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:4px;padding:8px 11px;color:#fff;font-size:.82rem;outline:none;font-family:var(--sans);';
+  const labelSt = 'font-size:.72rem;letter-spacing:.07em;text-transform:uppercase;color:var(--text-dim);margin-bottom:5px;display:block;';
+  const sectionSt = 'margin-bottom:22px;';
+  const h3St = 'font-size:.7rem;letter-spacing:.15em;text-transform:uppercase;color:var(--gold);margin-bottom:14px;padding-bottom:6px;border-bottom:1px solid rgba(201,169,110,.15);';
+
+  let html = `<div style="padding:4px 0;">`;
+
+  // Bouton sauvegarder
+  html += `<div style="display:flex;justify-content:flex-end;margin-bottom:18px;">
+    <button class="btn-sm btn-sm-gold" id="btn-save-anamnese" onclick="saveAnamnese('${clientId}','${clientEmail||''}')">
+      <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+      Sauvegarder
+    </button>
+  </div>`;
+
+  // Date entretien
+  html += `<div style="${sectionSt}"><label style="${labelSt}">Date de l'entretien</label>
+    <input type="date" id="an-date" value="${data?.date_entretien || new Date().toISOString().split('T')[0]}" style="${inputSt}">
+  </div>`;
+
+  // Objectifs
+  html += `<div style="${sectionSt}"><h3 style="${h3St}">Objectifs du massage</h3>`;
+  html += `<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px;">`;
+  objectifs_list.forEach(o => {
+    const checked = obj.includes(o) ? 'checked' : '';
+    html += `<label style="display:flex;align-items:center;gap:8px;font-size:.8rem;color:rgba(255,255,255,.7);cursor:pointer;padding:6px 8px;border:1px solid rgba(255,255,255,.07);border-radius:4px;">
+      <input type="checkbox" class="an-obj" value="${esc(o)}" ${checked} style="accent-color:var(--gold);">
+      ${esc(o)}</label>`;
+  });
+  html += `</div>`;
+  html += `<label style="${labelSt}">Durée de cure envisagée</label>
+    <select id="an-duree" style="${inputSt}">
+      <option value="">—</option>
+      ${['1-2 mois','3-4 mois','5-6 mois'].map(d => `<option value="${d}" ${data?.duree_cure===d?'selected':''}>${d}</option>`).join('')}
+    </select>`;
+  html += `</div>`;
+
+  // Santé
+  html += `<div style="${sectionSt}"><h3 style="${h3St}">Données de santé</h3>`;
+  sante_fields.forEach(f => {
+    const val = sante[f.key] || {};
+    const oui = val.oui === true;
+    const non = val.oui === false;
+    const det = val.details || '';
+    html += `<div style="margin-bottom:10px;padding:8px 10px;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.06);border-radius:6px;">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:${f.detail?'6px':'0'};">
+        <span style="flex:1;font-size:.8rem;color:rgba(255,255,255,.75);">${esc(f.label)}</span>
+        <label style="display:flex;align-items:center;gap:4px;font-size:.78rem;color:var(--text-dim);cursor:pointer;">
+          <input type="radio" name="sante-${f.key}" value="oui" ${oui?'checked':''} onchange="toggleSanteDetail('${f.key}',true)" style="accent-color:var(--gold);"> Oui
+        </label>
+        <label style="display:flex;align-items:center;gap:4px;font-size:.78rem;color:var(--text-dim);cursor:pointer;">
+          <input type="radio" name="sante-${f.key}" value="non" ${non?'checked':''} onchange="toggleSanteDetail('${f.key}',false)" style="accent-color:var(--gold);"> Non
+        </label>
+      </div>
+      ${f.detail ? `<div id="sante-det-${f.key}" style="display:${oui?'block':'none'};">
+        <input type="text" id="sante-det-val-${f.key}" placeholder="${esc(f.detail)}" value="${esc(det)}" style="${inputSt}font-size:.77rem;padding:6px 10px;">
+      </div>` : ''}
+    </div>`;
+  });
+  html += `</div>`;
+
+  // Médicaments
+  html += `<div style="${sectionSt}"><h3 style="${h3St}">Prise de médicaments</h3>`;
+  med_fields.forEach(f => {
+    const val = meds[f.key] || {};
+    const oui = val.oui === true;
+    const det = val.details || '';
+    html += `<div style="margin-bottom:8px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+      <span style="flex:1;min-width:120px;font-size:.8rem;color:rgba(255,255,255,.75);">${esc(f.label)}</span>
+      <label style="display:flex;align-items:center;gap:4px;font-size:.78rem;color:var(--text-dim);cursor:pointer;">
+        <input type="radio" name="med-${f.key}" value="oui" ${oui?'checked':''} style="accent-color:var(--gold);"> Oui
+      </label>
+      <label style="display:flex;align-items:center;gap:4px;font-size:.78rem;color:var(--text-dim);cursor:pointer;">
+        <input type="radio" name="med-${f.key}" value="non" ${!oui&&val.oui===false?'checked':''} style="accent-color:var(--gold);"> Non
+      </label>
+      <input type="text" id="med-det-${f.key}" placeholder="Si oui, lesquels" value="${esc(det)}" style="${inputSt}width:140px;flex-shrink:0;font-size:.77rem;padding:6px 10px;">
+    </div>`;
+  });
+  html += `</div>`;
+
+  // Alimentation
+  html += `<div style="${sectionSt}"><h3 style="${h3St}">Alimentation</h3>
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+      <span style="flex:1;font-size:.8rem;color:rgba(255,255,255,.75);">Habitudes alimentaires saines ?</span>
+      <label style="display:flex;align-items:center;gap:4px;font-size:.78rem;cursor:pointer;"><input type="radio" name="alim-saines" value="oui" ${alim.habitudes_saines?'checked':''} style="accent-color:var(--gold);"> Oui</label>
+      <label style="display:flex;align-items:center;gap:4px;font-size:.78rem;cursor:pointer;"><input type="radio" name="alim-saines" value="non" ${alim.habitudes_saines===false?'checked':''} style="accent-color:var(--gold);"> Non</label>
+    </div>
+    <label style="${labelSt}">Litres d'eau par jour</label>
+    <input type="text" id="an-eau" value="${esc(alim.litres_eau||'')}" placeholder="ex : 1.5" style="${inputSt}">
+  </div>`;
+
+  // Posture & Autres
+  html += `<div style="${sectionSt}"><h3 style="${h3St}">Posture quotidienne</h3>
+    <textarea id="an-posture" style="${inputSt}min-height:60px;resize:vertical;">${esc(data?.posture||'')}</textarea>
+  </div>`;
+  html += `<div style="${sectionSt}"><h3 style="${h3St}">Autres détails</h3>
+    <textarea id="an-autres" style="${inputSt}min-height:80px;resize:vertical;">${esc(data?.autres_details||'')}</textarea>
+  </div>`;
+
+  html += `<div id="anamnese-msg" style="font-size:.8rem;margin-top:8px;min-height:18px;"></div></div>`;
+
+  el.innerHTML = html;
+  // Store the existing record id for update
+  el.dataset.anamneseId = data?.id || '';
+}
+
+function toggleSanteDetail(key, show) {
+  const d = document.getElementById('sante-det-' + key);
+  if (d) d.style.display = show ? 'block' : 'none';
+}
+
+async function saveAnamnese(clientId, clientEmail) {
+  const btn = document.getElementById('btn-save-anamnese');
+  btn.textContent = 'Sauvegarde…'; btn.disabled = true;
+
+  // Objectifs
+  const objectifs = [...document.querySelectorAll('.an-obj:checked')].map(c => c.value);
+
+  // Santé
+  const sante_keys = ['fumeur','activite_physique','chirurgie_recente','cancer','historique_avc','historique_thrombose','hypertension','hyperthyroidie','diabete','allergies','restrictions_sportives','enceinte'];
+  const sante = {};
+  sante_keys.forEach(k => {
+    const r = document.querySelector(`input[name="sante-${k}"]:checked`);
+    const d = document.getElementById(`sante-det-val-${k}`);
+    sante[k] = { oui: r ? r.value === 'oui' : null, details: d ? d.value.trim() : '' };
+  });
+
+  // Médicaments
+  const med_keys = ['anticoagulants','hormonales','corticoides','autres'];
+  const medicaments = {};
+  med_keys.forEach(k => {
+    const r = document.querySelector(`input[name="med-${k}"]:checked`);
+    const d = document.getElementById(`med-det-${k}`);
+    medicaments[k] = { oui: r ? r.value === 'oui' : null, details: d ? d.value.trim() : '' };
+  });
+
+  // Alimentation
+  const alimR = document.querySelector('input[name="alim-saines"]:checked');
+  const alimentation = {
+    habitudes_saines: alimR ? alimR.value === 'oui' : null,
+    litres_eau: (document.getElementById('an-eau')?.value || '').trim()
+  };
+
+  const payload = {
+    client_id:       clientId || null,
+    client_email:    clientEmail || null,
+    date_entretien:  document.getElementById('an-date')?.value || new Date().toISOString().split('T')[0],
+    objectifs,
+    duree_cure:      document.getElementById('an-duree')?.value || null,
+    sante,
+    medicaments,
+    posture:         (document.getElementById('an-posture')?.value || '').trim(),
+    alimentation,
+    autres_details:  (document.getElementById('an-autres')?.value || '').trim(),
+  };
+
+  const el = document.getElementById('drawer-anamnese');
+  const existingId = el.dataset.anamneseId;
+  let err;
+  if (existingId) {
+    const r = await sb.from('anamneses').update(payload).eq('id', existingId);
+    err = r.error;
+  } else {
+    const r = await sb.from('anamneses').insert(payload).select().single();
+    if (r.data) el.dataset.anamneseId = r.data.id;
+    err = r.error;
+  }
+
+  const msg = document.getElementById('anamnese-msg');
+  if (err) {
+    msg.style.color = '#e57373';
+    msg.textContent = 'Erreur : ' + err.message;
+  } else {
+    msg.style.color = 'var(--gold)';
+    msg.textContent = '✓ Anamnèse sauvegardée';
+    setTimeout(() => { msg.textContent = ''; }, 3000);
+  }
+  btn.textContent = 'Sauvegarder'; btn.disabled = false;
+}
+
+// ── MENSURATIONS ───────────────────────────────────────
+const MENSURATION_FIELDS = [
+  { key:'bras',         label:'Bras' },
+  { key:'tour_buste',   label:'Tour de buste' },
+  { key:'tour_taille',  label:'Tour de taille' },
+  { key:'tour_hanche',  label:'Tour de hanche' },
+  { key:'tour_bassin',  label:'Tour de bassin' },
+  { key:'cuisse',       label:'Cuisse' },
+  { key:'genou',        label:'Genou' },
+  { key:'mollet',       label:'Mollet' },
+  { key:'cheville',     label:'Cheville' },
+];
+
+async function loadDrawerMensurations(clientId) {
+  const el = document.getElementById('drawer-mensurations');
+  const c  = allClients.find(x => x.id === clientId);
+  const clientEmail = c?.email || null;
+
+  let query = sb.from('mensurations').select('*');
+  if (clientId) query = query.eq('client_id', clientId);
+  else if (clientEmail) query = query.eq('client_email', clientEmail);
+  const { data } = await query.order('date_seance', { ascending: false });
+  const sessions = data || [];
+
+  const inputSt = 'background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:4px;padding:6px 8px;color:#fff;font-size:.8rem;outline:none;font-family:var(--sans);width:100%;';
+
+  let html = `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;">
+    <div style="font-size:.85rem;color:var(--text-mid);">${sessions.length} session${sessions.length>1?'s':''}</div>
+    <button class="btn-sm btn-sm-gold" onclick="openAddMensuration('${clientId}','${clientEmail||''}')">
+      + Nouvelle séance
+    </button>
+  </div>`;
+
+  // Formulaire d'ajout (caché par défaut)
+  html += `<div id="add-mensuration-form" style="display:none;background:var(--dark-card-2);border:1px solid var(--dark-border);border-radius:8px;padding:18px;margin-bottom:18px;">
+    <h3 style="font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);margin-bottom:16px;">Nouvelle session de mesures</h3>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
+      <div><label style="font-size:.7rem;color:var(--text-dim);display:block;margin-bottom:4px;">Date</label>
+        <input type="date" id="mens-date" value="${new Date().toISOString().split('T')[0]}" style="${inputSt}"></div>
+      <div><label style="font-size:.7rem;color:var(--text-dim);display:block;margin-bottom:4px;">Type de soin</label>
+        <select id="mens-type" style="${inputSt}">
+          <option value="">—</option>
+          <option value="maderotherapie">Maderothérapie</option>
+          <option value="drainage_lymphatique">Drainage Lymphatique</option>
+          <option value="les_deux">Les deux</option>
+        </select></div>
+      <div><label style="font-size:.7rem;color:var(--text-dim);display:block;margin-bottom:4px;">Type de cellulite</label>
+        <select id="mens-cellulite" style="${inputSt}">
+          <option value="">—</option>
+          <option value="aqueuse">Aqueuse</option>
+          <option value="fibreuse">Fibreuse</option>
+          <option value="adipeuse">Adipeuse</option>
+          <option value="mixte">Mixte</option>
+        </select></div>
+      <div><label style="font-size:.7rem;color:var(--text-dim);display:block;margin-bottom:4px;">Poids (kg)</label>
+        <input type="number" id="mens-poids" step="0.1" placeholder="ex : 62.5" style="${inputSt}"></div>
+    </div>
+    <div style="font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:var(--text-dim);margin-bottom:10px;">Mesures (cm)</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px;">
+      ${MENSURATION_FIELDS.map(f => `<div>
+        <label style="font-size:.67rem;color:var(--text-dim);display:block;margin-bottom:3px;">${esc(f.label)}</label>
+        <input type="number" id="mens-${f.key}" step="0.1" placeholder="—" style="${inputSt}">
+      </div>`).join('')}
+    </div>
+    <div style="margin-bottom:12px;">
+      <label style="font-size:.7rem;color:var(--text-dim);display:block;margin-bottom:4px;">Notes</label>
+      <textarea id="mens-notes" style="${inputSt}min-height:60px;resize:vertical;"></textarea>
+    </div>
+    <div style="display:flex;gap:8px;">
+      <button class="btn-sm btn-sm-gold" onclick="submitMensuration('${clientId}','${clientEmail||''}')">Enregistrer</button>
+      <button class="btn-sm btn-sm-outline" onclick="document.getElementById('add-mensuration-form').style.display='none'">Annuler</button>
+    </div>
+    <div id="mens-msg" style="font-size:.8rem;margin-top:8px;min-height:16px;"></div>
+  </div>`;
+
+  if (!sessions.length) {
+    html += `<div class="empty-state"><div class="empty-state-icon">📏</div><div class="empty-state-text">Aucune mesure enregistrée</div></div>`;
+  } else {
+    // Tableau de suivi avec évolution
+    html += `<div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;font-size:.75rem;">
+      <thead><tr style="border-bottom:1px solid rgba(255,255,255,.08);">
+        <th style="text-align:left;padding:7px 6px;color:var(--text-dim);font-weight:500;white-space:nowrap;">Date</th>
+        ${MENSURATION_FIELDS.map(f => `<th style="text-align:center;padding:7px 4px;color:var(--text-dim);font-weight:500;white-space:nowrap;">${esc(f.label)}</th>`).join('')}
+        <th style="text-align:center;padding:7px 4px;color:var(--text-dim);font-weight:500;">Poids</th>
+        <th style="text-align:left;padding:7px 4px;color:var(--text-dim);font-weight:500;">Soin</th>
+      </tr></thead>
+      <tbody>
+        ${sessions.map((s, idx) => {
+          const prev = sessions[idx + 1]; // séance précédente (plus ancienne)
+          const typeLabel = s.type_soin === 'maderotherapie' ? 'Madéro' : s.type_soin === 'drainage_lymphatique' ? 'Drainage' : s.type_soin === 'les_deux' ? 'Madéro+Dr.' : '—';
+          return `<tr style="border-bottom:1px solid rgba(255,255,255,.04);">
+            <td style="padding:7px 6px;color:#fff;white-space:nowrap;">${fmtDateShort(s.date_seance)}</td>
+            ${MENSURATION_FIELDS.map(f => {
+              const val = s[f.key];
+              const prevVal = prev ? prev[f.key] : null;
+              let diff = '';
+              if (val != null && prevVal != null) {
+                const d = parseFloat(val) - parseFloat(prevVal);
+                diff = d !== 0 ? `<span style="font-size:.65rem;color:${d < 0 ? '#81c784' : '#e57373'};">${d > 0 ? '+' : ''}${d.toFixed(1)}</span>` : '';
+              }
+              return `<td style="text-align:center;padding:7px 4px;color:rgba(255,255,255,.7);">${val != null ? val : '—'}${diff ? '<br>' + diff : ''}</td>`;
+            }).join('')}
+            <td style="text-align:center;padding:7px 4px;color:rgba(255,255,255,.7);">${s.poids != null ? s.poids + ' kg' : '—'}</td>
+            <td style="padding:7px 4px;color:var(--gold);font-size:.7rem;">${typeLabel}</td>
+          </tr>`;
+        }).join('')}
+      </tbody>
+    </table></div>`;
+  }
+
+  html += `</div>`;
+  el.innerHTML = html;
+}
+
+function openAddMensuration(clientId, clientEmail) {
+  const f = document.getElementById('add-mensuration-form');
+  if (f) { f.style.display = f.style.display === 'none' ? 'block' : 'none'; }
+}
+
+async function submitMensuration(clientId, clientEmail) {
+  const payload = {
+    client_id:     clientId || null,
+    client_email:  clientEmail || null,
+    date_seance:   document.getElementById('mens-date')?.value || new Date().toISOString().split('T')[0],
+    type_soin:     document.getElementById('mens-type')?.value || null,
+    type_cellulite: document.getElementById('mens-cellulite')?.value || null,
+    poids:         parseFloat(document.getElementById('mens-poids')?.value) || null,
+    notes:         (document.getElementById('mens-notes')?.value || '').trim() || null,
+  };
+  MENSURATION_FIELDS.forEach(f => {
+    const v = parseFloat(document.getElementById('mens-' + f.key)?.value);
+    payload[f.key] = isNaN(v) ? null : v;
+  });
+
+  const { error } = await sb.from('mensurations').insert(payload);
+  const msg = document.getElementById('mens-msg');
+  if (error) {
+    msg.style.color = '#e57373';
+    msg.textContent = 'Erreur : ' + error.message;
+  } else {
+    msg.style.color = 'var(--gold)';
+    msg.textContent = '✓ Session enregistrée !';
+    setTimeout(() => loadDrawerMensurations(clientId), 1200);
+  }
 }
 
 // ── OVERVIEW ──────────────────────────────────────────
