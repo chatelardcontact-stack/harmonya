@@ -2651,10 +2651,14 @@ function openContratDrawer(contratId) {
     </div>
 
     <!-- Actions -->
-    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;">
       <button class="btn-sm btn-sm-gold" onclick="openContratPrint('${contratId}')">
         <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
-        Imprimer le contrat
+        Imprimer
+      </button>
+      <button class="btn-sm btn-sm-gold" id="btn-send-contrat-${contratId}" onclick="sendContratEmail('${contratId}')">
+        <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        Envoyer par email
       </button>
       ${contrat.statut !== 'signé' ? `<button class="btn-sm btn-sm-outline" onclick="markContratSigne('${contratId}')">
         <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
@@ -2663,7 +2667,8 @@ function openContratDrawer(contratId) {
       ${contrat.statut !== 'annulé' ? `<button class="btn-sm btn-sm-outline" style="color:#e57373;border-color:rgba(229,115,115,.3);" onclick="markContratAnnule('${contratId}')">Annuler</button>` : ''}
     </div>
 
-    ${contrat.notes ? `<div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:5px;padding:11px 14px;font-size:.8rem;color:var(--text-dim);">💬 ${esc(contrat.notes)}</div>` : ''}
+    ${contrat.notes ? `<div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:5px;padding:11px 14px;font-size:.8rem;color:var(--text-dim);margin-bottom:10px;">💬 ${esc(contrat.notes)}</div>` : ''}
+    <div id="contrat-email-feedback" style="font-size:.8rem;min-height:18px;margin-top:4px;"></div>
   `;
   overlay.classList.add('open');
 }
@@ -2698,12 +2703,190 @@ function openContratPrint(contratId) {
   if (!contrat) return;
   let html = contrat.contenu_html;
   if (!html) {
-    // Regenerate if missing
     const client = allClients.find(c => c.id === contrat.client_id);
     html = generateContratHTML(contrat, client);
   }
   const w = window.open('', '_blank');
   if (w) { w.document.write(html); w.document.close(); }
+}
+
+async function sendContratEmail(contratId) {
+  const contrat = allContrats.find(c => c.id === contratId);
+  if (!contrat) return;
+  const client  = allClients.find(c => c.id === contrat.client_id);
+  const toEmail = client?.email;
+  if (!toEmail) {
+    const fb = document.getElementById('contrat-email-feedback');
+    if (fb) { fb.style.color = '#e57373'; fb.textContent = '⚠ Aucun email trouvé pour cette cliente.'; }
+    return;
+  }
+
+  const btn = document.getElementById(`btn-send-contrat-${contratId}`);
+  if (btn) { btn.textContent = 'Envoi…'; btn.disabled = true; }
+  const fb = document.getElementById('contrat-email-feedback');
+
+  try {
+    const emailHtml = generateContratEmailHTML(contrat, client);
+    const clientName = client?.full_name || client?.prenom || toEmail;
+    const fmtShort = (ds) => {
+      if (!ds) return '—';
+      const d = new Date(ds + 'T12:00:00Z');
+      return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;
+    };
+    const { error } = await sb.functions.invoke('send-email', {
+      body: {
+        to: toEmail,
+        subject: `📋 Votre contrat Harmonya — ${contrat.prestation}`,
+        html: emailHtml
+      }
+    });
+    if (error) throw error;
+    if (fb) { fb.style.color = 'var(--gold)'; fb.textContent = `✓ Contrat envoyé à ${toEmail}`; }
+    setTimeout(() => { if (fb) fb.textContent = ''; }, 5000);
+  } catch(e) {
+    console.error('Erreur envoi contrat:', e);
+    if (fb) { fb.style.color = '#e57373'; fb.textContent = 'Erreur lors de l\'envoi. Réessayez.'; }
+  } finally {
+    if (btn) {
+      btn.innerHTML = `<svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Envoyer par email`;
+      btn.disabled = false;
+    }
+  }
+}
+
+function generateContratEmailHTML(contrat, client) {
+  const clientName  = client?.full_name || client?.prenom || client?.email || '—';
+  const fmtShort = (ds) => {
+    if (!ds) return '—';
+    const d = new Date(ds + 'T12:00:00Z');
+    return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;
+  };
+  const fmtFr = (ds) => {
+    if (!ds) return '—';
+    const d = new Date(ds + 'T12:00:00Z');
+    const days   = ['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'];
+    const months = ['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
+    return `${days[d.getDay()]} ${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
+  };
+  const today       = new Date().toISOString().split('T')[0];
+  const echeances   = contrat.echeances || [];
+  const total       = parseFloat(contrat.montant || 0).toFixed(2);
+  const nbSeances   = contrat.nombre_seances ? `${contrat.nombre_seances} séance(s)` : '—';
+  const dateDebut   = contrat.date_debut ? fmtFr(contrat.date_debut) : '—';
+  const fois        = parseInt((contrat.plan_paiement||'1x')[0]) || 1;
+
+  // Build échéancier rows (table-based for email compatibility)
+  const ecRows = echeances.map(e => `
+    <tr>
+      <td style="padding:8px 12px;border-bottom:1px solid #e8ddd0;font-size:13px;color:#555;">Versement n°${e.numero}</td>
+      <td style="padding:8px 12px;border-bottom:1px solid #e8ddd0;font-size:13px;color:#555;">${fmtShort(e.date)}</td>
+      <td style="padding:8px 12px;border-bottom:1px solid #e8ddd0;font-size:13px;font-weight:600;text-align:right;">${parseFloat(e.montant).toFixed(2)} €</td>
+    </tr>`).join('');
+
+  // Summary of main contract articles (email-safe, no complex CSS)
+  return `<div style="font-family:Georgia,serif;max-width:620px;margin:0 auto;background:#1a1614;color:#e8ddd0;padding:0;border-radius:12px;overflow:hidden;">
+
+  <!-- Header -->
+  <div style="background:#1a1614;text-align:center;padding:36px 32px 20px;">
+    <div style="font-size:1.8rem;letter-spacing:.18em;color:#c9a96e;margin-bottom:6px;">HARMONYA</div>
+    <div style="font-size:.75rem;letter-spacing:.1em;text-transform:uppercase;color:rgba(232,221,208,.4);">Institut de massage premium · Illkirch-Graffenstaden</div>
+  </div>
+
+  <!-- Title band -->
+  <div style="background:rgba(201,169,110,.1);border-top:1px solid rgba(201,169,110,.2);border-bottom:1px solid rgba(201,169,110,.2);padding:14px 32px;text-align:center;">
+    <div style="font-size:1rem;font-weight:600;color:#c9a96e;letter-spacing:.06em;text-transform:uppercase;">Contrat de prestations de services</div>
+    <div style="font-size:.78rem;color:rgba(232,221,208,.5);margin-top:4px;">Établi le ${fmtFr(today)}</div>
+  </div>
+
+  <!-- Body -->
+  <div style="padding:28px 32px;">
+
+    <p style="font-size:.9rem;line-height:1.8;color:rgba(232,221,208,.8);margin-bottom:20px;">
+      Bonjour <strong style="color:#e8ddd0;">${clientName}</strong>,<br>
+      Veuillez trouver ci-dessous votre contrat de prestations Harmonya. Merci de le lire attentivement, de l'imprimer en deux exemplaires, de le signer et d'en retourner un à votre praticienne.
+    </p>
+
+    <!-- Parties -->
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
+      <tr>
+        <td width="48%" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:6px;padding:14px 16px;vertical-align:top;">
+          <div style="font-size:.65rem;letter-spacing:.12em;text-transform:uppercase;color:#c9a96e;margin-bottom:7px;">Le Prestataire</div>
+          <div style="font-size:.9rem;font-weight:600;color:#e8ddd0;margin-bottom:4px;">Hélène CHATELARD</div>
+          <div style="font-size:.78rem;color:rgba(232,221,208,.6);line-height:1.6;">Praticienne en massage de bien-être<br>HARMONYA<br>1A rue de la Poste, 67400 Illkirch<br>contact@harmonyamassage.fr</div>
+        </td>
+        <td width="4%"></td>
+        <td width="48%" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:6px;padding:14px 16px;vertical-align:top;">
+          <div style="font-size:.65rem;letter-spacing:.12em;text-transform:uppercase;color:#c9a96e;margin-bottom:7px;">La Cliente</div>
+          <div style="font-size:.9rem;font-weight:600;color:#e8ddd0;margin-bottom:4px;">${clientName}</div>
+          <div style="font-size:.78rem;color:rgba(232,221,208,.6);line-height:1.6;">${client?.email || ''}</div>
+        </td>
+      </tr>
+    </table>
+
+    <!-- Prestation recap -->
+    <div style="background:rgba(201,169,110,.07);border:1px solid rgba(201,169,110,.2);border-radius:8px;padding:18px 20px;margin-bottom:22px;">
+      <div style="font-size:.65rem;letter-spacing:.12em;text-transform:uppercase;color:#c9a96e;margin-bottom:12px;">Récapitulatif de la prestation</div>
+      <table width="100%" cellpadding="0" cellspacing="0">
+        <tr><td style="font-size:.8rem;color:rgba(232,221,208,.55);padding:4px 0;">Prestation</td><td style="font-size:.88rem;color:#e8ddd0;font-weight:600;text-align:right;">${contrat.prestation}</td></tr>
+        <tr><td style="font-size:.8rem;color:rgba(232,221,208,.55);padding:4px 0;">Nombre de séances</td><td style="font-size:.88rem;color:#e8ddd0;text-align:right;">${nbSeances}</td></tr>
+        <tr><td style="font-size:.8rem;color:rgba(232,221,208,.55);padding:4px 0;">Date de début</td><td style="font-size:.88rem;color:#e8ddd0;text-align:right;">${dateDebut}</td></tr>
+        <tr><td style="font-size:.8rem;color:rgba(232,221,208,.55);padding:4px 0;">Plan de paiement</td><td style="font-size:.88rem;color:#e8ddd0;text-align:right;">${fois === 1 ? 'Paiement unique' : `${fois} fois`}</td></tr>
+        <tr><td style="font-size:.8rem;color:rgba(232,221,208,.55);padding:8px 0 0;border-top:1px solid rgba(201,169,110,.15);">Montant total TTC</td><td style="font-size:1rem;color:#c9a96e;font-weight:700;text-align:right;border-top:1px solid rgba(201,169,110,.15);padding-top:8px;">${total} €</td></tr>
+      </table>
+    </div>
+
+    <!-- Échéancier -->
+    ${echeances.length > 0 ? `
+    <div style="margin-bottom:22px;">
+      <div style="font-size:.65rem;letter-spacing:.12em;text-transform:uppercase;color:#c9a96e;margin-bottom:10px;">Échéancier de paiement</div>
+      <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;background:#fff;border-radius:6px;overflow:hidden;">
+        <thead>
+          <tr style="background:#f5efe8;">
+            <th style="padding:9px 12px;text-align:left;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:#888;border-bottom:2px solid #e8d8c0;">Échéance</th>
+            <th style="padding:9px 12px;text-align:left;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:#888;border-bottom:2px solid #e8d8c0;">Date</th>
+            <th style="padding:9px 12px;text-align:right;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:#888;border-bottom:2px solid #e8d8c0;">Montant</th>
+          </tr>
+        </thead>
+        <tbody>${ecRows}
+          <tr style="background:#fdf8f2;">
+            <td colspan="2" style="padding:9px 12px;font-weight:700;font-size:13px;color:#1a1a1a;border-top:2px solid #c9a96e;">TOTAL</td>
+            <td style="padding:9px 12px;font-weight:700;font-size:13px;color:#c9a96e;text-align:right;border-top:2px solid #c9a96e;">${total} €</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>` : ''}
+
+    <!-- Key clauses summary -->
+    <div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:6px;padding:16px 18px;margin-bottom:22px;">
+      <div style="font-size:.65rem;letter-spacing:.12em;text-transform:uppercase;color:#c9a96e;margin-bottom:10px;">Points essentiels du contrat</div>
+      <div style="font-size:.8rem;color:rgba(232,221,208,.7);line-height:1.9;">
+        📅 &nbsp;Séances valables <strong style="color:#e8ddd0;">12 mois</strong> à compter de la signature<br>
+        ⏰ &nbsp;Annulation : <strong style="color:#e8ddd0;">48h minimum</strong> à l'avance (sinon séance décomptée)<br>
+        🔒 &nbsp;Données personnelles traitées conformément au <strong style="color:#e8ddd0;">RGPD</strong><br>
+        ⚖️ &nbsp;Droit applicable : <strong style="color:#e8ddd0;">droit français</strong> — TGI Strasbourg<br>
+        ℹ️ &nbsp;Massages de bien-être exclusivement — non thérapeutiques
+      </div>
+    </div>
+
+    <!-- CTA -->
+    <div style="text-align:center;background:rgba(201,169,110,.08);border:1px solid rgba(201,169,110,.2);border-radius:8px;padding:20px 24px;margin-bottom:24px;">
+      <p style="font-size:.85rem;color:rgba(232,221,208,.7);margin-bottom:12px;">Pour valider votre contrat, merci d'imprimer ce document, de le signer, et d'en retourner un exemplaire signé à :</p>
+      <p style="font-size:.88rem;color:#e8ddd0;font-weight:600;">contact@harmonyamassage.fr</p>
+      <p style="font-size:.78rem;color:rgba(232,221,208,.5);margin-top:6px;">ou en main propre lors de votre première séance</p>
+    </div>
+
+    ${contrat.notes ? `<div style="background:rgba(255,255,255,.03);border-left:3px solid rgba(201,169,110,.4);padding:10px 14px;font-size:.8rem;color:rgba(232,221,208,.6);margin-bottom:20px;">💬 ${contrat.notes}</div>` : ''}
+
+  </div>
+
+  <!-- Footer -->
+  <div style="background:rgba(0,0,0,.2);text-align:center;padding:20px 32px;border-top:1px solid rgba(255,255,255,.06);">
+    <p style="font-size:.72rem;color:rgba(232,221,208,.35);margin-bottom:4px;">Harmonya · Institut de massage premium · 1A rue de la Poste, 67400 Illkirch-Graffenstaden</p>
+    <p style="font-size:.72rem;color:rgba(232,221,208,.35);">contact@harmonyamassage.fr · 06 26 14 25 89 · harmonyamassage.fr</p>
+    <p style="font-size:.68rem;color:rgba(232,221,208,.2);margin-top:8px;">Document contractuel confidentiel — ne pas diffuser</p>
+  </div>
+
+</div>`;
 }
 
 function autofillContratFields(sel) {
