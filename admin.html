@@ -1408,34 +1408,264 @@ async function saveFacture(form) {
 }
 
 async function saveContrat(form) {
-  const echances = generateEchances(form.plan_paiement.value, parseFloat(form.montant.value));
-  const { error } = await sb.from('contrats').insert({
-    client_id: form.client_id.value,
-    prestation: form.prestation.value.trim(),
-    montant: parseFloat(form.montant.value) || 0,
-    plan_paiement: form.plan_paiement.value || '1x',
-    echances: echances,
-    statut: 'en_attente'
-  });
+  const clientId    = form.client_id.value;
+  const client      = allClients.find(c => c.id === clientId);
+  const montant     = parseFloat(form.montant.value) || 0;
+  const plan        = form.plan_paiement.value || '1x';
+  const prestation  = form.prestation.value.trim();
+  const nbSeances   = parseInt(form.nb_seances?.value) || null;
+  const dateDebut   = form.date_debut?.value || new Date().toISOString().split('T')[0];
+  const notes       = (form.notes?.value || '').trim();
+
+  const echeances = generateEcheances(plan, montant, dateDebut);
+  const contenuHtml = generateContratHTML({
+    prestation, montant, plan_paiement: plan, echeances,
+    nombre_seances: nbSeances, date_debut: dateDebut, notes, statut: 'en_attente',
+    created_at: new Date().toISOString()
+  }, client);
+
+  const { data, error } = await sb.from('contrats').insert({
+    client_id:      clientId,
+    prestation,
+    montant,
+    plan_paiement:  plan,
+    echeances,
+    nombre_seances: nbSeances,
+    date_debut:     dateDebut,
+    notes:          notes || null,
+    contenu_html:   contenuHtml,
+    statut:         'en_attente'
+  }).select().single();
+
   if (!error) { closeModal(); loadAllContrats(); }
+  else console.error('Erreur création contrat:', error);
 }
 
-function generateEchances(plan, total) {
+function generateEcheances(plan, total, dateDebutStr) {
   const times = parseInt(plan[0]) || 1;
-  const perInstallment = total / times;
-  const echances = [];
-  const today = new Date();
+  const perInstallment = Math.round((total / times) * 100) / 100;
+  const echeances = [];
+  const startDate = dateDebutStr ? new Date(dateDebutStr + 'T12:00:00Z') : new Date();
   for (let i = 0; i < times; i++) {
-    const d = new Date(today);
+    const d = new Date(startDate);
     d.setMonth(d.getMonth() + i);
-    echances.push({
+    echeances.push({
       numero: i + 1,
       date: d.toISOString().split('T')[0],
       montant: perInstallment,
       payee: false
     });
   }
-  return echances;
+  return echeances;
+}
+
+function generateContratHTML(contrat, client) {
+  const clientName   = client?.full_name || client?.prenom || client?.email || '—';
+  const clientEmail  = client?.email || '—';
+  const clientAddr   = client?.adresse || '';
+  const today        = new Date();
+  const fmtFr = (ds) => {
+    if (!ds) return '—';
+    const d = new Date(ds + 'T12:00:00Z');
+    const days   = ['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'];
+    const months = ['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
+    return `${days[d.getDay()]} ${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
+  };
+  const fmtShort = (ds) => {
+    if (!ds) return '—';
+    const d = new Date(ds + 'T12:00:00Z');
+    return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;
+  };
+  const contractNum  = 'C' + today.getFullYear() + '-' + String(today.getTime()).slice(-5);
+  const echeances    = contrat.echeances || [];
+  const nbSeances    = contrat.nombre_seances || '—';
+  const dateDebut    = contrat.date_debut ? fmtFr(contrat.date_debut) : '—';
+  const total        = parseFloat(contrat.montant || 0).toFixed(2);
+  const plan         = contrat.plan_paiement || '1x';
+  const fois         = parseInt(plan[0]) || 1;
+
+  const echeancesRows = echeances.map(e => `
+    <tr>
+      <td style="padding:8px 12px;border-bottom:1px solid #e8e0d4;">Versement n°${e.numero}</td>
+      <td style="padding:8px 12px;border-bottom:1px solid #e8e0d4;">${fmtShort(e.date)}</td>
+      <td style="padding:8px 12px;border-bottom:1px solid #e8e0d4;text-align:right;font-weight:600;">${parseFloat(e.montant).toFixed(2)} €</td>
+      <td style="padding:8px 12px;border-bottom:1px solid #e8e0d4;text-align:center;">${e.payee ? '✅ Payé' : '⬜ À régler'}</td>
+    </tr>`).join('');
+
+  return `<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8">
+<title>Contrat de prestations — ${clientName}</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family: 'Georgia', serif; font-size: 13px; color: #1a1a1a; background: #fff; padding: 48px 56px; line-height: 1.7; }
+  .header { text-align:center; margin-bottom:36px; border-bottom: 2px solid #c9a96e; padding-bottom: 24px; }
+  .logo { font-size: 2rem; letter-spacing: .2em; color: #c9a96e; font-weight: 400; margin-bottom: 6px; }
+  .subtitle { font-size: .85rem; color: #888; letter-spacing: .08em; text-transform: uppercase; }
+  .contract-ref { font-size:.78rem; color:#aaa; margin-top:6px; }
+  .parties { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; margin-bottom: 28px; }
+  .partie { background: #faf7f3; border: 1px solid #e8ddd0; border-radius: 6px; padding: 16px 20px; }
+  .partie-role { font-size: .7rem; letter-spacing:.1em; text-transform:uppercase; color:#c9a96e; margin-bottom:8px; }
+  .partie-nom { font-size: 1rem; font-weight: 600; margin-bottom: 4px; }
+  .partie-detail { font-size:.82rem; color:#555; line-height:1.6; }
+  h2 { font-size: .82rem; letter-spacing: .14em; text-transform: uppercase; color: #c9a96e; border-bottom: 1px solid #e8ddd0; padding-bottom: 5px; margin: 24px 0 10px; }
+  p { margin-bottom: 8px; font-size: .88rem; color: #333; }
+  table { width: 100%; border-collapse: collapse; margin: 12px 0; }
+  th { background: #f5efe8; padding: 9px 12px; text-align: left; font-size: .78rem; letter-spacing:.06em; text-transform:uppercase; color:#555; border-bottom:2px solid #e8d8c0; }
+  .total-row td { font-weight:600; background:#fdf8f2; border-top:2px solid #c9a96e !important; }
+  .article { margin-bottom: 18px; }
+  .bold { font-weight: 600; }
+  .signatures { display:grid; grid-template-columns:1fr 1fr; gap:40px; margin-top:48px; padding-top:24px; border-top:1px solid #e8ddd0; }
+  .sig-box { }
+  .sig-label { font-size:.75rem; letter-spacing:.08em; text-transform:uppercase; color:#888; margin-bottom:10px; }
+  .sig-line { border-bottom:1px solid #333; height:50px; margin-bottom:8px; }
+  .sig-name { font-size:.82rem; color:#333; }
+  .mention { font-size:.75rem; color:#888; margin-top:6px; font-style:italic; }
+  .legal-note { background:#faf7f3; border:1px solid #e8ddd0; border-radius:4px; padding:12px 16px; font-size:.78rem; color:#666; margin-top:8px; line-height:1.6; }
+  @media print {
+    body { padding: 24px 32px; }
+    .no-print { display: none !important; }
+    h2 { page-break-after: avoid; }
+    .parties { page-break-inside: avoid; }
+    .signatures { page-break-inside: avoid; }
+  }
+</style></head>
+<body>
+
+<div class="header">
+  <div class="logo">HARMONYA</div>
+  <div class="subtitle">Institut de massage premium · Illkirch-Graffenstaden</div>
+  <div class="contract-ref">Contrat n° ${contractNum} · établi le ${fmtFr(today.toISOString().split('T')[0])}</div>
+</div>
+
+<div class="no-print" style="text-align:center;margin-bottom:28px;">
+  <button onclick="window.print()" style="background:#c9a96e;color:#fff;border:none;padding:10px 28px;border-radius:6px;font-size:.9rem;cursor:pointer;font-family:Georgia,serif;">🖨️ Imprimer / Enregistrer en PDF</button>
+</div>
+
+<p style="text-align:center;font-size:.95rem;font-weight:600;margin-bottom:24px;letter-spacing:.05em;text-transform:uppercase;">CONTRAT DE PRESTATIONS DE SERVICES</p>
+
+<div class="parties">
+  <div class="partie">
+    <div class="partie-role">Le Prestataire</div>
+    <div class="partie-nom">Hélène CHATELARD</div>
+    <div class="partie-detail">
+      Praticienne en massage de bien-être<br>
+      <span class="bold">Harmonya</span> — Institut de massage<br>
+      1A rue de la Poste, 67400 Illkirch-Graffenstaden<br>
+      contact@harmonyamassage.fr<br>
+      Tél. 06 26 14 25 89<br>
+      N° SIRET : <em>[à compléter]</em>
+    </div>
+  </div>
+  <div class="partie">
+    <div class="partie-role">La Cliente</div>
+    <div class="partie-nom">${clientName}</div>
+    <div class="partie-detail">
+      ${clientEmail !== '—' ? `Email : ${clientEmail}<br>` : ''}
+      ${clientAddr ? `Adresse : ${clientAddr}<br>` : ''}
+      <em style="color:#aaa;">Ci-après désignée « la Cliente »</em>
+    </div>
+  </div>
+</div>
+
+<div class="article">
+  <h2>Article 1 — Objet du contrat</h2>
+  <p>Le présent contrat a pour objet de définir les conditions dans lesquelles Hélène CHATELARD (ci-après « la Praticienne »), exerçant sous l'enseigne <span class="bold">HARMONYA</span>, s'engage à fournir à la Cliente des prestations de <span class="bold">massage de bien-être</span>.</p>
+  <p>Les massages proposés par HARMONYA sont exclusivement des <span class="bold">massages de bien-être à visée de détente et de relaxation</span>. Ils ne constituent pas des actes de soins au sens médical ou paramédical et ne sauraient se substituer à un suivi médical ou thérapeutique. Ces prestations relèvent du secteur du bien-être et ne sont pas réglementées par le Code de la Santé Publique.</p>
+</div>
+
+<div class="article">
+  <h2>Article 2 — Nature et description des prestations</h2>
+  <p><span class="bold">Prestation souscrite :</span> ${contrat.prestation}</p>
+  <p><span class="bold">Nombre de séances :</span> ${nbSeances !== '—' ? nbSeances + ' séance(s)' : 'À définir selon le forfait'}</p>
+  <p><span class="bold">Date de début estimée :</span> ${dateDebut}</p>
+  <p>Les séances seront réalisées au cabinet HARMONYA situé 1A rue de la Poste, 67400 Illkirch-Graffenstaden, ou à domicile selon accord préalable entre les parties. La durée de chaque séance sera précisée lors de la confirmation du rendez-vous.</p>
+  <p>Les séances sont valables <span class="bold">12 mois</span> à compter de la date de signature du présent contrat, sauf accord écrit contraire.</p>
+  ${contrat.notes ? `<p><span class="bold">Notes particulières :</span> ${contrat.notes}</p>` : ''}
+</div>
+
+<div class="article">
+  <h2>Article 3 — Tarif et modalités de paiement</h2>
+  <p><span class="bold">Montant total de la cure :</span> <span style="font-size:1.05rem;font-weight:600;">${total} €</span> TTC</p>
+  <p><span class="bold">Plan de paiement :</span> ${fois === 1 ? 'Paiement unique' : `Paiement en ${fois} fois`}</p>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Échéance</th>
+        <th>Date d'exigibilité</th>
+        <th style="text-align:right;">Montant</th>
+        <th style="text-align:center;">Statut</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${echeancesRows}
+      <tr class="total-row">
+        <td colspan="2" style="padding:9px 12px;">TOTAL</td>
+        <td style="padding:9px 12px;text-align:right;">${total} €</td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p>Les règlements sont acceptés en espèces, par virement bancaire ou par chèque libellé à l'ordre de <span class="bold">Hélène CHATELARD</span>. Tout paiement par carte bancaire fera l'objet d'un accord préalable. En cas de retard de paiement, une relance amiable sera effectuée avant toute procédure.</p>
+</div>
+
+<div class="article">
+  <h2>Article 4 — Conditions d'annulation et de report</h2>
+  <p>Toute annulation ou report de séance doit être communiqué à la Praticienne <span class="bold">au minimum 48 heures à l'avance</span> par téléphone (06 26 14 25 89) ou par email (contact@harmonyamassage.fr).</p>
+  <p>En cas d'annulation notifiée <span class="bold">moins de 24 heures</span> avant la séance prévue ou en cas d'absence non justifiée, la séance sera considérée comme consommée, sauf circonstance exceptionnelle appréciée par la Praticienne (maladie justifiée, urgence).</p>
+  <p>La Praticienne se réserve le droit d'annuler une séance en cas de force majeure ou d'indisponibilité imprévisible. Dans ce cas, la séance sera reportée sans frais supplémentaires.</p>
+  <p>Le remboursement des séances non effectuées (hors annulation tardive) sera possible sur demande écrite de la Cliente, déduction faite d'éventuels frais administratifs de 10% du montant concerné.</p>
+</div>
+
+<div class="article">
+  <h2>Article 5 — Obligations, contre-indications et responsabilité</h2>
+  <p>La Cliente s'engage à informer la Praticienne de tout état de santé susceptible de constituer une contre-indication au massage (grossesse, pathologie cardiovasculaire, thrombose, cancer, affection cutanée, prise de médicaments anticoagulants, etc.) avant chaque séance.</p>
+  <p>Le massage de bien-être est contre-indiqué en cas notamment de : fièvre, état infectieux, phlébite ou thrombose active, plaie ouverte ou infection cutanée, traitement anticoagulant sans avis médical, cancer évolutif non stabilisé.</p>
+  <p>La Praticienne ne pourra être tenue responsable des conséquences découlant d'une information incomplète ou erronée fournie par la Cliente sur son état de santé. La Cliente reconnaît avoir été informée des limites non thérapeutiques des soins dispensés.</p>
+  <p>La responsabilité civile professionnelle de la Praticienne est couverte par un contrat d'assurance en cours de validité.</p>
+</div>
+
+<div class="article">
+  <h2>Article 6 — Protection des données personnelles (RGPD)</h2>
+  <p>Conformément au <span class="bold">Règlement Général sur la Protection des Données (UE) 2016/679</span> et à la Loi Informatique et Libertés, les données personnelles collectées dans le cadre du présent contrat (état civil, coordonnées, données de santé) sont traitées par Hélène CHATELARD, responsable de traitement.</p>
+  <p>Ces données sont collectées pour les finalités suivantes : gestion de la relation client, suivi des prestations, facturation. Elles ne sont ni cédées ni transmises à des tiers. Les données de santé bénéficient d'une protection renforcée conformément à l'article 9 du RGPD.</p>
+  <p>La Cliente bénéficie d'un droit d'accès, de rectification, de suppression et de portabilité de ses données, ainsi que d'un droit d'opposition, exercisables par email à contact@harmonyamassage.fr. En cas de litige, elle peut saisir la CNIL (www.cnil.fr).</p>
+</div>
+
+<div class="article">
+  <h2>Article 7 — Droit applicable et règlement des litiges</h2>
+  <p>Le présent contrat est soumis au <span class="bold">droit français</span>. Il est régi notamment par les dispositions du Code civil relatives aux contrats de prestation de services (art. 1710 et s.) et par le Code de la Consommation (art. L.111-1 et s.).</p>
+  <p>En cas de litige relatif à l'exécution ou à l'interprétation du présent contrat, les parties s'engagent à rechercher une solution amiable préalablement à toute action judiciaire. À défaut, le litige sera porté devant les juridictions compétentes du ressort du Tribunal de Grande Instance de Strasbourg.</p>
+  <p>Conformément à l'article L.612-1 du Code de la Consommation, la Cliente peut recourir gratuitement à un médiateur de la consommation en vue de la résolution amiable d'un litige.</p>
+</div>
+
+<div class="article">
+  <h2>Article 8 — Clauses diverses</h2>
+  <p>Le présent contrat annule et remplace tout accord verbal ou écrit antérieur relatif à la même prestation. Toute modification doit faire l'objet d'un avenant signé par les deux parties.</p>
+  <p>Si l'une des clauses du présent contrat était déclarée nulle, les autres clauses resteraient valides et applicables.</p>
+</div>
+
+<div class="signatures">
+  <div class="sig-box">
+    <div class="sig-label">La Praticienne</div>
+    <div class="sig-line"></div>
+    <div class="sig-name"><span class="bold">Hélène CHATELARD</span><br>HARMONYA</div>
+    <div class="mention">Lu et approuvé — date et signature</div>
+  </div>
+  <div class="sig-box">
+    <div class="sig-label">La Cliente</div>
+    <div class="sig-line"></div>
+    <div class="sig-name"><span class="bold">${clientName}</span></div>
+    <div class="mention">Lu et approuvé — date et signature</div>
+  </div>
+</div>
+
+<div class="legal-note" style="margin-top:32px;">
+  <span class="bold">Notice légale :</span> Conformément à l'article L.111-1 du Code de la Consommation, les informations essentielles relatives aux prestations ont été communiquées avant la signature. Ce contrat est établi en deux exemplaires originaux, un pour chaque partie. Toute reproduction non autorisée est interdite. Document confidentiel.
+</div>
+
+</body></html>`;
 }
 
 async function loadDrawerSuivi(clientId) {
@@ -2112,32 +2342,56 @@ function openModal(type) {
   else if (type === 'contrat') {
     const clientOptions = allClients.map(c => `<option value="${c.id}" ${selectedClientId===c.id?'selected':''}>${esc(c.full_name||c.email)}</option>`).join('');
     const CURES = [
-      {nom: 'Cure 5 séances Standard', prix: 340},
-      {nom: 'Cure 5 séances Complexe', prix: 400},
-      {nom: 'Cure 10 séances Standard', prix: 660},
-      {nom: 'Cure 10 séances Complexe', prix: 760}
+      {nom: 'Cure Évasion — 5 séances', prix: 340, nb: 5},
+      {nom: 'Cure Immersion — 5 séances complexe', prix: 400, nb: 5},
+      {nom: 'Cure Signature — 10 séances', prix: 660, nb: 10},
+      {nom: 'Cure Prestige — 10 séances complexe', prix: 760, nb: 10},
+      {nom: 'Cure Drainage — 5 séances drainage classique', prix: 300, nb: 5},
+      {nom: 'Cure Drain & Sculpt — 5 séances', prix: 450, nb: 5},
+      {nom: 'Cure Post-opératoire — 5 séances', prix: 380, nb: 5},
+      {nom: 'Cure Sur-mesure', prix: 0, nb: null},
     ];
-    const cureOpts = CURES.map(c => `<option value="${c.nom}">${c.nom} — ${c.prix}€</option>`).join('');
+    const cureOpts = CURES.map(c => `<option value="${c.nom}" data-prix="${c.prix}" data-nb="${c.nb||''}">${c.nom}${c.prix ? ' — '+c.prix+'€' : ' (tarif libre)'}</option>`).join('');
+    const todayStr = new Date().toISOString().split('T')[0];
     html = `
       <button class="modal-close" onclick="closeModal()"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
-      <h3 class="modal-title">Nouveau contrat</h3>
+      <h3 class="modal-title">Nouveau contrat de prestations</h3>
       <form id="modal-form" onsubmit="event.preventDefault();saveContrat(this);">
-        <div class="form-field"><label class="form-label">Cliente *</label><select name="client_id" class="form-select" required onchange="updateContratForm()">${clientOptions||'<option value="">Aucune cliente</option>'}</select></div>
-        <div class="form-field"><label class="form-label">Prestation *</label><select name="prestation" class="form-select" required>${cureOpts}</select></div>
+        <div class="form-field"><label class="form-label">Cliente *</label>
+          <select name="client_id" class="form-select" required>${clientOptions||'<option value="">Aucune cliente</option>'}</select>
+        </div>
+        <div class="form-field"><label class="form-label">Prestation / Cure *</label>
+          <select name="prestation" class="form-select" required onchange="autofillContratFields(this)">${cureOpts}</select>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+          <div class="form-field"><label class="form-label">Nombre de séances</label>
+            <input name="nb_seances" type="number" min="1" class="form-input" placeholder="ex: 5">
+          </div>
+          <div class="form-field"><label class="form-label">Date de début</label>
+            <input name="date_debut" type="date" class="form-input" value="${todayStr}">
+          </div>
+        </div>
         <div class="form-field"><label class="form-label">Plan de paiement</label>
           <select name="plan_paiement" class="form-select">
-            <option value="1x">Paiement unique</option>
+            <option value="1x">Paiement unique (1 fois)</option>
             <option value="2x">2 fois</option>
             <option value="3x">3 fois</option>
             <option value="4x">4 fois</option>
             <option value="5x">5 fois</option>
           </select>
         </div>
-        <div class="form-field"><label class="form-label">Montant total (€) *</label><input name="montant" type="number" step="0.01" class="form-input" required placeholder="340"></div>
-        <div class="form-field"><label class="form-label">Notes</label><textarea name="notes" class="form-input" style="min-height:80px;"></textarea></div>
+        <div class="form-field"><label class="form-label">Montant total TTC (€) *</label>
+          <input name="montant" type="number" step="0.01" class="form-input" required placeholder="340.00">
+        </div>
+        <div class="form-field"><label class="form-label">Notes / Conditions particulières</label>
+          <textarea name="notes" class="form-input" style="min-height:70px;" placeholder="Conditions spécifiques, accord verbal, aménagements…"></textarea>
+        </div>
         <div class="form-actions">
           <button type="button" class="btn-cancel" onclick="closeModal()">Annuler</button>
-          <button type="submit" class="btn-action">Créer le contrat</button>
+          <button type="submit" class="btn-action">
+            <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/></svg>
+            Créer et générer le contrat
+          </button>
         </div>
       </form>`;
   }
@@ -2309,15 +2563,157 @@ function renderContratsTable() {
     allContrats.forEach(c => {
       const client = allClients.find(cl => cl.id === c.client_id);
       const badge = c.statut === 'signé' ? '<span class="badge actif">Signé</span>' : '<span class="badge en_attente">En attente</span>';
-      html += `<tr><td>${esc(client?.full_name||client?.email||'—')}</td><td>${esc(c.prestation)}</td><td>${c.plan_paiement}</td><td>${c.montant}€</td><td>${badge}</td><td style="cursor:pointer;" onclick="openContratDrawer('${c.id}')">→</td></tr>`;
+      const echeances = c.echeances || [];
+      const nbPaye = echeances.filter(e => e.payee).length;
+      const progress = echeances.length > 0 ? `${nbPaye}/${echeances.length} versements` : c.plan_paiement;
+      html += `<tr>
+        <td>${esc(client?.full_name||client?.email||'—')}</td>
+        <td style="font-size:.82rem;">${esc(c.prestation)}</td>
+        <td style="font-size:.78rem;color:var(--text-dim);">${progress}</td>
+        <td>${parseFloat(c.montant||0).toFixed(2)}€</td>
+        <td>${badge}</td>
+        <td>
+          <button class="btn-sm btn-sm-outline" style="font-size:.7rem;" onclick="openContratDrawer('${c.id}')">Ouvrir</button>
+          <button class="btn-sm btn-sm-gold" style="font-size:.7rem;margin-left:4px;" onclick="openContratPrint('${c.id}')">
+            <svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+            PDF
+          </button>
+        </td>
+      </tr>`;
     });
   }
   document.getElementById('contrats-tbody').innerHTML = html;
 }
 
 function openContratDrawer(contratId) {
-  // Will be implemented with drawer
-  console.log('Open contrat:', contratId);
+  const contrat = allContrats.find(c => c.id === contratId);
+  if (!contrat) return;
+  const client = allClients.find(c => c.id === contrat.client_id);
+  const clientName = client?.full_name || client?.email || '—';
+
+  const fmtShort = (ds) => {
+    if (!ds) return '—';
+    const d = new Date(ds + 'T12:00:00Z');
+    return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;
+  };
+
+  const echeances = contrat.echeances || [];
+  const totalPaye  = echeances.filter(e => e.payee).reduce((s,e) => s + parseFloat(e.montant||0), 0);
+  const totalReste = parseFloat(contrat.montant||0) - totalPaye;
+
+  // Build échéancier rows
+  const ecRows = echeances.map((e, idx) => `
+    <div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.05);">
+      <span style="flex:0 0 80px;font-size:.78rem;color:var(--text-dim);">Versement ${e.numero}</span>
+      <span style="flex:1;font-size:.82rem;color:#fff;">${fmtShort(e.date)}</span>
+      <span style="font-size:.88rem;font-weight:600;color:var(--gold-light);">${parseFloat(e.montant).toFixed(2)}€</span>
+      <span class="badge ${e.payee ? 'actif' : 'en_attente'}" style="font-size:.68rem;">${e.payee ? '✓ Payé' : 'À régler'}</span>
+      <button class="btn-sm ${e.payee ? 'btn-sm-outline' : 'btn-sm-gold'}" style="font-size:.7rem;padding:4px 8px;" onclick="toggleEcheancePaid('${contratId}', ${idx})">
+        ${e.payee ? 'Annuler' : 'Marquer payé'}
+      </button>
+    </div>`).join('');
+
+  const statutBadge = contrat.statut === 'signé'
+    ? '<span class="badge actif">Signé</span>'
+    : contrat.statut === 'annulé'
+    ? '<span class="badge annule">Annulé</span>'
+    : '<span class="badge en_attente">En attente de signature</span>';
+
+  const content = document.getElementById('modal-content');
+  const overlay = document.getElementById('modal-overlay');
+
+  content.innerHTML = `
+    <button class="modal-close" onclick="closeModal()"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    <h3 class="modal-title">Contrat — ${esc(clientName)}</h3>
+
+    <div style="display:flex;gap:10px;align-items:center;margin-bottom:18px;flex-wrap:wrap;">
+      ${statutBadge}
+      <span style="font-size:.78rem;color:var(--text-dim);">${esc(contrat.prestation)}</span>
+      <span style="font-size:.78rem;color:var(--text-dim);">·</span>
+      <span style="font-size:.88rem;font-weight:600;color:var(--gold-light);">${parseFloat(contrat.montant||0).toFixed(2)}€</span>
+    </div>
+
+    <!-- Progress bar -->
+    <div style="margin-bottom:20px;">
+      <div style="display:flex;justify-content:space-between;font-size:.75rem;color:var(--text-dim);margin-bottom:5px;">
+        <span>Payé : <strong style="color:var(--gold-light);">${totalPaye.toFixed(2)}€</strong></span>
+        <span>Restant : <strong style="color:${totalReste > 0 ? '#e57373' : 'var(--gold-light)'};">${totalReste.toFixed(2)}€</strong></span>
+      </div>
+      <div style="background:rgba(255,255,255,.08);border-radius:4px;height:6px;overflow:hidden;">
+        <div style="background:var(--gold);height:100%;width:${contrat.montant > 0 ? Math.round(totalPaye/contrat.montant*100) : 0}%;transition:width .4s;"></div>
+      </div>
+    </div>
+
+    <!-- Échéancier -->
+    <div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:6px;padding:14px 16px;margin-bottom:18px;">
+      <div style="font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);margin-bottom:10px;">Échéancier de paiement</div>
+      ${ecRows || '<div style="color:var(--text-dim);font-size:.82rem;">Aucune échéance</div>'}
+    </div>
+
+    <!-- Actions -->
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">
+      <button class="btn-sm btn-sm-gold" onclick="openContratPrint('${contratId}')">
+        <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+        Imprimer le contrat
+      </button>
+      ${contrat.statut !== 'signé' ? `<button class="btn-sm btn-sm-outline" onclick="markContratSigne('${contratId}')">
+        <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+        Marquer comme signé
+      </button>` : ''}
+      ${contrat.statut !== 'annulé' ? `<button class="btn-sm btn-sm-outline" style="color:#e57373;border-color:rgba(229,115,115,.3);" onclick="markContratAnnule('${contratId}')">Annuler</button>` : ''}
+    </div>
+
+    ${contrat.notes ? `<div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:5px;padding:11px 14px;font-size:.8rem;color:var(--text-dim);">💬 ${esc(contrat.notes)}</div>` : ''}
+  `;
+  overlay.classList.add('open');
+}
+
+async function toggleEcheancePaid(contratId, idx) {
+  const contrat = allContrats.find(c => c.id === contratId);
+  if (!contrat) return;
+  const echeances = JSON.parse(JSON.stringify(contrat.echeances || []));
+  if (!echeances[idx]) return;
+  echeances[idx].payee = !echeances[idx].payee;
+  echeances[idx].date_paiement = echeances[idx].payee ? new Date().toISOString().split('T')[0] : null;
+  await sb.from('contrats').update({ echeances }).eq('id', contratId);
+  await loadAllContrats();
+  openContratDrawer(contratId);
+}
+
+async function markContratSigne(contratId) {
+  await sb.from('contrats').update({ statut: 'signé', signe_le: new Date().toISOString() }).eq('id', contratId);
+  await loadAllContrats();
+  openContratDrawer(contratId);
+}
+
+async function markContratAnnule(contratId) {
+  if (!confirm('Annuler ce contrat ?')) return;
+  await sb.from('contrats').update({ statut: 'annulé' }).eq('id', contratId);
+  closeModal();
+  loadAllContrats();
+}
+
+function openContratPrint(contratId) {
+  const contrat = allContrats.find(c => c.id === contratId);
+  if (!contrat) return;
+  let html = contrat.contenu_html;
+  if (!html) {
+    // Regenerate if missing
+    const client = allClients.find(c => c.id === contrat.client_id);
+    html = generateContratHTML(contrat, client);
+  }
+  const w = window.open('', '_blank');
+  if (w) { w.document.write(html); w.document.close(); }
+}
+
+function autofillContratFields(sel) {
+  const opt = sel.options[sel.selectedIndex];
+  const form = document.getElementById('modal-form');
+  if (!form) return;
+  const prix = parseFloat(opt.dataset.prix);
+  const nb   = opt.dataset.nb;
+  if (prix > 0 && form.montant) form.montant.value = prix.toFixed(2);
+  if (nb   && form.nb_seances) form.nb_seances.value = nb;
 }
 
 // ── REALTIME ──────────────────────────────────────────
