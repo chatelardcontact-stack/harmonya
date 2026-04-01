@@ -2603,14 +2603,18 @@ function openContratDrawer(contratId) {
 
   // Build échéancier rows
   const ecRows = echeances.map((e, idx) => `
-    <div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.05);">
+    <div style="display:flex;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.05);flex-wrap:wrap;">
       <span style="flex:0 0 80px;font-size:.78rem;color:var(--text-dim);">Versement ${e.numero}</span>
-      <span style="flex:1;font-size:.82rem;color:#fff;">${fmtShort(e.date)}</span>
+      <span style="flex:1;font-size:.82rem;color:#fff;min-width:70px;">${fmtShort(e.date)}</span>
       <span style="font-size:.88rem;font-weight:600;color:var(--gold-light);">${parseFloat(e.montant).toFixed(2)}€</span>
       <span class="badge ${e.payee ? 'actif' : 'en_attente'}" style="font-size:.68rem;">${e.payee ? '✓ Payé' : 'À régler'}</span>
       <button class="btn-sm ${e.payee ? 'btn-sm-outline' : 'btn-sm-gold'}" style="font-size:.7rem;padding:4px 8px;" onclick="toggleEcheancePaid('${contratId}', ${idx})">
         ${e.payee ? 'Annuler' : 'Marquer payé'}
       </button>
+      ${!e.payee ? `<button class="btn-sm btn-sm-outline" style="font-size:.7rem;padding:4px 8px;color:var(--gold);border-color:rgba(201,169,110,.4);" id="btn-pay-link-${contratId}-${idx}" onclick="sendEcheancePaymentLink('${contratId}', ${idx})">
+        <svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+        Lien de paiement
+      </button>` : ''}
     </div>`).join('');
 
   const statutBadge = contrat.statut === 'signé'
@@ -2683,6 +2687,97 @@ async function toggleEcheancePaid(contratId, idx) {
   await sb.from('contrats').update({ echeances }).eq('id', contratId);
   await loadAllContrats();
   openContratDrawer(contratId);
+}
+
+async function sendEcheancePaymentLink(contratId, idx) {
+  const contrat = allContrats.find(c => c.id === contratId);
+  if (!contrat) return;
+  const echeance = (contrat.echeances || [])[idx];
+  if (!echeance || echeance.payee) return;
+
+  const client = allClients.find(c => c.id === contrat.client_id);
+  const btn = document.getElementById(`btn-pay-link-${contratId}-${idx}`);
+  if (btn) { btn.textContent = 'Génération…'; btn.disabled = true; }
+
+  const feedback = document.getElementById('contrat-email-feedback');
+  if (feedback) feedback.textContent = '';
+
+  try {
+    const amountCents = Math.round(parseFloat(echeance.montant) * 100);
+    const description = `${contrat.prestation || 'Cure Harmonya'} — Versement n°${echeance.numero}`;
+    const clientEmail = client?.email || '';
+    const clientName = client?.prenom || '';
+
+    const { data, error } = await sb.functions.invoke('create-checkout-session', {
+      body: {
+        contrat_id: contratId,
+        echeance_idx: idx,
+        amount_cents: amountCents,
+        description,
+        client_email: clientEmail,
+        client_name: clientName,
+      }
+    });
+
+    if (error) throw error;
+    if (!data?.url) throw new Error('Pas de lien Stripe');
+
+    // Send payment link email to client
+    if (clientEmail) {
+      const montantLabel = parseFloat(echeance.montant).toFixed(2);
+      const emailHtml = `<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"></head>
+<body style="margin:0;padding:0;background:#0d0d0d;font-family:Georgia,serif;">
+<table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#0d0d0d;">
+  <tr><td align="center" style="padding:40px 20px;">
+    <table width="560" cellpadding="0" cellspacing="0" border="0" style="background:#1a1a1a;border-radius:12px;overflow:hidden;">
+      <tr><td style="background:linear-gradient(135deg,#b8975a,#d4af7a);padding:32px;text-align:center;">
+        <h1 style="margin:0;font-size:24px;color:#fff;font-weight:normal;letter-spacing:2px;">HARMONYA</h1>
+        <p style="margin:8px 0 0;font-size:12px;color:rgba(255,255,255,.8);">Massages &amp; Bien-être</p>
+      </td></tr>
+      <tr><td style="padding:32px;">
+        <h2 style="color:#d4af7a;font-size:19px;font-weight:normal;margin:0 0 14px;">Votre versement n°${echeance.numero}</h2>
+        <p style="color:#ccc;font-size:14px;margin:0 0 10px;">Bonjour ${clientName ? clientName : ''},</p>
+        <p style="color:#ccc;font-size:14px;margin:0 0 24px;">Votre versement de <strong style="color:#d4af7a;">${montantLabel} €</strong> pour votre cure <em>${contrat.prestation || ''}</em> est à régler.</p>
+        <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:28px;">
+          <tr><td align="center">
+            <a href="${data.url}" style="display:inline-block;background:linear-gradient(135deg,#b8975a,#d4af7a);color:#fff;text-decoration:none;padding:14px 32px;border-radius:6px;font-size:15px;letter-spacing:.5px;">
+              Payer ${montantLabel} € →
+            </a>
+          </td></tr>
+        </table>
+        <p style="color:#777;font-size:11px;text-align:center;">Lien sécurisé Stripe · valable 24h</p>
+        <p style="color:#999;font-size:12px;text-align:center;margin-top:20px;">À très bientôt — Hélène &amp; l'équipe Harmonya</p>
+      </td></tr>
+    </table>
+  </td></tr>
+</table></body></html>`;
+
+      await sb.functions.invoke('send-email', {
+        body: {
+          to: clientEmail,
+          subject: `💳 Versement n°${echeance.numero} — ${contrat.prestation || 'Cure Harmonya'}`,
+          html: emailHtml
+        }
+      });
+
+      if (feedback) {
+        feedback.style.color = 'var(--gold)';
+        feedback.textContent = `✓ Lien de paiement envoyé à ${clientEmail}`;
+      }
+    } else {
+      // No email — show the link for manual copy
+      if (feedback) {
+        feedback.style.color = 'var(--gold)';
+        feedback.innerHTML = `Lien de paiement : <a href="${data.url}" target="_blank" style="color:var(--gold-light);word-break:break-all;">${data.url}</a>`;
+      }
+    }
+
+    if (btn) { btn.textContent = '✓ Envoyé'; btn.disabled = false; }
+  } catch (e) {
+    console.error('Payment link error:', e);
+    if (feedback) { feedback.style.color = '#e57373'; feedback.textContent = 'Erreur : ' + (e.message || String(e)); }
+    if (btn) { btn.textContent = 'Lien de paiement'; btn.disabled = false; }
+  }
 }
 
 async function markContratSigne(contratId) {

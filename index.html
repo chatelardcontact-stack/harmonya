@@ -1602,12 +1602,13 @@
       var phone  = window._bkPhone  || (document.getElementById('bk-phone')  ? document.getElementById('bk-phone').value.trim()  : '');
       if (!prenom || !email) return;
       var btn = document.getElementById('bk-decharge-btn') || document.getElementById('bk-submit-btn');
-      if (btn) { btn.textContent = 'Enregistrement…'; btn.disabled = true; }
+      if (btn) { btn.textContent = 'Redirection vers le paiement…'; btn.disabled = true; }
       try {
         var sbk = window.supabase.createClient(BK_SUPA_URL, BK_SUPA_KEY);
         var serviceId = window.selectedServiceId || '';
-        // Insert pending RDV
-        await sbk.from('rendez_vous').insert({
+        var totalPrice = (window.selectedServicePrice || 0) + (window.locationFees || 0);
+        // Insert pending RDV — statut en_attente_paiement jusqu'au paiement Stripe
+        var { data: rdvData, error: rdvError } = await sbk.from('rendez_vous').insert({
           client_email: email,
           client_prenom: prenom,
           client_phone: phone || null,
@@ -1615,77 +1616,63 @@
           lieu: window.selectedLocation || 'cabinet',
           adresse_domicile: window.selectedAddress || null,
           frais_km: window.locationFees || 0,
-          prix: window.selectedServicePrice || 0,
+          prix: totalPrice,
           date: window.selectedDate || null,
           heure: (window.selectedTime ? window.selectedTime + ':00' : null),
-          statut: 'en_attente',
+          statut: 'en_attente_paiement',
+          paiement_statut: 'en_attente',
           decharge_signee: window._bkDechargeSigned || false,
           decharge_date: window._bkDechargeSigned ? new Date().toISOString() : null,
           decharge_nom: window._bkDechargeNom || null
-        });
+        }).select('id').single();
+
+        if (rdvError) throw rdvError;
+        var rdvId = rdvData.id;
+
         // Réinitialiser les variables temporaires
         window._bkPrenom = null; window._bkEmail = null; window._bkPhone = null;
         window._bkDechargeSigned = false; window._bkDechargeNom = null; window._bkDechargeDate = null;
-        // Send branded magic link via our Edge Function (uses notifications@harmonyamassage.fr)
+
+        // Envoyer magic link (accès espace client)
         sbk.functions.invoke('send-magic-link', {
           body: { email, prenom, redirectTo: window.location.origin + '/espace-client.html' }
         });
-        // Send branded confirmation email to client
-        var creneau = window.selectedDate && window.selectedTime
-          ? '<div style="display:flex;gap:10px;font-size:.87rem;color:rgba(232,221,208,.65);"><span>📅</span><span>' + frenchDate(window.selectedDate) + ' à ' + window.selectedTime + '</span></div>'
-          : '';
-        var lieuLabel = window.selectedLocation === 'domicile'
-          ? 'À domicile — ' + escHtml(window.selectedAddress || '') + ' (+' + (window.locationFees||0).toFixed(2) + '€)'
-          : 'Au cabinet · 1A rue de la Poste, 67400 Illkirch';
-        await sbk.functions.invoke('send-email', {
+
+        // Créer session Stripe Checkout
+        var amountCents = Math.round(totalPrice * 100);
+        if (amountCents < 50) amountCents = 50; // minimum Stripe
+        var descriptionLabel = (window.selectedServiceTitle || serviceId)
+          + (window.selectedDate ? ' · ' + frenchDate(window.selectedDate) : '')
+          + (window.selectedTime ? ' à ' + window.selectedTime : '');
+
+        var { data: checkoutData, error: checkoutError } = await sbk.functions.invoke('create-checkout-session', {
           body: {
-            to: email,
-            subject: '🌿 Demande de RDV Harmonya enregistrée',
-            html: '<div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;background:#1a1614;color:#e8ddd0;padding:40px 32px;border-radius:12px;">' +
-              '<div style="text-align:center;margin-bottom:28px;"><span style="font-size:1.6rem;letter-spacing:.12em;color:#c9a96e;">HARMONYA</span></div>' +
-              '<h2 style="font-size:1.4rem;margin-bottom:8px;">Bonjour ' + escHtml(prenom) + ' 🌿</h2>' +
-              '<p style="color:rgba(232,221,208,.7);line-height:1.7;">Votre demande de rendez-vous a bien été enregistrée. Hélène vous enverra un email de confirmation dès que votre créneau sera validé.</p>' +
-              '<div style="background:rgba(201,169,110,.08);border:1px solid rgba(201,169,110,.2);border-radius:8px;padding:16px 18px;margin:20px 0;display:flex;flex-direction:column;gap:8px;">' +
-              '<div style="color:#c9a96e;font-weight:600;font-size:.95rem;margin-bottom:4px;">' + escHtml(window.selectedServiceTitle||serviceId) + '</div>' +
-              creneau +
-              '<div style="display:flex;gap:10px;font-size:.87rem;color:rgba(232,221,208,.65);"><span>📍</span><span>' + lieuLabel + '</span></div>' +
-              '</div>' +
-              '<p style="color:rgba(232,221,208,.5);font-size:.82rem;text-align:center;">Un email séparé vous a été envoyé pour accéder à votre espace client Harmonya.</p>' +
-              '<p style="color:rgba(232,221,208,.3);font-size:.75rem;text-align:center;margin-top:24px;border-top:1px solid rgba(255,255,255,.06);padding-top:20px;">© 2026 Harmonya · Institut de massage premium · Illkirch-Graffenstaden</p>' +
-              '</div>'
+            rdv_id: rdvId,
+            amount_cents: amountCents,
+            description: descriptionLabel,
+            client_email: email,
+            client_name: prenom,
+            success_url: window.location.origin + '/?booking=success&session_id={CHECKOUT_SESSION_ID}',
+            cancel_url: window.location.origin + '/?booking=cancelled&rdv_id=' + rdvId
           }
         });
-        // Send admin notification email
-        var adminDateTimeInfo = '';
-        if (window.selectedDate && window.selectedTime) {
-          adminDateTimeInfo = '<div style="color:rgba(232,221,208,.6);">Créneau : ' + frenchDate(window.selectedDate) + ' à ' + window.selectedTime + '</div>';
-        }
-        await sbk.functions.invoke('send-email', {
-          body: {
-            to: 'contact@harmonyamassage.fr',
-            subject: '🔔 Nouvelle réservation — ' + (window.selectedServiceTitle || serviceId),
-            html: '<div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;background:#1a1614;color:#e8ddd0;padding:40px 32px;border-radius:12px;">' +
-              '<div style="text-align:center;margin-bottom:28px;"><span style="font-size:1.6rem;letter-spacing:.12em;color:#c9a96e;">HARMONYA</span></div>' +
-              '<h2 style="font-size:1.4rem;margin-bottom:8px;">🔔 Nouvelle réservation</h2>' +
-              '<div style="background:rgba(201,169,110,.1);border:1px solid rgba(201,169,110,.25);border-radius:8px;padding:16px;margin:20px 0;font-size:.9rem;line-height:1.8;">' +
-              '<div style="color:#c9a96e;font-weight:600;margin-bottom:8px;">Détails du client</div>' +
-              '<div style="color:rgba(232,221,208,.8);"><strong>Nom :</strong> ' + prenom + '</div>' +
-              '<div style="color:rgba(232,221,208,.8);"><strong>Email :</strong> ' + email + '</div>' +
-              (phone ? '<div style="color:rgba(232,221,208,.8);"><strong>Téléphone :</strong> ' + phone + '</div>' : '') +
-              '<div style="color:rgba(232,221,208,.8);"><strong>Service :</strong> ' + (window.selectedServiceTitle||serviceId) + '</div>' +
-              '<div style="color:rgba(232,221,208,.8);"><strong>Lieu :</strong> ' + (window.selectedLocation==='domicile' ? 'À domicile — ' + (window.selectedAddress || '') : 'Au cabinet') + '</div>' +
-              (window.selectedLocation==='domicile' ? '<div style="color:rgba(232,221,208,.8);"><strong>Frais km :</strong> ' + (window.locationFees||0).toFixed(2) + '€</div>' : '') +
-              (adminDateTimeInfo || '') +
-              '</div>' +
-              '</div>'
-          }
-        });
-        showBookingSuccess(prenom);
+
+        if (checkoutError) throw checkoutError;
+        if (!checkoutData || !checkoutData.url) throw new Error('No Stripe URL returned');
+
+        // Rediriger vers Stripe Checkout
+        window.location.href = checkoutData.url;
+
       } catch(e) {
         console.error('Booking error:', e);
-        btn.textContent = 'Confirmer ma réservation';
-        btn.disabled = false;
-        btn.style.borderColor = '#e57373';
+        if (btn) { btn.textContent = 'Confirmer ma réservation'; btn.disabled = false; btn.style.borderColor = '#e57373'; }
+        var card = document.getElementById('bk-card');
+        if (card) {
+          var errDiv = document.createElement('p');
+          errDiv.style.cssText = 'color:#e57373;font-size:.83rem;text-align:center;margin-top:12px;';
+          errDiv.textContent = 'Une erreur est survenue. Veuillez réessayer ou nous contacter.';
+          card.appendChild(errDiv);
+        }
       }
     }
 
@@ -1782,6 +1769,45 @@
     document.addEventListener('keydown', function(e) {
       if (e.key === 'Escape') closeBookingModal();
     });
+
+    // ── Détection retour depuis Stripe ──────────────────────
+    (function() {
+      var params = new URLSearchParams(window.location.search);
+      var bookingStatus = params.get('booking');
+      if (!bookingStatus) return;
+
+      // Nettoyer l'URL sans rechargement
+      history.replaceState({}, document.title, window.location.pathname);
+
+      // Ouvrir le modal et afficher l'écran approprié
+      var overlay = document.getElementById('bk-overlay');
+      if (!overlay) return;
+      overlay.style.display = 'flex';
+      document.body.style.overflow = 'hidden';
+      var card = document.getElementById('bk-card');
+      if (!card) return;
+
+      if (bookingStatus === 'success') {
+        card.innerHTML =
+          '<div style="text-align:center;padding:16px 0;">' +
+          '<div style="width:72px;height:72px;background:rgba(100,200,120,.12);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;font-size:2rem;">✅</div>' +
+          '<h2 class="bk-title" style="margin-bottom:10px;">Paiement confirmé !</h2>' +
+          '<p class="bk-desc" style="margin-bottom:20px;">Votre réservation est bien enregistrée et votre paiement a été reçu.<br>Un email de confirmation vous a été envoyé.</p>' +
+          '<p style="font-size:.83rem;color:rgba(255,255,255,.45);line-height:1.7;margin-bottom:24px;">Vérifiez votre boîte mail pour accéder à votre espace client Harmonya.</p>' +
+          '<button class="bk-cta" onclick="closeBookingModal()" style="width:100%;cursor:pointer;border:none;">Fermer <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></button>' +
+          '</div>';
+      } else if (bookingStatus === 'cancelled') {
+        card.innerHTML =
+          '<div style="text-align:center;padding:16px 0;">' +
+          '<div style="width:72px;height:72px;background:rgba(229,115,115,.1);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;font-size:2rem;">↩️</div>' +
+          '<h2 class="bk-title" style="margin-bottom:10px;">Paiement annulé</h2>' +
+          '<p class="bk-desc" style="margin-bottom:20px;">Votre réservation n\'a pas été confirmée. Aucun montant n\'a été prélevé.</p>' +
+          '<p style="font-size:.83rem;color:rgba(255,255,255,.45);margin-bottom:24px;">Vous pouvez recommencer votre réservation quand vous le souhaitez.</p>' +
+          '<button class="bk-cta" onclick="closeBookingModal()" style="width:100%;cursor:pointer;border:none;margin-bottom:10px;">Fermer</button>' +
+          '<button class="bk-back" onclick="document.getElementById(\'bk-card\').innerHTML=\'\';renderServicePicker();" style="width:100%;cursor:pointer;">Recommencer une réservation</button>' +
+          '</div>';
+      }
+    })();
     </script>
 
     <!-- ── Auth navbar ──────────────────────────────── -->
