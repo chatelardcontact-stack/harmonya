@@ -1956,6 +1956,7 @@
       document.getElementById('bk-card').innerHTML = html;
 
       // Pré-remplir si le client est déjà connecté
+      var sbk = window.supabase.createClient(BK_SUPA_URL, BK_SUPA_KEY);
       sbk.auth.getSession().then(function(res) {
         var session = res && res.data && res.data.session;
         if (session && session.user) {
