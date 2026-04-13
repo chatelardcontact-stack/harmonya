@@ -1954,6 +1954,29 @@
         html += '<button class="bk-cta" id="bk-submit-btn" style="width:100%;cursor:pointer;border:none;">Confirmer ma réservation <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></button>';
       }
       document.getElementById('bk-card').innerHTML = html;
+
+      // Pré-remplir si le client est déjà connecté
+      sbk.auth.getSession().then(function(res) {
+        var session = res && res.data && res.data.session;
+        if (session && session.user) {
+          var u = session.user;
+          var meta = u.user_metadata || {};
+          var prenomField = document.getElementById('bk-prenom');
+          var emailField  = document.getElementById('bk-email');
+          var phoneField  = document.getElementById('bk-phone');
+          if (prenomField && (meta.prenom || meta.full_name || meta.name)) {
+            prenomField.value = meta.prenom || meta.full_name || meta.name || '';
+          }
+          if (emailField && u.email) {
+            emailField.value = u.email;
+            emailField.style.opacity = '.7';
+          }
+          if (phoneField && (meta.phone || meta.telephone)) {
+            phoneField.value = meta.phone || meta.telephone || '';
+          }
+        }
+      });
+
       document.getElementById('bk-submit-btn').addEventListener('click', function() {
         var prenom = (document.getElementById('bk-prenom').value || '').trim();
         var email  = (document.getElementById('bk-email').value  || '').trim();
@@ -2052,10 +2075,7 @@
         window._bkPrenom = null; window._bkEmail = null; window._bkPhone = null;
         window._bkDechargeSigned = false; window._bkDechargeNom = null; window._bkDechargeDate = null;
 
-        // Envoyer magic link (accès espace client)
-        sbk.functions.invoke('send-magic-link', {
-          body: { email, prenom, redirectTo: window.location.origin + '/espace-client.html' }
-        });
+        // Le magic link sera envoyé automatiquement par le webhook Stripe après confirmation du paiement
 
         // Afficher le spinner de redirection Stripe
         document.getElementById('bk-card').innerHTML =
@@ -2143,6 +2163,10 @@
       } else if (id === 'cocooning') {
         html += '<div class="bk-zones">' + s.zones + '</div>';
         html += '<a href="javascript:void(0)" class="bk-cta" onclick="renderCocooningPicker()">Choisir ma durée <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></a>';
+      } else if (id === 'post-natal') {
+        html += '<a href="javascript:void(0)" class="bk-cta" onclick="renderPostNatalPicker()">Choisir ma formule <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></a>';
+      } else if (id === 'drain-sculpt') {
+        html += '<a href="javascript:void(0)" class="bk-cta" onclick="renderDrainSculptPicker()">Choisir ma formule <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></a>';
       } else {
         if (s.themes) {
           html += '<div class="bk-themes"><p class="bk-themes-label">Choisissez votre thème :</p>';
@@ -2218,6 +2242,58 @@
       html += '<div class="bk-drain-name">60 min</div><div class="bk-drain-info">95€</div></button>';
       html += '<button class="bk-drain-card" onclick="openServiceLocStep(\'cocooning-90\',\'Cocooning 90 min\',115)">';
       html += '<div class="bk-drain-name">90 min</div><div class="bk-drain-info">115€</div></button>';
+      html += '</div>';
+      document.getElementById('bk-card').innerHTML = html;
+    }
+
+    // ── Post-natal : sélecteur formule ──────────────────────────
+    function renderPostNatalPicker() {
+      var html = closeBtn();
+      html += '<button class="bk-back" onclick="renderServiceDetail(\'post-natal\')">← Retour</button>';
+      html += '<p class="bk-eyebrow">Post-natal · Choisissez votre formule</p>';
+      html += '<h2 class="bk-title" style="font-size:1.2rem;margin-bottom:18px;">Massage Post-natal</h2>';
+      html += '<div style="display:flex;flex-direction:column;gap:12px;">';
+      html += '<button class="bk-drain-card" style="text-align:left;" onclick="openServiceLocStep(\'post-natal\',\'Post-natal · Séance unique\',75)">';
+      html += '<div class="bk-drain-name">Séance unique</div>';
+      html += '<div class="bk-drain-info">60 min · 75€</div>';
+      html += '<div style="font-size:.78rem;color:rgba(232,221,208,.45);margin-top:4px;">Idéal pour découvrir le massage post-natal</div>';
+      html += '</button>';
+      html += '<button class="bk-drain-card" style="text-align:left;" onclick="openServiceLocStep(\'post-natal-cure5\',\'Post-natal · Cure 5 séances\',320)">';
+      html += '<div class="bk-drain-name">Cure · 5 séances</div>';
+      html += '<div class="bk-drain-info">320€ <span style="font-size:.78rem;opacity:.6;">(64€/séance)</span></div>';
+      html += '<div style="font-size:.78rem;color:rgba(232,221,208,.45);margin-top:4px;">Accompagnement complet de votre rétablissement</div>';
+      html += '</button>';
+      html += '<button class="bk-drain-card" style="text-align:left;" onclick="openServiceLocStep(\'post-natal-cure10\',\'Post-natal · Cure 10 séances\',610)">';
+      html += '<div class="bk-drain-name">Cure · 10 séances</div>';
+      html += '<div class="bk-drain-info">610€ <span style="font-size:.78rem;opacity:.6;">(61€/séance)</span></div>';
+      html += '<div style="font-size:.78rem;color:rgba(232,221,208,.45);margin-top:4px;">Programme intensif pour une récupération optimale</div>';
+      html += '</button>';
+      html += '</div>';
+      document.getElementById('bk-card').innerHTML = html;
+    }
+
+    // ── Drain & Sculpt : sélecteur formule ───────────────────────
+    function renderDrainSculptPicker() {
+      var html = closeBtn();
+      html += '<button class="bk-back" onclick="renderServiceDetail(\'drain-sculpt\')">← Retour</button>';
+      html += '<p class="bk-eyebrow">Drain & Sculpt · Choisissez votre formule</p>';
+      html += '<h2 class="bk-title" style="font-size:1.2rem;margin-bottom:18px;">Drainage Sculpt</h2>';
+      html += '<div style="display:flex;flex-direction:column;gap:12px;">';
+      html += '<button class="bk-drain-card" style="text-align:left;" onclick="openServiceLocStep(\'drain-sculpt\',\'Drain & Sculpt · Séance\',85)">';
+      html += '<div class="bk-drain-name">Séance unique</div>';
+      html += '<div class="bk-drain-info">60 min · 85€</div>';
+      html += '<div style="font-size:.78rem;color:rgba(232,221,208,.45);margin-top:4px;">Drainage lymphatique et sculpture du corps</div>';
+      html += '</button>';
+      html += '<button class="bk-drain-card" style="text-align:left;" onclick="openServiceLocStep(\'drain-sculpt-cure5\',\'Drain & Sculpt · Cure 5 séances\',325)">';
+      html += '<div class="bk-drain-name">Cure · 5 séances</div>';
+      html += '<div class="bk-drain-info">325€ <span style="font-size:.78rem;opacity:.6;">(65€/séance)</span></div>';
+      html += '<div style="font-size:.78rem;color:rgba(232,221,208,.45);margin-top:4px;">Programme de remodelage sur mesure</div>';
+      html += '</button>';
+      html += '<button class="bk-drain-card" style="text-align:left;" onclick="openServiceLocStep(\'drain-sculpt-cure10\',\'Drain & Sculpt · Cure 10 séances\',820)">';
+      html += '<div class="bk-drain-name">Cure · 10 séances</div>';
+      html += '<div class="bk-drain-info">820€ <span style="font-size:.78rem;opacity:.6;">(82€/séance)</span></div>';
+      html += '<div style="font-size:.78rem;color:rgba(232,221,208,.45);margin-top:4px;">Transformation complète et durable</div>';
+      html += '</button>';
       html += '</div>';
       document.getElementById('bk-card').innerHTML = html;
     }
