@@ -293,6 +293,7 @@
     </button>
     <div class="auth-error" id="auth-error"></div>
     <a href="#" class="auth-forgot" onclick="doForgotPassword();return false;">Mot de passe oublié ? Recevoir un lien de réinitialisation</a>
+    <a href="index.html" style="display:block;margin-top:18px;font-size:.78rem;color:rgba(255,255,255,.3);text-decoration:none;text-align:center;transition:color .2s;" onmouseover="this.style.color='rgba(201,169,110,.7)'" onmouseout="this.style.color='rgba(255,255,255,.3)'">← Retour au site</a>
   </div>
 </div>
 
@@ -350,6 +351,12 @@
         Analytics
       </div>
     </nav>
+    <div style="padding:12px 16px 0;">
+      <a href="index.html" style="display:flex;align-items:center;gap:8px;font-size:.73rem;color:rgba(255,255,255,.35);text-decoration:none;letter-spacing:.05em;padding:8px 10px;border-radius:6px;transition:background .2s,color .2s;" onmouseover="this.style.background='rgba(201,169,110,.08)';this.style.color='rgba(201,169,110,.8)'" onmouseout="this.style.background='transparent';this.style.color='rgba(255,255,255,.35)'">
+        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+        Retour au site
+      </a>
+    </div>
     <div class="sidebar-user">
       <div class="sidebar-avatar">H</div>
       <div class="sidebar-user-info">
@@ -695,7 +702,7 @@ async function doForgotPassword() {
 async function doSignOut() {
   realtimeChannels.forEach(c => sb.removeChannel(c));
   await sb.auth.signOut();
-  location.reload();
+  window.location.href = 'index.html';
 }
 
 async function init() {

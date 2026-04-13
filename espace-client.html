@@ -1078,6 +1078,7 @@
   async function signOut() {
     if (realtimeChannel) supabase.removeChannel(realtimeChannel);
     await supabase.auth.signOut();
+    window.location.href = 'index.html';
   }
 
   // ── User Info ────────────────────────────────────

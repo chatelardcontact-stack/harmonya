@@ -583,6 +583,28 @@
                             <div class="soin-hover-line"></div>
                         </div>
                     </div>
+
+                    <div class="soin-card soin-featured reveal-up" style="--d:400ms;cursor:pointer" data-magnetic onclick="openBookingModal('duo-saf')">
+                        <div class="soin-label">En duo · Partenariat</div>
+                        <div class="soin-card-inner">
+                            <div class="soin-top">
+                                <div class="soin-num">06</div>
+                                <div class="soin-duration">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+                                    90 min
+                                </div>
+                            </div>
+                            <h3 class="soin-name">Massage Duo × Saf'Ncare</h3>
+                            <p class="soin-desc">Un moment de bien-être à deux. En partenariat avec <a href="https://www.instagram.com/saf_ncare/" target="_blank" rel="noopener" style="color:#c9a96e;text-decoration:none;">@saf_ncare</a>. Soin corps et beauté pour un duo d'exception.</p>
+                            <div class="soin-footer">
+                                <div class="soin-price">190 <sup>€</sup></div>
+                                <div class="soin-arrow">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                                </div>
+                            </div>
+                            <div class="soin-hover-line"></div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -1329,6 +1351,13 @@
         duo: true,
         url: 'https://calendly.com/massage-harmonya/massage-duo'
       },
+      'duo-saf': {
+        name: 'Massage Duo × Saf\'Ncare',
+        duration: '90 min', price: '190€', minPrice: 190,
+        desc: 'Un moment de bien-être à deux, en partenariat avec @saf_ncare. Soin corps et beauté pour un duo d\'exception.',
+        duo: true,
+        url: 'https://www.instagram.com/saf_ncare/'
+      },
       'drainage-classique': {
         name: 'Drainage Lymphatique',
         duration: 'Voir ci-dessous', price: 'Voir ci-dessous',
@@ -1356,7 +1385,7 @@
         url: 'https://calendly.com/massage-harmonya/drain-sculpt'
       }
     };
-    const MASSAGE_IDS = ['decouverte','immersion','evasion','cocooning','duo'];
+    const MASSAGE_IDS = ['decouverte','immersion','evasion','cocooning','duo','duo-saf'];
 
     // FAQ Toggle Function
     function toggleFaq(button) {
@@ -1590,13 +1619,17 @@
 
     function selectPostOpOption(opt) {
       var titles = {
-        'standard': 'Standard (60 min · 80€)',
-        'complexe': 'Complexe (70 min · 95€)',
-        'cure5': 'Cure 5 séances (340€ Standard / 400€ Complexe)',
-        'cure10': 'Cure 10 séances (660€ Standard / 760€ Complexe)'
+        'standard': 'Séance Standard Post-Op (60 min · 80€)',
+        'complexe': 'Séance Complexe Post-Op (70 min · 95€)',
+        'cure5': 'Cure 5 séances Post-Op (340€)',
+        'cure10': 'Cure 10 séances Post-Op (660€)'
       };
+      var prices = { 'standard': 80, 'complexe': 95, 'cure5': 340, 'cure10': 660 };
       window.selectedPostOpOption = opt;
-      showLocationPicker('post-op', titles[opt]);
+      window.selectedServicePrice = prices[opt];
+      window.selectedServiceId = 'post-op-' + opt;
+      window.selectedServiceTitle = titles[opt];
+      showLocationPicker('post-op-' + opt, titles[opt]);
     }
 
     function renderDrainageClassiquePicker() {
@@ -1635,7 +1668,9 @@
       var prices = { 'bas': 50, 'haut': 60, 'bas-abdomen': 80, 'complet': 140 };
       window.selectedDrainageOption = opt;
       window.selectedServicePrice = prices[opt];
-      showLocationPicker('drainage-classique', titles[opt]);
+      window.selectedServiceId = 'drainage-classique-' + opt;
+      window.selectedServiceTitle = titles[opt];
+      showLocationPicker('drainage-classique-' + opt, titles[opt]);
     }
 
     function showLocationPicker(serviceId, title) {
@@ -2134,22 +2169,22 @@
       var prices = {'bas':50,'haut':60,'bas-abdomen':80,'complet':140};
       window.selectedDrainageOption = opt;
       window.selectedServicePrice = prices[opt];
-      window.selectedServiceId = 'drainage-classique';
+      window.selectedServiceId = 'drainage-classique-' + opt;
       window.selectedServiceTitle = titles[opt];
-      showLocationPicker('drainage-classique', titles[opt]);
+      showLocationPicker('drainage-classique-' + opt, titles[opt]);
     }
 
     function openAndSelectPostOp(opt) {
       var overlay = document.getElementById('bk-overlay');
       overlay.style.display = 'flex';
       document.body.style.overflow = 'hidden';
-      var titles = {'standard':'Séance Standard Post-Op (60 min · 80€)','complexe':'Séance Complexe Post-Op (70 min · 95€)','cure5':'Cure 5 séances Post-Op','cure10':'Cure 10 séances Post-Op'};
+      var titles = {'standard':'Séance Standard Post-Op (60 min · 80€)','complexe':'Séance Complexe Post-Op (70 min · 95€)','cure5':'Cure 5 séances Post-Op (340€)','cure10':'Cure 10 séances Post-Op (660€)'};
       var prices = {'standard':80,'complexe':95,'cure5':340,'cure10':660};
       window.selectedPostOpOption = opt;
       window.selectedServicePrice = prices[opt];
-      window.selectedServiceId = 'post-op';
+      window.selectedServiceId = 'post-op-' + opt;
       window.selectedServiceTitle = titles[opt];
-      showLocationPicker('post-op', titles[opt]);
+      showLocationPicker('post-op-' + opt, titles[opt]);
     }
     document.getElementById('bk-overlay').addEventListener('click', function(e) {
       if (e.target === this) closeBookingModal();
