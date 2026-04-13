@@ -344,6 +344,11 @@
         <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg>
         Contrats
       </div>
+      <div class="nav-section">Rapports</div>
+      <div class="nav-item" data-panel="analytics" onclick="switchPanel('analytics',this)">
+        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><line x1="12" y1="2" x2="12" y2="22"/><polyline points="4 7 8 3 12 6 16 2 20 8"/><line x1="4" y1="21" x2="20" y2="21"/></svg>
+        Analytics
+      </div>
     </nav>
     <div class="sidebar-user">
       <div class="sidebar-avatar">H</div>
@@ -528,6 +533,43 @@
       </table>
     </div>
 
+    <!-- ── ANALYTICS ─────────────────────────── -->
+    <div class="panel" id="panel-analytics">
+      <div class="panel-header">
+        <div>
+          <div class="panel-tag">✦ Harmonya · Admin</div>
+          <h2 class="panel-title">Analytics</h2>
+        </div>
+      </div>
+
+      <!-- KPI Cards -->
+      <div class="stats-row" id="analytics-kpis"></div>
+
+      <!-- CA by Month Chart -->
+      <div style="background:var(--dark-card);border:1px solid var(--dark-border);border-radius:4px;padding:24px;margin-bottom:28px;">
+        <div class="section-label" style="margin:0 0 20px 0;">Chiffre d'affaires par mois (6 derniers mois)</div>
+        <div id="analytics-chart" style="display:flex;align-items:flex-end;justify-content:space-around;height:240px;gap:10px;padding:0 20px;"></div>
+      </div>
+
+      <!-- Top Prestations Table -->
+      <div style="background:var(--dark-card);border:1px solid var(--dark-border);border-radius:4px;padding:24px;margin-bottom:28px;">
+        <div class="section-label" style="margin:0 0 16px 0;">Top prestations</div>
+        <table class="data-table" style="margin:0;">
+          <thead><tr><th>Prestation</th><th>Nombre de RDV</th><th>% du total</th></tr></thead>
+          <tbody id="analytics-prestations-tbody"></tbody>
+        </table>
+      </div>
+
+      <!-- Recurring Clients Table -->
+      <div style="background:var(--dark-card);border:1px solid var(--dark-border);border-radius:4px;padding:24px;">
+        <div class="section-label" style="margin:0 0 16px 0;">Clients récurrents (2+ visites)</div>
+        <table class="data-table" style="margin:0;">
+          <thead><tr><th>Cliente</th><th>Nombre de RDV</th><th>Dernier RDV</th></tr></thead>
+          <tbody id="analytics-clients-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
   </main>
 </div>
 
@@ -709,6 +751,11 @@ function switchPanel(id, el) {
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   document.getElementById('panel-' + id).classList.add('active');
   if (el) el.classList.add('active');
+
+  // Load panel-specific data
+  if (id === 'analytics') {
+    renderAnalytics();
+  }
 }
 
 // ── CLIENTS ───────────────────────────────────────────
@@ -2992,6 +3039,138 @@ function autofillContratFields(sel) {
   const nb   = opt.dataset.nb;
   if (prix > 0 && form.montant) form.montant.value = prix.toFixed(2);
   if (nb   && form.nb_seances) form.nb_seances.value = nb;
+}
+
+// ── ANALYTICS ──────────────────────────────────────────
+async function renderAnalytics() {
+  // Load factures to get revenue data
+  const { data: factures } = await sb.from('factures').select('*').order('date', { ascending: false });
+  const allFactures = factures || [];
+
+  // Get current month date range
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  const currentMonth = now.getMonth();
+  const monthStart = new Date(currentYear, currentMonth, 1).toISOString().split('T')[0];
+  const monthEnd = new Date(currentYear, currentMonth + 1, 0).toISOString().split('T')[0];
+
+  // 1. CA du mois en cours (from factures with statut='payée')
+  const monthFactures = allFactures.filter(f =>
+    f.date >= monthStart && f.date <= monthEnd && f.statut === 'payée'
+  );
+  const caMois = monthFactures.reduce((sum, f) => sum + parseFloat(f.montant || 0), 0);
+
+  // 2. CA total all time
+  const caTotal = allFactures
+    .filter(f => f.statut === 'payée')
+    .reduce((sum, f) => sum + parseFloat(f.montant || 0), 0);
+
+  // 3. Nombre de RDV ce mois (confirmed or completed)
+  const rdvMois = allRDV.filter(r =>
+    r.date >= monthStart && r.date <= monthEnd &&
+    (r.statut === 'confirmé' || r.statut === 'terminé')
+  ).length;
+
+  // 4. Taux de remplissage (RDV confirmés / créneaux dispo)
+  // Approximation: 22 jours/mois × 1 créneau/jour
+  const creneauxDisponibles = 22;
+  const tauxRemplissage = Math.round((rdvMois / creneauxDisponibles) * 100);
+
+  // Render KPIs
+  const kpisHtml = `
+    <div class="stat-card"><div class="stat-label">CA ce mois</div><div class="stat-value">${caMois.toFixed(0)}€</div></div>
+    <div class="stat-card"><div class="stat-label">CA total</div><div class="stat-value">${caTotal.toFixed(0)}€</div></div>
+    <div class="stat-card"><div class="stat-label">RDV ce mois</div><div class="stat-value">${rdvMois}</div></div>
+    <div class="stat-card"><div class="stat-label">Taux de remplissage</div><div class="stat-value">${tauxRemplissage}%</div></div>
+  `;
+  document.getElementById('analytics-kpis').innerHTML = kpisHtml;
+
+  // Chart: CA by month (last 6 months)
+  const last6Months = [];
+  for (let i = 5; i >= 0; i--) {
+    const d = new Date(currentYear, currentMonth - i, 1);
+    last6Months.push({ year: d.getFullYear(), month: d.getMonth() });
+  }
+
+  const monthlyData = last6Months.map(({ year, month }) => {
+    const mStart = new Date(year, month, 1).toISOString().split('T')[0];
+    const mEnd = new Date(year, month + 1, 0).toISOString().split('T')[0];
+    const mFactures = allFactures.filter(f => f.date >= mStart && f.date <= mEnd && f.statut === 'payée');
+    const mTotal = mFactures.reduce((sum, f) => sum + parseFloat(f.montant || 0), 0);
+    const monthNames = ['Jan','Fév','Mar','Avr','Mai','Jun','Jul','Aoû','Sep','Oct','Nov','Déc'];
+    return { label: monthNames[month], value: mTotal, year, month };
+  });
+
+  const maxValue = Math.max(...monthlyData.map(m => m.value), 1);
+  const chartHtml = monthlyData.map(m => `
+    <div style="display:flex;flex-direction:column;align-items:center;gap:6px;flex:1;">
+      <div style="width:100%;background:linear-gradient(to top,rgba(201,169,110,.4),rgba(201,169,110,.15));border-radius:4px;height:${(m.value / maxValue) * 180}px;min-height:20px;border:1px solid rgba(201,169,110,.2);position:relative;">
+        <div style="position:absolute;bottom:-24px;left:50%;transform:translateX(-50%);font-size:.75rem;color:var(--text-dim);white-space:nowrap;">${m.value > 0 ? m.value.toFixed(0)+'€' : '0€'}</div>
+      </div>
+      <div style="font-size:.8rem;color:var(--text-dim);margin-top:24px;">${m.label}</div>
+    </div>
+  `).join('');
+  document.getElementById('analytics-chart').innerHTML = chartHtml;
+
+  // Top prestations: count RDV by prestation (confirmed + terminated)
+  const prestationMap = {};
+  allRDV.forEach(r => {
+    if ((r.statut === 'confirmé' || r.statut === 'terminé') && r.prestation) {
+      prestationMap[r.prestation] = (prestationMap[r.prestation] || 0) + 1;
+    }
+  });
+
+  const prestationStats = Object.entries(prestationMap)
+    .map(([name, count]) => ({ name, count }))
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 10);
+
+  const totalRDVPrestations = prestationStats.reduce((sum, p) => sum + p.count, 0);
+  const prestationsHtml = prestationStats.length
+    ? prestationStats.map(p => `
+      <tr>
+        <td>${esc(p.name)}</td>
+        <td style="font-weight:500;">${p.count}</td>
+        <td style="color:var(--gold-light);">${totalRDVPrestations > 0 ? Math.round((p.count / totalRDVPrestations) * 100) : 0}%</td>
+      </tr>
+    `).join('')
+    : `<tr><td colspan="3" style="text-align:center;padding:32px;color:var(--text-dim);">Aucune donnée</td></tr>`;
+  document.getElementById('analytics-prestations-tbody').innerHTML = prestationsHtml;
+
+  // Recurring clients: 2+ RDV
+  const clientRDVMap = {};
+  allRDV.forEach(r => {
+    if ((r.statut === 'confirmé' || r.statut === 'terminé') && r.client_id) {
+      if (!clientRDVMap[r.client_id]) {
+        clientRDVMap[r.client_id] = { count: 0, lastDate: null };
+      }
+      clientRDVMap[r.client_id].count++;
+      if (!clientRDVMap[r.client_id].lastDate || r.date > clientRDVMap[r.client_id].lastDate) {
+        clientRDVMap[r.client_id].lastDate = r.date;
+      }
+    }
+  });
+
+  const recurringClients = Object.entries(clientRDVMap)
+    .filter(([clientId, data]) => data.count >= 2)
+    .map(([clientId, data]) => {
+      const client = allClients.find(c => c.id === clientId);
+      const name = client ? (client.full_name || client.email || '—') : '—';
+      return { clientId, name, count: data.count, lastDate: data.lastDate };
+    })
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 15);
+
+  const clientsHtml = recurringClients.length
+    ? recurringClients.map(c => `
+      <tr>
+        <td>${esc(c.name)}</td>
+        <td style="font-weight:500;">${c.count}</td>
+        <td style="color:var(--text-dim);font-size:.8rem;">${fmtDate(c.lastDate) || '—'}</td>
+      </tr>
+    `).join('')
+    : `<tr><td colspan="3" style="text-align:center;padding:32px;color:var(--text-dim);">Aucun client avec 2+ visites</td></tr>`;
+  document.getElementById('analytics-clients-tbody').innerHTML = clientsHtml;
 }
 
 // ── REALTIME ──────────────────────────────────────────
