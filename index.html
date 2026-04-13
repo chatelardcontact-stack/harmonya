@@ -75,6 +75,7 @@
       .bk-drain-info{font-size:11.5px;color:rgba(201,169,110,0.7);}
       .form-field{margin-bottom:14px;}
       @media(max-width:480px){#bk-card{padding:36px 22px 28px;} .bk-massage-grid,.bk-cat-grid,.bk-drain-grid{grid-template-columns:1fr;}}
+      @keyframes bk-spin{to{transform:rotate(360deg);}}
     </style>
 </head>
 <body>
@@ -1649,9 +1650,15 @@
           body: { email, prenom, redirectTo: window.location.origin + '/espace-client.html' }
         });
 
-        // Créer session Stripe Checkout
-        var amountCents = Math.round(totalPrice * 100);
-        if (amountCents < 50) amountCents = 50; // minimum Stripe
+        // Afficher le spinner de redirection Stripe
+        document.getElementById('bk-card').innerHTML =
+          '<div style="text-align:center;padding:48px 20px;">' +
+          '<div style="width:56px;height:56px;border:3px solid rgba(201,169,110,.2);border-top-color:#c9a96e;border-radius:50%;animation:bk-spin 0.8s linear infinite;margin:0 auto 24px;"></div>' +
+          '<p style="color:rgba(232,221,208,.7);font-size:.95rem;margin:0;">Redirection vers le paiement sécurisé…</p>' +
+          '<p style="color:rgba(232,221,208,.35);font-size:.78rem;margin-top:8px;">Vous allez être redirigé vers Stripe</p>' +
+          '</div>';
+
+        // Créer session Stripe Checkout — le prix est recalculé côté serveur
         var descriptionLabel = (window.selectedServiceTitle || serviceId)
           + (window.selectedDate ? ' · ' + frenchDate(window.selectedDate) : '')
           + (window.selectedTime ? ' à ' + window.selectedTime : '');
@@ -1659,7 +1666,8 @@
         var { data: checkoutData, error: checkoutError } = await sbk.functions.invoke('create-checkout-session', {
           body: {
             rdv_id: rdvId,
-            amount_cents: amountCents,
+            service_id: serviceId,
+            frais_km: window.locationFees || 0,
             description: descriptionLabel,
             client_email: email,
             client_name: prenom,
@@ -1815,7 +1823,7 @@
           '<p class="bk-desc" style="margin-bottom:20px;">Votre réservation n\'a pas été confirmée. Aucun montant n\'a été prélevé.</p>' +
           '<p style="font-size:.83rem;color:rgba(255,255,255,.45);margin-bottom:24px;">Vous pouvez recommencer votre réservation quand vous le souhaitez.</p>' +
           '<button class="bk-cta" onclick="closeBookingModal()" style="width:100%;cursor:pointer;border:none;margin-bottom:10px;">Fermer</button>' +
-          '<button class="bk-back" onclick="document.getElementById(\'bk-card\').innerHTML=\'\';renderServicePicker();" style="width:100%;cursor:pointer;">Recommencer une réservation</button>' +
+          '<button class="bk-back" onclick="renderCategoryPicker();" style="width:100%;cursor:pointer;">Recommencer une réservation</button>' +
           '</div>';
       }
     })();
