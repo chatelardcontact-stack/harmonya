@@ -1348,14 +1348,14 @@
         name: 'Massage Duo × Évasion Lomi Lomi',
         duration: '90 min', price: '190€', minPrice: 190,
         desc: 'Un moment de bien-être à deux, en partenariat avec @evasionlomilomi. Massage sensoriel pour les couples.',
-        duo: true,
+        duo: true, partner: '@evasionlomilomi',
         url: 'https://calendly.com/massage-harmonya/massage-duo'
       },
       'duo-saf': {
         name: 'Massage Duo × Saf\'Ncare',
         duration: '90 min', price: '190€', minPrice: 190,
         desc: 'Un moment de bien-être à deux, en partenariat avec @saf_ncare. Soin corps et beauté pour un duo d\'exception.',
-        duo: true,
+        duo: true, partner: '@saf_ncare',
         url: 'https://www.instagram.com/saf_ncare/'
       },
       'drainage-classique': {
@@ -2127,7 +2127,7 @@
       var html = closeBtn();
       if (fromMassage) html += '<button class="bk-back" onclick="renderMassagePicker()">← Retour</button>';
       else if (fromDrain || DRAIN_IDS.includes(id)) html += '<button class="bk-back" onclick="renderDrainagePicker()">← Retour</button>';
-      if (s.duo) html += '<span class="bk-duo-badge">✦ En partenariat avec @evasionlomilomi</span>';
+      if (s.duo) html += '<span class="bk-duo-badge">✦ En partenariat avec ' + (s.partner || '@evasionlomilomi') + '</span>';
       html += '<p class="bk-eyebrow">Réservation</p>';
       html += '<h2 class="bk-title">' + s.name + '</h2>';
       html += '<div class="bk-meta"><span>' + s.duration + '</span><span class="bk-meta-sep">·</span><span>' + s.price + '</span></div>';
@@ -2138,6 +2138,11 @@
         html += '<a href="javascript:void(0)" class="bk-cta" onclick="renderPostOpPicker()">Sélectionner une option <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></a>';
       } else if (id === 'drainage-classique') {
         html += '<a href="javascript:void(0)" class="bk-cta" onclick="renderDrainageClassiquePicker()">Sélectionner une option <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></a>';
+      } else if (id === 'immersion') {
+        html += '<a href="javascript:void(0)" class="bk-cta" onclick="renderImmersionPicker()">Choisir mon thème et ma durée <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></a>';
+      } else if (id === 'cocooning') {
+        html += '<div class="bk-zones">' + s.zones + '</div>';
+        html += '<a href="javascript:void(0)" class="bk-cta" onclick="renderCocooningPicker()">Choisir ma durée <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></a>';
       } else {
         if (s.themes) {
           html += '<div class="bk-themes"><p class="bk-themes-label">Choisissez votre thème :</p>';
@@ -2149,11 +2154,71 @@
           html += '<div class="bk-zones">' + s.zones + '</div>';
         }
         var minP = s.minPrice || 0;
-        var ctaFn = minP >= 50
-          ? 'openServiceLocStep(\'' + id + '\',\'' + s.name + ' — ' + s.price + '\',' + minP + ')'
-          : 'window.selectedServiceId=\'' + id + '\';window.selectedServiceTitle=\'' + s.name + '\';window.selectedServicePrice=' + minP + ';window.selectedLocation=\'cabinet\';window.locationFees=0;renderEmailStep()';
+        // Tous les services passent par le sélecteur lieu + créneau
+        var ctaFn = 'openServiceLocStep(\'' + id + '\',\'' + s.name + ' — ' + s.price + '\',' + minP + ')';
         html += '<a href="javascript:void(0)" class="bk-cta" onclick="' + ctaFn + '">Réserver ce soin <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></a>';
       }
+      document.getElementById('bk-card').innerHTML = html;
+    }
+
+    // ── Immersion : sélecteur thème + durée ─────────────────────
+    function renderImmersionPicker() {
+      var html = closeBtn();
+      html += '<button class="bk-back" onclick="renderServiceDetail(\'immersion\')">← Retour</button>';
+      html += '<p class="bk-eyebrow">Immersion · Personnalisez</p>';
+      html += '<h2 class="bk-title" style="font-size:1.35rem;">Votre thème</h2>';
+      html += '<div class="bk-drain-grid" style="margin-bottom:22px;">';
+      var themes = [
+        { id:'les-iles',   emoji:'🌺', name:'Les Îles',   sub:'Lomi-lomi polynésien' },
+        { id:'lorient',    emoji:'🌙', name:"L'Orient",   sub:'Massage oriental' },
+        { id:'lasie',      emoji:'🍃', name:"L'Asie",     sub:'Deep tissus sportif' },
+        { id:'lafrique',   emoji:'🌍', name:"L'Afrique",  sub:'Massage africain' }
+      ];
+      themes.forEach(function(t) {
+        html += '<button class="bk-drain-card" id="imm-theme-' + t.id + '" onclick="selectImmersionTheme(\'' + t.id + '\',\'' + t.name.replace(/'/g,"\\'") + '\')">';
+        html += '<div class="bk-drain-name">' + t.emoji + ' ' + t.name + '</div>';
+        html += '<div class="bk-drain-info">' + t.sub + '</div>';
+        html += '</button>';
+      });
+      html += '</div>';
+      html += '<h2 class="bk-title" style="font-size:1.15rem;margin-bottom:10px;">Votre durée</h2>';
+      html += '<div class="bk-drain-grid" id="imm-dur-picker" style="opacity:.3;pointer-events:none;transition:opacity .3s;">';
+      html += '<button class="bk-drain-card" onclick="selectImmersionDuration(\'immersion\',60,60)">';
+      html += '<div class="bk-drain-name">60 min</div><div class="bk-drain-info">60€</div></button>';
+      html += '<button class="bk-drain-card" onclick="selectImmersionDuration(\'immersion-90\',90,85)">';
+      html += '<div class="bk-drain-name">90 min</div><div class="bk-drain-info">85€</div></button>';
+      html += '</div>';
+      document.getElementById('bk-card').innerHTML = html;
+    }
+    function selectImmersionTheme(themeId, themeName) {
+      window.selectedImmersionTheme = themeName;
+      document.querySelectorAll('[id^="imm-theme-"]').forEach(function(b) {
+        b.style.borderColor = 'rgba(255,255,255,.08)';
+        b.style.background = 'rgba(255,255,255,.03)';
+      });
+      var sel = document.getElementById('imm-theme-' + themeId);
+      if (sel) { sel.style.borderColor = 'rgba(201,169,110,.6)'; sel.style.background = 'rgba(201,169,110,.1)'; }
+      var dp = document.getElementById('imm-dur-picker');
+      if (dp) { dp.style.opacity = '1'; dp.style.pointerEvents = 'auto'; }
+    }
+    function selectImmersionDuration(serviceId, minutes, price) {
+      var themeLabel = window.selectedImmersionTheme ? ' · ' + window.selectedImmersionTheme : '';
+      openServiceLocStep(serviceId, 'Immersion ' + minutes + ' min' + themeLabel, price);
+    }
+
+    // ── Cocooning : sélecteur durée ──────────────────────────────
+    function renderCocooningPicker() {
+      var html = closeBtn();
+      html += '<button class="bk-back" onclick="renderServiceDetail(\'cocooning\')">← Retour</button>';
+      html += '<p class="bk-eyebrow">Cocooning · Réservation</p>';
+      html += '<h2 class="bk-title">Choisissez votre durée</h2>';
+      html += '<p class="bk-desc">Massage aux pierres chaudes · Dos · Épaules · Visage · Jambes · Pieds</p>';
+      html += '<div class="bk-drain-grid" style="margin-top:20px;">';
+      html += '<button class="bk-drain-card" onclick="openServiceLocStep(\'cocooning\',\'Cocooning 60 min\',95)">';
+      html += '<div class="bk-drain-name">60 min</div><div class="bk-drain-info">95€</div></button>';
+      html += '<button class="bk-drain-card" onclick="openServiceLocStep(\'cocooning-90\',\'Cocooning 90 min\',115)">';
+      html += '<div class="bk-drain-name">90 min</div><div class="bk-drain-info">115€</div></button>';
+      html += '</div>';
       document.getElementById('bk-card').innerHTML = html;
     }
 
