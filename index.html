@@ -1503,26 +1503,28 @@
       var overlay = document.getElementById('bk-overlay');
       overlay.style.display = 'flex';
       document.body.style.overflow = 'hidden';
-      var card = document.getElementById('bk-card');
-      card.innerHTML =
-        '<button class="bk-close" onclick="closeBookingModal()" aria-label="Fermer"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>' +
-        '<div style="text-align:center;padding:24px 0 16px;">' +
-        '<div style="width:68px;height:68px;background:rgba(201,169,110,.12);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 22px;font-size:2rem;">🌿</div>' +
-        '<h2 style="font-family:\'Playfair Display\',serif;font-size:1.5rem;color:#fff;font-weight:400;margin:0 0 12px;letter-spacing:.02em;">Réservation en ligne</h2>' +
-        '<p style="color:rgba(201,169,110,.9);font-size:.95rem;margin:0 0 10px;letter-spacing:.04em;text-transform:uppercase;font-size:.75rem;">Bientôt disponible</p>' +
-        '<p style="color:rgba(232,221,208,.6);font-size:.9rem;line-height:1.75;margin:0 0 32px;">La réservation en ligne arrive très prochainement.<br>En attendant, contactez-nous directement :</p>' +
-        '<div style="display:flex;flex-direction:column;gap:12px;margin-bottom:28px;">' +
-        '<a href="tel:0626142589" style="display:flex;align-items:center;justify-content:center;gap:10px;background:rgba(201,169,110,.1);border:1px solid rgba(201,169,110,.25);border-radius:10px;padding:14px 20px;color:#c9a96e;text-decoration:none;font-size:.92rem;transition:background .2s;" onmouseover="this.style.background=\'rgba(201,169,110,.18)\'" onmouseout="this.style.background=\'rgba(201,169,110,.1)\'">' +
-        '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81a19.79 19.79 0 01-3.07-8.68A2 2 0 012 .9h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 8.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>' +
-        '06 26 14 25 89' +
-        '</a>' +
-        '<a href="mailto:contact@harmonyamassage.fr" style="display:flex;align-items:center;justify-content:center;gap:10px;background:rgba(201,169,110,.1);border:1px solid rgba(201,169,110,.25);border-radius:10px;padding:14px 20px;color:#c9a96e;text-decoration:none;font-size:.92rem;transition:background .2s;" onmouseover="this.style.background=\'rgba(201,169,110,.18)\'" onmouseout="this.style.background=\'rgba(201,169,110,.1)\'">' +
-        '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>' +
-        'contact@harmonyamassage.fr' +
-        '</a>' +
-        '</div>' +
-        '<button class="bk-cta" onclick="closeBookingModal()" style="width:100%;cursor:pointer;border:none;">Fermer</button>' +
-        '</div>';
+      // Réinitialiser les variables de session
+      window.selectedServiceId = null;
+      window.selectedServiceTitle = null;
+      window.selectedServicePrice = null;
+      window.selectedLocation = null;
+      window.locationFees = 0;
+      window.selectedAddress = null;
+      window.selectedDate = null;
+      window.selectedTime = null;
+      window.selectedDrainageOption = null;
+      window.selectedPostOpOption = null;
+      window._bkPrenom = null;
+      window._bkEmail = null;
+      window._bkPhone = null;
+      window._bkDechargeSigned = false;
+      if (id && BK_SERVICES[id]) {
+        // Accès direct depuis une carte de soin
+        renderServiceDetail(id);
+      } else {
+        // Pas d'id → sélecteur de catégorie
+        renderCategoryPicker();
+      }
     }
     function closeBookingModal() {
       document.getElementById('bk-overlay').style.display = 'none';
