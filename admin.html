@@ -2547,13 +2547,47 @@ function renderCalendarWeek() {
       }
 
       html += '</div>';
-      html += `<div class="calendar-info">${blockedCount > 0 ? blockedCount + ' créneau(x) bloqué(s)' : 'Tous disponibles'}</div>`;
+      const allBlocked = blockedCount === SLOTS.length;
+      html += `<div class="calendar-info">${blockedCount > 0 ? blockedCount + '/' + SLOTS.length + ' bloqué(s)' : 'Tous disponibles'}</div>`;
+      // Boutons actions rapides
+      html += `<div style="display:flex;gap:4px;margin-top:6px;">`;
+      if (!allBlocked) {
+        html += `<button onclick="blockDay('${dateStr}')" title="Bloquer toute la journée" style="flex:1;font-size:.65rem;padding:4px 2px;background:rgba(229,115,115,.15);border:1px solid rgba(229,115,115,.3);border-radius:4px;color:#e57373;cursor:pointer;">🔒 Tout</button>`;
+      }
+      if (blockedCount > 0) {
+        html += `<button onclick="unblockDay('${dateStr}')" title="Débloquer toute la journée" style="flex:1;font-size:.65rem;padding:4px 2px;background:rgba(100,200,120,.08);border:1px solid rgba(100,200,120,.2);border-radius:4px;color:#81c784;cursor:pointer;">🔓 Tout</button>`;
+      }
+      html += `</div>`;
       html += '</div>';
     }
 
     html += '</div>';
     document.getElementById('calendar-view').innerHTML = html;
   });
+}
+
+async function blockDay(date) {
+  const SLOTS = ['17:30','18:00','18:30','19:00','19:30','20:00','20:30'];
+  try {
+    // Supprimer les existants d'abord pour éviter les doublons
+    await sb.from('disponibilites').delete().eq('date', date).eq('type', 'bloquee');
+    // Insérer tous les créneaux
+    const rows = SLOTS.map(slot => {
+      const [hh, mm] = slot.split(':').map(Number);
+      const endMins = hh * 60 + mm + 30;
+      const hEnd = String(Math.floor(endMins / 60)).padStart(2,'0') + ':' + String(endMins % 60).padStart(2,'0') + ':00';
+      return { date, heure_debut: slot + ':00', heure_fin: hEnd, type: 'bloquee' };
+    });
+    await sb.from('disponibilites').insert(rows);
+    renderCalendarWeek();
+  } catch (err) { console.error('Erreur blockDay:', err); }
+}
+
+async function unblockDay(date) {
+  try {
+    await sb.from('disponibilites').delete().eq('date', date).eq('type', 'bloquee');
+    renderCalendarWeek();
+  } catch (err) { console.error('Erreur unblockDay:', err); }
 }
 
 async function toggleSlot(date, time) {
