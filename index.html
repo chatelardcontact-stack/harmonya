@@ -572,10 +572,10 @@
                                     90 min
                                 </div>
                             </div>
-                            <h3 class="soin-name">Massage Duo · Lomi-Lomi</h3>
+                            <h3 class="soin-name">Lomi-Lomi × @evasionlomilomi</h3>
                             <p class="soin-desc">Massage Lomi-Lomi polynésien à deux. En partenariat avec <a href="https://www.instagram.com/evasionlomilomi/" target="_blank" rel="noopener" style="color:#c9a96e;text-decoration:none;">@evasionlomilomi</a>. Une expérience sensorielle et enveloppante.</p>
                             <div class="soin-footer">
-                                <div class="soin-price">190 <sup>€</sup></div>
+                                <div class="soin-price">85 <sup>€</sup></div>
                                 <div class="soin-arrow">
                                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
                                 </div>
@@ -591,13 +591,13 @@
                                 <div class="soin-num">06</div>
                                 <div class="soin-duration">
                                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
-                                    90 min
+                                    100 min
                                 </div>
                             </div>
-                            <h3 class="soin-name">Massage Duo · Évasion</h3>
+                            <h3 class="soin-name">Évasion × @saf_ncare</h3>
                             <p class="soin-desc">Idéal mère-fille ou entre copines. En partenariat avec <a href="https://www.instagram.com/saf_ncare/" target="_blank" rel="noopener" style="color:#c9a96e;text-decoration:none;">@saf_ncare</a>. Un massage à 4 mains pour un moment de complicité unique.</p>
                             <div class="soin-footer">
-                                <div class="soin-price">190 <sup>€</sup></div>
+                                <div class="soin-price">95 <sup>€</sup></div>
                                 <div class="soin-arrow">
                                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
                                 </div>
@@ -1345,18 +1345,18 @@
         url: 'https://calendly.com/massage-harmonya/massage-cocooning'
       },
       'duo': {
-        name: 'Massage Duo · Lomi-Lomi',
-        duration: '90 min', price: '190€', minPrice: 190,
+        name: 'Lomi-Lomi polynésien',
+        duration: '90 min', price: '85€', minPrice: 85,
         desc: 'Massage Lomi-Lomi polynésien à deux, en partenariat avec @evasionlomilomi. Un voyage sensoriel aux mouvements enveloppants et fluides.',
         duo: true, partner: '@evasionlomilomi',
-        url: 'https://calendly.com/massage-harmonya/massage-duo'
+        bookingId: 'immersion-90'
       },
       'duo-saf': {
-        name: 'Massage Duo · Évasion',
-        duration: '90 min', price: '190€', minPrice: 190,
-        desc: 'Idéal mère-fille ou entre copines — un massage Évasion à 4 mains en partenariat avec @saf_ncare. Un moment de complicité et de bien-être absolu.',
+        name: 'Massage Évasion',
+        duration: '100 min', price: '95€', minPrice: 95,
+        desc: 'Idéal mère-fille ou entre copines — massage Évasion en partenariat avec @saf_ncare. Un moment de complicité et de bien-être absolu.',
         duo: true, partner: '@saf_ncare',
-        url: 'https://www.instagram.com/saf_ncare/'
+        bookingId: 'evasion'
       },
       'drainage-classique': {
         name: 'Drainage Lymphatique',
@@ -2183,8 +2183,9 @@
           html += '<div class="bk-zones">' + s.zones + '</div>';
         }
         var minP = s.minPrice || 0;
-        // Tous les services passent par le sélecteur lieu + créneau
-        var ctaFn = 'openServiceLocStep(\'' + id + '\',\'' + s.name + ' — ' + s.price + '\',' + minP + ')';
+        // Utiliser bookingId si défini (ex: duo → immersion-90), sinon l'id courant
+        var bookingId = s.bookingId || id;
+        var ctaFn = 'openServiceLocStep(\'' + bookingId + '\',\'' + s.name + ' — ' + s.price + '\',' + minP + ')';
         html += '<a href="javascript:void(0)" class="bk-cta" onclick="' + ctaFn + '">Réserver ce soin <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></a>';
       }
       document.getElementById('bk-card').innerHTML = html;
