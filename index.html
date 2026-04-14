@@ -1385,7 +1385,8 @@
         url: 'https://calendly.com/massage-harmonya/drain-sculpt'
       }
     };
-    const MASSAGE_IDS = ['decouverte','immersion','evasion','cocooning','duo','duo-saf'];
+    const MASSAGE_IDS = ['decouverte','immersion','evasion','cocooning'];
+    const DUO_IDS = ['duo','duo-saf'];
 
     // FAQ Toggle Function
     function toggleFaq(button) {
@@ -1519,10 +1520,10 @@
       window._bkPhone = null;
       window._bkDechargeSigned = false;
       if (id && BK_SERVICES[id]) {
-        // Accès direct depuis une carte de soin
+        // Accès direct depuis une carte de soin (inclut les duos)
         renderServiceDetail(id);
       } else {
-        // Pas d'id → sélecteur de catégorie
+        // Pas d'id → sélecteur de catégorie (massages solo + drainages)
         renderCategoryPicker();
       }
     }
@@ -1540,7 +1541,7 @@
       html += '<button class="bk-cat-card" onclick="renderMassagePicker()">';
       html += '<span class="bk-cat-icon">🤲</span>';
       html += '<div class="bk-cat-name">Massages bien-être</div>';
-      html += '<div class="bk-cat-sub">Découverte · Immersion · Évasion<br>Cocooning · Massage Duo</div>';
+      html += '<div class="bk-cat-sub">Découverte · Immersion<br>Évasion · Cocooning</div>';
       html += '</button>';
       html += '<button class="bk-cat-card" onclick="renderDrainagePicker()">';
       html += '<span class="bk-cat-icon">💧</span>';
@@ -2145,8 +2146,11 @@
       var s = BK_SERVICES[id];
       if (!s) return;
       var fromMassage = MASSAGE_IDS.includes(id);
+      var isDuo = DUO_IDS.includes(id);
       var html = closeBtn();
-      if (fromMassage) html += '<button class="bk-back" onclick="renderMassagePicker()">← Retour</button>';
+      if (isDuo) {
+        // Les duos sont accessibles uniquement depuis la page principale, pas de retour vers le sélecteur
+      } else if (fromMassage) html += '<button class="bk-back" onclick="renderMassagePicker()">← Retour</button>';
       else if (fromDrain || DRAIN_IDS.includes(id)) html += '<button class="bk-back" onclick="renderDrainagePicker()">← Retour</button>';
       if (s.duo) html += '<span class="bk-duo-badge">✦ En partenariat avec ' + (s.partner || '@evasionlomilomi') + '</span>';
       html += '<p class="bk-eyebrow">Réservation</p>';
