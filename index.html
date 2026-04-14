@@ -562,7 +562,7 @@
                         </div>
                     </div>
 
-                    <div class="soin-card soin-featured reveal-up" style="--d:320ms;cursor:pointer" data-magnetic onclick="openBookingModal('duo')">
+                    <div class="soin-card soin-featured reveal-up" style="--d:320ms;cursor:pointer" data-magnetic onclick="openDuoBooking('duo','Lomi-Lomi polynésien · En duo × @evasionlomilomi',190)">
                         <div class="soin-label">En duo · Partenariat</div>
                         <div class="soin-card-inner">
                             <div class="soin-top">
@@ -584,7 +584,7 @@
                         </div>
                     </div>
 
-                    <div class="soin-card soin-featured reveal-up" style="--d:400ms;cursor:pointer" data-magnetic onclick="openBookingModal('duo-saf')">
+                    <div class="soin-card soin-featured reveal-up" style="--d:400ms;cursor:pointer" data-magnetic onclick="openDuoBooking('duo-saf','Évasion · En duo × @saf_ncare',190)">
                         <div class="soin-label">En duo · Partenariat</div>
                         <div class="soin-card-inner">
                             <div class="soin-top">
@@ -2308,6 +2308,26 @@
       window.selectedServiceId = id;
       window.selectedServiceTitle = title;
       window.selectedServicePrice = minPrice;
+      showLocationPicker(id, title);
+    }
+
+    // ── Duos : ouverture directe sans aucun écran intermédiaire ──
+    function openDuoBooking(id, title, price) {
+      var overlay = document.getElementById('bk-overlay');
+      overlay.style.display = 'flex';
+      document.body.style.overflow = 'hidden';
+      window.selectedServiceId = id;
+      window.selectedServiceTitle = title;
+      window.selectedServicePrice = price;
+      window.selectedLocation = null;
+      window.locationFees = 0;
+      window.selectedAddress = null;
+      window.selectedDate = null;
+      window.selectedTime = null;
+      window._bkPrenom = null;
+      window._bkEmail = null;
+      window._bkPhone = null;
+      window._bkDechargeSigned = false;
       showLocationPicker(id, title);
     }
 
