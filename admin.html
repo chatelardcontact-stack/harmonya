@@ -594,7 +594,9 @@
     </button>
   </div>
   <div class="drawer-tabs">
-    <div class="drawer-tab active" onclick="switchDrawerTab('forfaits',this)">Forfaits</div>
+    <div class="drawer-tab active" onclick="switchDrawerTab('apercu',this)">📋 Aperçu</div>
+    <div class="drawer-tab" onclick="switchDrawerTab('contrats-client',this)">💳 Contrats</div>
+    <div class="drawer-tab" onclick="switchDrawerTab('forfaits',this)">Forfaits</div>
     <div class="drawer-tab" onclick="switchDrawerTab('suivi',this)" id="tab-suivi">Suivi</div>
     <div class="drawer-tab" onclick="switchDrawerTab('rdv-client',this)">RDV</div>
     <div class="drawer-tab" onclick="switchDrawerTab('anamnese',this)">Anamnèse</div>
@@ -604,7 +606,9 @@
     <div class="drawer-tab" onclick="switchDrawerTab('fact-client',this)">Factures</div>
   </div>
   <div class="drawer-body">
-    <div class="drawer-tab-content active" id="dt-forfaits">
+    <div class="drawer-tab-content active" id="dt-apercu"><div id="drawer-apercu"></div></div>
+    <div class="drawer-tab-content" id="dt-contrats-client"><div id="drawer-contrats"></div></div>
+    <div class="drawer-tab-content" id="dt-forfaits">
       <div style="display:flex;justify-content:flex-end;margin-bottom:16px;">
         <button class="btn-outline" onclick="openModal('forfait')">
           <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -922,16 +926,16 @@ async function openDrawer(clientId) {
   if (c.avatar_url) av.innerHTML = `<img src="${c.avatar_url}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;
   else av.textContent = initials(c.full_name || c.email || '?');
 
-  // Reset tabs
+  // Reset tabs — Aperçu est le premier onglet
   document.querySelectorAll('.drawer-tab').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('.drawer-tab-content').forEach(t => t.classList.remove('active'));
   document.querySelector('.drawer-tab').classList.add('active');
-  document.getElementById('dt-forfaits').classList.add('active');
+  document.getElementById('dt-apercu').classList.add('active');
 
   document.getElementById('client-drawer').classList.add('open');
   document.getElementById('drawer-overlay').classList.add('open');
 
-  loadDrawerForfaits(clientId);
+  loadDrawerApercu(clientId);
 }
 
 function closeDrawer() {
@@ -946,14 +950,227 @@ function switchDrawerTab(tabId, el) {
   el.classList.add('active');
   document.getElementById('dt-' + tabId).classList.add('active');
 
-  if (tabId === 'forfaits')     loadDrawerForfaits(selectedClientId);
-  if (tabId === 'suivi')        loadDrawerSuivi(selectedClientId);
-  if (tabId === 'rdv-client')   loadDrawerRDV(selectedClientId);
-  if (tabId === 'anamnese')     loadDrawerAnamnese(selectedClientId);
-  if (tabId === 'mensurations') loadDrawerMensurations(selectedClientId);
-  if (tabId === 'msg-client')   loadDrawerMsgs(selectedClientId);
-  if (tabId === 'docs-client')  loadDrawerDocs(selectedClientId);
-  if (tabId === 'fact-client')  loadDrawerFacts(selectedClientId);
+  if (tabId === 'apercu')          loadDrawerApercu(selectedClientId);
+  if (tabId === 'contrats-client') loadDrawerContrats(selectedClientId);
+  if (tabId === 'forfaits')        loadDrawerForfaits(selectedClientId);
+  if (tabId === 'suivi')           loadDrawerSuivi(selectedClientId);
+  if (tabId === 'rdv-client')      loadDrawerRDV(selectedClientId);
+  if (tabId === 'anamnese')        loadDrawerAnamnese(selectedClientId);
+  if (tabId === 'mensurations')    loadDrawerMensurations(selectedClientId);
+  if (tabId === 'msg-client')      loadDrawerMsgs(selectedClientId);
+  if (tabId === 'docs-client')     loadDrawerDocs(selectedClientId);
+  if (tabId === 'fact-client')     loadDrawerFacts(selectedClientId);
+}
+
+// ── APERÇU ────────────────────────────────────────────
+async function loadDrawerApercu(clientId) {
+  const el = document.getElementById('drawer-apercu');
+  el.innerHTML = '<p style="color:var(--text-dim);font-size:.82rem;padding:8px 0;">Chargement…</p>';
+
+  const today = new Date().toISOString().split('T')[0];
+
+  const [{ data: rdvs }, { data: contrats }] = await Promise.all([
+    sb.from('rendez_vous').select('*').eq('client_id', clientId).order('date', { ascending: false }),
+    sb.from('contrats').select('*').eq('client_id', clientId).order('created_at', { ascending: false })
+  ]);
+
+  const fmtDate = d => { if(!d) return '—'; const x=new Date(d+'T12:00:00Z'); const m=['jan','fév','mar','avr','mai','jun','jul','aoû','sep','oct','nov','déc']; return `${x.getDate()} ${m[x.getMonth()]} ${x.getFullYear()}`; };
+
+  let html = '';
+
+  // ── Prochain RDV
+  const prochains = (rdvs||[]).filter(r => r.date >= today && ['confirmé','en_attente'].includes(r.statut)).sort((a,b)=>a.date.localeCompare(b.date));
+  const prochain = prochains[0];
+  html += `<div style="background:rgba(201,169,110,.06);border:1px solid rgba(201,169,110,.2);border-radius:10px;padding:14px 16px;margin-bottom:12px;">`;
+  html += `<div style="font-size:.7rem;text-transform:uppercase;letter-spacing:.1em;color:var(--text-dim);margin-bottom:6px;">Prochain rendez-vous</div>`;
+  if (prochain) {
+    const h = (prochain.heure||'').substring(0,5);
+    const lieu = prochain.lieu === 'domicile' ? '🏠 Domicile' : '🏛️ Cabinet';
+    html += `<div style="font-size:.95rem;color:var(--gold-light);font-weight:600;">${prochain.prestation||'—'}</div>`;
+    html += `<div style="font-size:.82rem;color:var(--text-dim);margin-top:4px;">📅 ${fmtDate(prochain.date)} ${h?'à '+h:''} &nbsp;·&nbsp; ${lieu}</div>`;
+    const statColor = prochain.statut==='confirmé'?'#81c784':'#ffd54f';
+    html += `<span style="font-size:.7rem;background:rgba(255,255,255,.05);border-radius:12px;padding:2px 8px;margin-top:6px;display:inline-block;color:${statColor};">${prochain.statut}</span>`;
+  } else {
+    html += `<div style="font-size:.85rem;color:var(--text-dim);">Aucun RDV à venir</div>`;
+  }
+  html += `</div>`;
+
+  // ── Alertes paiements en retard
+  const retards = [];
+  (contrats||[]).forEach(c => {
+    (c.echeances||[]).forEach((e,i) => {
+      if (!e.payee && e.date < today) retards.push({contrat: c, echeance: e, idx: i});
+    });
+  });
+  if (retards.length > 0) {
+    html += `<div style="background:rgba(229,115,115,.08);border:1px solid rgba(229,115,115,.3);border-radius:10px;padding:14px 16px;margin-bottom:12px;">`;
+    html += `<div style="font-size:.7rem;text-transform:uppercase;letter-spacing:.1em;color:#e57373;margin-bottom:8px;">⚠️ ${retards.length} paiement${retards.length>1?'s':''} en retard</div>`;
+    retards.forEach(({contrat, echeance}) => {
+      html += `<div style="font-size:.82rem;color:rgba(232,221,208,.75);margin-bottom:4px;">• ${echeance.montant}€ — ${contrat.prestation||'Cure'} <span style="color:rgba(229,115,115,.8);font-size:.75rem;">(dû le ${fmtDate(echeance.date)})</span></div>`;
+    });
+    html += `<button onclick="switchDrawerTab('contrats-client', document.querySelector('[onclick*=contrats-client]'))" style="margin-top:8px;font-size:.75rem;background:rgba(229,115,115,.15);border:1px solid rgba(229,115,115,.3);color:#e57373;padding:5px 12px;border-radius:6px;cursor:pointer;">Voir les contrats →</button>`;
+    html += `</div>`;
+  }
+
+  // ── Paiements à venir (7 jours)
+  const in7 = new Date(); in7.setDate(in7.getDate()+7); const in7Str = in7.toISOString().split('T')[0];
+  const prochainsPaie = [];
+  (contrats||[]).forEach(c => {
+    (c.echeances||[]).forEach((e,i) => {
+      if (!e.payee && e.date >= today && e.date <= in7Str) prochainsPaie.push({contrat: c, echeance: e, idx: i});
+    });
+  });
+  if (prochainsPaie.length > 0) {
+    html += `<div style="background:rgba(255,213,79,.06);border:1px solid rgba(255,213,79,.2);border-radius:10px;padding:14px 16px;margin-bottom:12px;">`;
+    html += `<div style="font-size:.7rem;text-transform:uppercase;letter-spacing:.1em;color:#ffd54f;margin-bottom:8px;">📅 Paiement prévu dans 7 jours</div>`;
+    prochainsPaie.forEach(({contrat, echeance}) => {
+      html += `<div style="font-size:.82rem;color:rgba(232,221,208,.75);">• <strong>${echeance.montant}€</strong> — ${contrat.prestation||'Cure'} le ${fmtDate(echeance.date)}</div>`;
+    });
+    html += `</div>`;
+  }
+
+  // ── Résumé financier contrats
+  if ((contrats||[]).length > 0) {
+    html += `<div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:14px 16px;margin-bottom:12px;">`;
+    html += `<div style="font-size:.7rem;text-transform:uppercase;letter-spacing:.1em;color:var(--text-dim);margin-bottom:10px;">Contrats & cures</div>`;
+    (contrats||[]).forEach(c => {
+      const echeances = c.echeances || [];
+      const nbPaye = echeances.filter(e => e.payee).length;
+      const nbTotal = echeances.length;
+      const montantPaye = echeances.filter(e=>e.payee).reduce((s,e)=>s+parseFloat(e.montant||0),0);
+      const montantTotal = parseFloat(c.montant||0);
+      const montantRestant = montantTotal - montantPaye;
+      const pct = nbTotal>0 ? Math.round(nbPaye/nbTotal*100) : 0;
+      html += `<div style="margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid rgba(255,255,255,.06);">`;
+      html += `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">`;
+      html += `<span style="font-size:.85rem;color:#e8ddd0;">${c.prestation||'Cure'}</span>`;
+      html += `<span style="font-size:.75rem;color:var(--text-dim);">${c.plan_paiement||'1x'}</span>`;
+      html += `</div>`;
+      html += `<div style="background:rgba(255,255,255,.06);border-radius:4px;height:5px;margin-bottom:5px;overflow:hidden;"><div style="width:${pct}%;height:100%;background:#c9a96e;border-radius:4px;"></div></div>`;
+      html += `<div style="font-size:.75rem;color:var(--text-dim);">${nbPaye}/${nbTotal} versements · `;
+      if (montantRestant > 0.01) {
+        html += `<span style="color:#ffd54f;">${montantRestant.toFixed(2)}€ restant</span>`;
+      } else {
+        html += `<span style="color:#81c784;">Soldé ✓</span>`;
+      }
+      html += `</div></div>`;
+    });
+    html += `</div>`;
+  }
+
+  // ── Derniers RDV
+  const derniers = (rdvs||[]).filter(r => r.date < today).slice(0, 3);
+  if (derniers.length > 0) {
+    html += `<div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:14px 16px;">`;
+    html += `<div style="font-size:.7rem;text-transform:uppercase;letter-spacing:.1em;color:var(--text-dim);margin-bottom:8px;">Derniers RDV</div>`;
+    derniers.forEach(r => {
+      const statColor = r.statut==='confirmé'||r.statut==='terminé'?'rgba(129,199,132,.7)':'rgba(255,213,79,.7)';
+      html += `<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.04);">`;
+      html += `<span style="font-size:.82rem;color:rgba(232,221,208,.8);">${r.prestation||'—'}</span>`;
+      html += `<span style="font-size:.75rem;color:var(--text-dim);">${fmtDate(r.date)} <span style="color:${statColor};">· ${r.statut}</span></span>`;
+      html += `</div>`;
+    });
+    html += `</div>`;
+  }
+
+  if (!html) html = '<div class="empty-state"><div class="empty-state-icon">👤</div><div class="empty-state-text">Aucune donnée pour cette cliente</div></div>';
+  el.innerHTML = html;
+}
+
+// ── CONTRATS CLIENT ────────────────────────────────────
+async function loadDrawerContrats(clientId) {
+  const el = document.getElementById('drawer-contrats');
+  el.innerHTML = '<p style="color:var(--text-dim);font-size:.82rem;padding:8px 0;">Chargement…</p>';
+
+  const { data: contrats } = await sb.from('contrats').select('*').eq('client_id', clientId).order('created_at', { ascending: false });
+  const today = new Date().toISOString().split('T')[0];
+  const fmtDate = d => { if(!d) return '—'; const x=new Date(d+'T12:00:00Z'); const m=['jan','fév','mar','avr','mai','jun','jul','aoû','sep','oct','nov','déc']; return `${x.getDate()} ${m[x.getMonth()]} ${x.getFullYear()}`; };
+
+  if (!contrats || !contrats.length) {
+    el.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📋</div><div class="empty-state-text">Aucun contrat</div></div>';
+    return;
+  }
+
+  let html = '';
+  for (const c of contrats) {
+    const echeances = c.echeances || [];
+    const nbPaye = echeances.filter(e => e.payee).length;
+    const montantTotal = parseFloat(c.montant||0);
+    const montantPaye = echeances.filter(e=>e.payee).reduce((s,e)=>s+parseFloat(e.montant||0),0);
+    const montantRestant = montantTotal - montantPaye;
+    const statutColor = montantRestant < 0.01 ? '#81c784' : '#ffd54f';
+    const statutLabel = montantRestant < 0.01 ? 'Soldé' : `${montantRestant.toFixed(2)}€ restant`;
+
+    html += `<div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:16px;margin-bottom:14px;">`;
+    html += `<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;">`;
+    html += `<div><div style="font-size:.95rem;color:#e8ddd0;font-weight:600;">${c.prestation||'Cure'}</div>`;
+    html += `<div style="font-size:.75rem;color:var(--text-dim);margin-top:2px;">${c.plan_paiement||'1x'} · ${montantTotal.toFixed(2)}€ total · ${nbPaye}/${echeances.length} versements</div></div>`;
+    html += `<span style="font-size:.72rem;color:${statutColor};background:rgba(255,255,255,.04);padding:3px 8px;border-radius:10px;">${statutLabel}</span>`;
+    html += `</div>`;
+
+    // Tableau des échéances
+    html += `<table style="width:100%;border-collapse:collapse;font-size:.8rem;">`;
+    html += `<tr style="color:var(--text-dim);"><th style="text-align:left;padding:4px 6px;font-weight:500;">N°</th><th style="text-align:left;padding:4px 6px;font-weight:500;">Date échéance</th><th style="text-align:right;padding:4px 6px;font-weight:500;">Montant</th><th style="text-align:center;padding:4px 6px;font-weight:500;">Statut</th></tr>`;
+    echeances.forEach((e, idx) => {
+      const isLate = !e.payee && e.date < today;
+      const rowBg = isLate ? 'rgba(229,115,115,.05)' : idx%2===0 ? 'rgba(255,255,255,.02)' : 'transparent';
+      let badge = '';
+      if (e.payee) {
+        badge = `<span style="color:#81c784;font-size:.7rem;">✓ Payé</span>`;
+        if (e.date_paiement) badge += `<div style="color:var(--text-dim);font-size:.65rem;">${fmtDate(e.date_paiement)}</div>`;
+      } else if (isLate) {
+        badge = `<span style="color:#e57373;font-size:.7rem;">⚠ Retard</span>`;
+      } else {
+        badge = `<span style="color:#ffd54f;font-size:.7rem;">En attente</span>`;
+      }
+      html += `<tr style="background:${rowBg};">`;
+      html += `<td style="padding:7px 6px;color:rgba(232,221,208,.6);">${e.numero||idx+1}</td>`;
+      html += `<td style="padding:7px 6px;color:rgba(232,221,208,.8);">${fmtDate(e.date)}</td>`;
+      html += `<td style="padding:7px 6px;text-align:right;color:#e8ddd0;font-weight:500;">${parseFloat(e.montant||0).toFixed(2)} €</td>`;
+      html += `<td style="padding:7px 6px;text-align:center;">${badge}</td>`;
+      html += `</tr>`;
+    });
+    html += `</table>`;
+
+    // Bouton générer lien paiement pour première échéance non payée
+    const nextUnpaid = echeances.findIndex(e => !e.payee);
+    if (nextUnpaid >= 0) {
+      const client = allClients.find(x => x.id === clientId);
+      html += `<button onclick="generateEcheanceLink('${c.id}', ${nextUnpaid}, ${echeances[nextUnpaid].montant}, '${client?.email||''}', '${c.prestation||'Cure'}', ${echeances[nextUnpaid].numero||nextUnpaid+1})" style="margin-top:10px;width:100%;padding:8px;background:rgba(201,169,110,.1);border:1px solid rgba(201,169,110,.3);color:#c9a96e;border-radius:6px;cursor:pointer;font-size:.8rem;">🔗 Générer lien paiement versement ${echeances[nextUnpaid].numero||nextUnpaid+1}</button>`;
+    }
+    html += `</div>`;
+  }
+  el.innerHTML = html;
+}
+
+async function generateEcheanceLink(contratId, echeanceIdx, montant, clientEmail, prestation, numero) {
+  const btn = event.target;
+  btn.textContent = 'Génération…'; btn.disabled = true;
+  try {
+    const { data, error } = await sb.functions.invoke('create-checkout-session', {
+      body: {
+        contrat_id: contratId,
+        echeance_idx: echeanceIdx,
+        description: `Versement ${numero} — ${prestation}`,
+        client_email: clientEmail,
+        success_url: 'https://www.harmonyamassage.fr/espace-client.html',
+        cancel_url:  'https://www.harmonyamassage.fr/espace-client.html'
+      }
+    });
+    if (error || !data?.url) throw new Error(error?.message || 'Pas d\'URL Stripe');
+    navigator.clipboard.writeText(data.url).then(() => {
+      btn.textContent = '✓ Lien copié !'; btn.style.color = '#81c784'; btn.style.borderColor = '#81c784';
+    }).catch(() => {
+      btn.textContent = '✓ Lien généré';
+      const linkEl = document.createElement('a');
+      linkEl.href = data.url; linkEl.target = '_blank'; linkEl.style.cssText = 'display:block;margin-top:6px;font-size:.75rem;color:#c9a96e;word-break:break-all;';
+      linkEl.textContent = data.url;
+      btn.parentNode.insertBefore(linkEl, btn.nextSibling);
+    });
+  } catch(e) {
+    btn.textContent = 'Erreur — réessayer'; btn.disabled = false;
+    console.error(e);
+  }
 }
 
 // ── FORFAITS ──────────────────────────────────────────
