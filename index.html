@@ -1948,7 +1948,7 @@
       html += '<p style="font-size:.75rem;color:rgba(255,255,255,.4);margin-bottom:16px;">Votre créneau est réservé — Hélène vous enverra un email de confirmation.</p>';
       // Décharge requise pour drain-sculpt, drainage-classique et post-op
       var sid = window.selectedServiceId || '';
-      var isDrainSculpt = sid === 'drain-sculpt' || sid.startsWith('drainage-classique-') || sid.startsWith('post-op-');
+      var isDrainSculpt = sid.startsWith('drain-sculpt') || sid.startsWith('drainage-classique-') || sid.startsWith('post-op-');
       if (isDrainSculpt) {
         html += '<button class="bk-cta" id="bk-submit-btn" style="width:100%;cursor:pointer;border:none;">Continuer vers la décharge <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></button>';
       } else {
@@ -2149,7 +2149,7 @@
       var isDuo = DUO_IDS.includes(id);
       var html = closeBtn();
       if (isDuo) {
-        // Les duos sont accessibles uniquement depuis la page principale, pas de retour vers le sélecteur
+        html += '<button class="bk-back" onclick="closeBookingModal()">← Fermer</button>';
       } else if (fromMassage) html += '<button class="bk-back" onclick="renderMassagePicker()">← Retour</button>';
       else if (fromDrain || DRAIN_IDS.includes(id)) html += '<button class="bk-back" onclick="renderDrainagePicker()">← Retour</button>';
       if (s.duo) html += '<span class="bk-duo-badge">✦ En partenariat avec ' + (s.partner || '@evasionlomilomi') + '</span>';

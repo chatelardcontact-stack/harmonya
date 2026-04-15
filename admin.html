@@ -1158,15 +1158,30 @@ async function generateEcheanceLink(contratId, echeanceIdx, montant, clientEmail
       }
     });
     if (error || !data?.url) throw new Error(error?.message || 'Pas d\'URL Stripe');
-    navigator.clipboard.writeText(data.url).then(() => {
-      btn.textContent = '✓ Lien copié !'; btn.style.color = '#81c784'; btn.style.borderColor = '#81c784';
-    }).catch(() => {
-      btn.textContent = '✓ Lien généré';
-      const linkEl = document.createElement('a');
-      linkEl.href = data.url; linkEl.target = '_blank'; linkEl.style.cssText = 'display:block;margin-top:6px;font-size:.75rem;color:#c9a96e;word-break:break-all;';
-      linkEl.textContent = data.url;
-      btn.parentNode.insertBefore(linkEl, btn.nextSibling);
-    });
+
+    // Envoyer le lien par email à la cliente
+    if (clientEmail) {
+      await sb.functions.invoke('send-email', {
+        body: {
+          to: clientEmail,
+          subject: `💳 Votre lien de paiement — Versement ${numero} · ${prestation}`,
+          html: `<div style="font-family:Georgia,serif;max-width:520px;margin:0 auto;background:#1a1a1a;color:#e8ddd0;padding:32px;border-radius:12px;">
+            <div style="text-align:center;margin-bottom:20px;"><span style="font-size:1.4rem;letter-spacing:.12em;color:#c9a96e;">HARMONYA</span></div>
+            <h2 style="color:#d4af7a;font-size:1.1rem;font-weight:normal;margin:0 0 12px;">Votre lien de paiement</h2>
+            <p style="color:#ccc;font-size:.9rem;margin:0 0 20px;">Versement <strong>n°${numero}</strong> — <em>${prestation}</em> · <strong style="color:#d4af7a;">${parseFloat(montant).toFixed(2)} €</strong></p>
+            <div style="text-align:center;margin:24px 0;">
+              <a href="${data.url}" style="display:inline-block;background:linear-gradient(135deg,#b8975a,#d4af7a);color:#fff;text-decoration:none;padding:13px 30px;border-radius:8px;font-size:.95rem;">Payer maintenant — ${parseFloat(montant).toFixed(2)} €</a>
+            </div>
+            <p style="color:#666;font-size:.75rem;text-align:center;">Lien sécurisé valable 24h. Une question ? <a href="tel:0626142589" style="color:#c9a96e;">06 26 14 25 89</a></p>
+          </div>`
+        }
+      });
+      btn.textContent = '✓ Email envoyé à la cliente !';
+    } else {
+      navigator.clipboard.writeText(data.url);
+      btn.textContent = '✓ Lien copié !';
+    }
+    btn.style.color = '#81c784'; btn.style.borderColor = '#81c784';
   } catch(e) {
     btn.textContent = 'Erreur — réessayer'; btn.disabled = false;
     console.error(e);
@@ -1708,7 +1723,33 @@ async function saveContrat(form) {
     statut:         'en_attente'
   }).select().single();
 
-  if (!error) { closeModal(); loadAllContrats(); }
+  if (!error && data) {
+    closeModal();
+    loadAllContrats();
+    // Auto-envoi email au client avec le récapitulatif du contrat
+    if (client?.email) {
+      const echeances = data.echeances || [];
+      const fmtE = d => { if(!d) return '—'; const x=new Date(d+'T12:00:00Z'); const m=['jan','fév','mar','avr','mai','jun','jul','aoû','sep','oct','nov','déc']; return `${x.getDate()} ${m[x.getMonth()]} ${x.getFullYear()}`; };
+      const echeancesRows = echeances.map(e => `<tr><td style="padding:6px 10px;border-bottom:1px solid #2a2a2a;">Versement ${e.numero}</td><td style="padding:6px 10px;border-bottom:1px solid #2a2a2a;">${fmtE(e.date)}</td><td style="padding:6px 10px;border-bottom:1px solid #2a2a2a;text-align:right;color:#d4af7a;">${parseFloat(e.montant).toFixed(2)} €</td></tr>`).join('');
+      await sb.functions.invoke('send-email', {
+        body: {
+          to: client.email,
+          subject: `📋 Votre contrat Harmonya — ${prestation}`,
+          html: `<div style="font-family:Georgia,serif;max-width:540px;margin:0 auto;background:#1a1a1a;color:#e8ddd0;padding:32px;border-radius:12px;">
+            <div style="text-align:center;margin-bottom:20px;"><span style="font-size:1.4rem;letter-spacing:.12em;color:#c9a96e;">HARMONYA</span></div>
+            <h2 style="color:#d4af7a;font-size:1.1rem;font-weight:normal;margin:0 0 8px;">Votre contrat est prêt</h2>
+            <p style="color:#ccc;font-size:.9rem;margin:0 0 20px;">Bonjour <strong>${client.full_name || client.prenom || 'cliente'}</strong>, voici le récapitulatif de votre cure <strong>${prestation}</strong>.</p>
+            <table width="100%" style="background:#111;border-radius:8px;border-collapse:collapse;font-size:.85rem;margin-bottom:20px;">
+              <tr style="color:#999;"><th style="padding:8px 10px;text-align:left;font-weight:500;">Versement</th><th style="padding:8px 10px;text-align:left;font-weight:500;">Date</th><th style="padding:8px 10px;text-align:right;font-weight:500;">Montant</th></tr>
+              ${echeancesRows}
+            </table>
+            <p style="color:#666;font-size:.8rem;text-align:center;">Un lien de paiement vous sera envoyé avant chaque échéance. Questions : <a href="tel:0626142589" style="color:#c9a96e;">06 26 14 25 89</a></p>
+          </div>`
+        }
+      });
+    }
+    showAdminToast('✓ Contrat créé et envoyé à la cliente', 'green');
+  }
   else console.error('Erreur création contrat:', error);
 }
 
@@ -3433,11 +3474,33 @@ async function renderAnalytics() {
 
 // ── REALTIME ──────────────────────────────────────────
 function subscribeRealtime() {
-  const ch = sb.channel('admin-msgs')
+  const ch = sb.channel('admin-live')
     .on('postgres_changes', { event:'INSERT', schema:'public', table:'messages' }, () => loadAllMessages())
     .on('postgres_changes', { event:'INSERT', schema:'public', table:'contrats' }, () => loadAllContrats())
+    .on('postgres_changes', { event:'INSERT', schema:'public', table:'rendez_vous' }, payload => {
+      loadAllRDVData().then(() => renderOverview());
+      // Notification visuelle nouvelle réservation
+      const rdv = payload.new;
+      if (rdv && rdv.prestation) {
+        showAdminToast(`📅 Nouvelle réservation : ${rdv.prestation} — ${rdv.client_prenom || 'Client'}`, 'gold');
+      }
+    })
+    .on('postgres_changes', { event:'UPDATE', schema:'public', table:'rendez_vous', filter:'paiement_statut=eq.payé' }, payload => {
+      loadAllRDVData().then(() => renderOverview());
+      const rdv = payload.new;
+      if (rdv) showAdminToast(`💳 Paiement reçu : ${rdv.prestation || ''} — ${(rdv.montant_paye||'?')}€`, 'green');
+    })
     .subscribe();
   realtimeChannels.push(ch);
+}
+
+function showAdminToast(message, type) {
+  const colors = { gold: '#c9a96e', green: '#81c784', red: '#e57373' };
+  const t = document.createElement('div');
+  t.style.cssText = `position:fixed;bottom:24px;right:24px;background:#1e1a17;border:1px solid ${colors[type]||colors.gold};color:#e8ddd0;padding:12px 18px;border-radius:10px;font-size:.85rem;z-index:99999;max-width:320px;box-shadow:0 4px 20px rgba(0,0,0,.4);animation:fadeInUp .3s ease;`;
+  t.textContent = message;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 5000);
 }
 
 // ── HELPERS ───────────────────────────────────────────
