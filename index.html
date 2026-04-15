@@ -1051,7 +1051,8 @@
             <div class="contact-layout">
                 <div class="contact-left reveal-left">
                     <span class="eyebrow">Contact</span>
-                    <h2>Prendre<br><em>rendez-vous</em></h2>
+                    <h2>Nous<br><em>contacter</em></h2>
+                    <p style="color:rgba(232,221,208,.6);font-size:.95rem;line-height:1.8;margin-bottom:28px;">Une question, un renseignement sur nos soins ? Nous vous répondons avec plaisir.</p>
                     <div class="contact-items">
                         <a href="https://maps.google.com/?q=1+A+rue+de+la+poste+67400+Illkirch-Graffenstaden" target="_blank" class="c-item">
                             <div class="c-icon">
@@ -1082,7 +1083,7 @@
                         </div>
                     </div>
                     <div class="socials">
-                        <a href="#" class="soc" aria-label="Instagram">
+                        <a href="https://www.instagram.com/harmonya_massage/" target="_blank" class="soc" aria-label="Instagram">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="5"/><circle cx="17.5" cy="6.5" r="1.5" fill="currentColor" stroke="none"/></svg>
                         </a>
                         <a href="#" class="soc" aria-label="Snapchat">
@@ -1092,33 +1093,29 @@
                 </div>
 
                 <div class="contact-form-box reveal-right">
-                    <form id="contactForm">
-                        <h3>Envoyez-nous un message</h3>
+                    <form id="contactFormModal" class="contact-form-modal">
+                        <h3 style="font-family:'Playfair Display',serif;font-size:1.15rem;color:#e8ddd0;font-weight:400;margin-bottom:24px;">Envoyez-nous un message</h3>
                         <div class="field">
-                            <input type="text" id="f-name" name="name" required placeholder=" ">
-                            <label for="f-name">Votre prénom & nom</label>
-                            <span class="field-line"></span>
-                        </div>
-                        <div class="field">
-                            <input type="tel" id="f-phone" name="phone" placeholder=" ">
-                            <label for="f-phone">Téléphone</label>
-                            <span class="field-line"></span>
-                        </div>
-                        <div class="field field-select">
-                            <select id="f-method" name="method">
-                                <option value="" disabled selected>Comment souhaitez-vous être contactée ?</option>
-                                <option>Par téléphone</option>
-                                <option>Par SMS</option>
-                                <option>Par Instagram</option>
-                                <option>Par Snapchat</option>
-                            </select>
+                            <input type="text" id="cfm-name" name="name" required placeholder=" ">
+                            <label for="cfm-name">Prénom*</label>
                             <span class="field-line"></span>
                         </div>
                         <div class="field">
-                            <textarea id="f-msg" name="message" rows="4" required placeholder=" "></textarea>
-                            <label for="f-msg">Votre message</label>
+                            <input type="email" id="cfm-email" name="email" required placeholder=" ">
+                            <label for="cfm-email">Email*</label>
                             <span class="field-line"></span>
                         </div>
+                        <div class="field">
+                            <input type="tel" id="cfm-phone" name="phone" placeholder=" ">
+                            <label for="cfm-phone">Téléphone</label>
+                            <span class="field-line"></span>
+                        </div>
+                        <div class="field">
+                            <textarea id="cfm-msg" name="message" rows="5" required placeholder=" "></textarea>
+                            <label for="cfm-msg">Message*</label>
+                            <span class="field-line"></span>
+                        </div>
+                        <div class="form-status" id="contactFormStatus"></div>
                         <button type="submit" class="btn-submit">
                             <span class="btn-submit-text">Envoyer le message</span>
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
@@ -1226,46 +1223,6 @@
     </section>
 
     <!-- CONTACT FORM SECTION -->
-    <section class="section contact-form-section" id="contactus">
-        <div class="wrap">
-            <div class="contactform-header reveal-up">
-                <span class="eyebrow">Nous aimerions vous rencontrer</span>
-                <h2>Contactez-nous</h2>
-                <p class="contactform-subtitle">Une question ? Un projet de cure ? Écrivez-nous.</p>
-            </div>
-
-            <div class="contactform-box reveal-up">
-                <form id="contactFormModal" class="contact-form-modal">
-                    <div class="field">
-                        <input type="text" id="cfm-name" name="name" required placeholder=" ">
-                        <label for="cfm-name">Prénom*</label>
-                        <span class="field-line"></span>
-                    </div>
-                    <div class="field">
-                        <input type="email" id="cfm-email" name="email" required placeholder=" ">
-                        <label for="cfm-email">Email*</label>
-                        <span class="field-line"></span>
-                    </div>
-                    <div class="field">
-                        <input type="tel" id="cfm-phone" name="phone" placeholder=" ">
-                        <label for="cfm-phone">Téléphone</label>
-                        <span class="field-line"></span>
-                    </div>
-                    <div class="field">
-                        <textarea id="cfm-msg" name="message" rows="5" required placeholder=" "></textarea>
-                        <label for="cfm-msg">Message*</label>
-                        <span class="field-line"></span>
-                    </div>
-                    <div class="form-status" id="contactFormStatus"></div>
-                    <button type="submit" class="btn-submit">
-                        <span class="btn-submit-text">Envoyer le message</span>
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-                    </button>
-                </form>
-            </div>
-        </div>
-    </section>
-
     <!-- FOOTER -->
     <footer class="footer">
         <div class="wrap">
