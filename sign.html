@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Signature de contrat — Harmonya</title>
+<link rel="icon" href="logo.png">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #0a0806; color: #e8ddd0; font-family: Georgia, serif; min-height: 100vh; }
+
+  .top-bar { background: linear-gradient(135deg, #1a1410, #1e1a17); border-bottom: 1px solid rgba(201,169,110,.15); padding: 18px 32px; display: flex; align-items: center; gap: 14px; }
+  .top-bar img { height: 36px; }
+  .top-bar-name { font-size: 1.1rem; letter-spacing: .12em; color: #c9a96e; }
+  .top-bar-sub { font-size: .75rem; color: rgba(232,221,208,.45); }
+
+  .container { max-width: 760px; margin: 0 auto; padding: 36px 24px 60px; }
+
+  .state-loading, .state-error, .state-signed { text-align: center; padding: 80px 24px; }
+  .state-icon { font-size: 3rem; margin-bottom: 16px; }
+  .state-title { font-size: 1.4rem; color: #c9a96e; margin-bottom: 8px; }
+  .state-sub { font-size: .9rem; color: rgba(232,221,208,.5); line-height: 1.7; }
+
+  .contract-header { background: rgba(201,169,110,.06); border: 1px solid rgba(201,169,110,.2); border-radius: 12px; padding: 20px 24px; margin-bottom: 24px; }
+  .contract-prestation { font-size: 1.2rem; color: #d4af7a; font-weight: 600; margin-bottom: 6px; }
+  .contract-meta { font-size: .82rem; color: rgba(232,221,208,.55); display: flex; gap: 16px; flex-wrap: wrap; }
+  .contract-meta span::before { content: '·'; margin-right: 6px; }
+  .contract-meta span:first-child::before { content: ''; margin: 0; }
+
+  .echeances-table { width: 100%; border-collapse: collapse; margin-bottom: 24px; }
+  .echeances-table th { text-align: left; font-size: .75rem; text-transform: uppercase; letter-spacing: .08em; color: rgba(232,221,208,.4); padding: 8px 12px; border-bottom: 1px solid rgba(255,255,255,.06); font-weight: 500; }
+  .echeances-table td { padding: 10px 12px; border-bottom: 1px solid rgba(255,255,255,.04); font-size: .88rem; color: rgba(232,221,208,.8); }
+  .echeances-table td:last-child { color: #c9a96e; font-weight: 600; text-align: right; }
+
+  .contract-body { background: #fff; color: #1a1a1a; border-radius: 10px; padding: 32px; margin-bottom: 28px; font-family: 'Times New Roman', serif; font-size: .9rem; line-height: 1.8; max-height: 480px; overflow-y: auto; }
+
+  .sign-box { background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.1); border-radius: 12px; padding: 24px; }
+  .sign-box-title { font-size: 1rem; color: #d4af7a; margin-bottom: 18px; }
+
+  .sign-field { margin-bottom: 16px; }
+  .sign-label { font-size: .82rem; color: rgba(232,221,208,.6); margin-bottom: 6px; display: block; }
+  .sign-input { width: 100%; padding: 11px 14px; background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.12); border-radius: 8px; color: #e8ddd0; font-size: .95rem; font-family: Georgia, serif; outline: none; transition: border-color .2s; }
+  .sign-input:focus { border-color: rgba(201,169,110,.5); }
+
+  .sign-confirm { display: flex; gap: 10px; align-items: flex-start; margin-bottom: 20px; }
+  .sign-confirm input[type="checkbox"] { margin-top: 3px; accent-color: #c9a96e; width: 16px; height: 16px; cursor: pointer; flex-shrink: 0; }
+  .sign-confirm label { font-size: .82rem; color: rgba(232,221,208,.7); line-height: 1.6; cursor: pointer; }
+
+  .btn-sign { width: 100%; padding: 14px; background: linear-gradient(135deg, #b8975a, #d4af7a); color: #0a0806; font-size: 1rem; font-weight: 700; border: none; border-radius: 10px; cursor: pointer; letter-spacing: .05em; transition: opacity .2s; }
+  .btn-sign:disabled { opacity: .45; cursor: not-allowed; }
+  .btn-sign:not(:disabled):hover { opacity: .9; }
+
+  .legal-note { font-size: .72rem; color: rgba(232,221,208,.3); text-align: center; line-height: 1.6; margin-top: 14px; }
+
+  .signed-proof { background: rgba(129,199,132,.06); border: 1px solid rgba(129,199,132,.25); border-radius: 10px; padding: 16px 20px; margin-top: 20px; font-size: .82rem; color: rgba(232,221,208,.65); line-height: 1.8; }
+  .signed-proof strong { color: #81c784; }
+</style>
+</head>
+<body>
+
+<div class="top-bar">
+  <img src="logo.png" alt="Harmonya">
+  <div>
+    <div class="top-bar-name">HARMONYA</div>
+    <div class="top-bar-sub">Signature électronique de contrat</div>
+  </div>
+</div>
+
+<div class="container">
+  <div id="state-loading" class="state-loading">
+    <div class="state-icon">⏳</div>
+    <div class="state-title">Chargement du contrat…</div>
+  </div>
+  <div id="state-error" class="state-error" style="display:none;">
+    <div class="state-icon">❌</div>
+    <div class="state-title">Contrat introuvable</div>
+    <div class="state-sub">Ce lien est invalide ou a expiré.<br>Contactez Harmonya au <a href="tel:0626142589" style="color:#c9a96e;">06 26 14 25 89</a>.</div>
+  </div>
+  <div id="state-signed" class="state-signed" style="display:none;">
+    <div class="state-icon">✅</div>
+    <div class="state-title" style="color:#81c784;">Contrat déjà signé</div>
+    <div class="state-sub" id="signed-info"></div>
+    <div id="signed-proof" class="signed-proof" style="max-width:440px;margin:20px auto 0;text-align:left;"></div>
+  </div>
+  <div id="state-main" style="display:none;">
+    <div class="contract-header">
+      <div class="contract-prestation" id="contract-prestation"></div>
+      <div class="contract-meta" id="contract-meta"></div>
+    </div>
+
+    <table class="echeances-table" id="echeances-section" style="display:none;">
+      <thead><tr><th>Versement</th><th>Date</th><th>Montant</th></tr></thead>
+      <tbody id="echeances-body"></tbody>
+    </table>
+
+    <p style="font-size:.82rem;color:rgba(232,221,208,.45);margin-bottom:12px;">Veuillez lire attentivement le contrat avant de signer :</p>
+    <div class="contract-body" id="contract-body"></div>
+
+    <div class="sign-box">
+      <div class="sign-box-title">✍️ Votre signature électronique</div>
+      <div class="sign-field">
+        <label class="sign-label" for="sign-prenom">Votre prénom *</label>
+        <input type="text" id="sign-prenom" class="sign-input" placeholder="Entrez votre prénom" autocomplete="given-name">
+      </div>
+      <div class="sign-field">
+        <label class="sign-label" for="sign-lu">Écrire « Lu et approuvé » *</label>
+        <input type="text" id="sign-lu" class="sign-input" placeholder="Lu et approuvé" autocomplete="off">
+      </div>
+      <div class="sign-confirm">
+        <input type="checkbox" id="sign-check">
+        <label for="sign-check">Je reconnais avoir lu et compris l'intégralité du présent contrat, et j'accepte ses conditions sans réserve. Je consens à sa signature électronique conformément à l'article 1366 du Code Civil.</label>
+      </div>
+      <button class="btn-sign" id="btn-sign" onclick="submitSignature()" disabled>Signer le contrat</button>
+      <p class="legal-note">
+        Signature électronique horodatée. Cette signature a la même valeur juridique qu'une signature manuscrite (Art. 1366 Code Civil français). Un exemplaire signé vous sera envoyé par email.
+      </p>
+    </div>
+  </div>
+</div>
+
+<script>
+const SUPA_URL = 'https://qewdympkbxbevgmbfxfd.supabase.co';
+const FN_URL   = SUPA_URL + '/functions/v1/sign-contract';
+
+const params = new URLSearchParams(window.location.search);
+const token  = params.get('token');
+
+function fmtDate(d) {
+  if (!d) return '—';
+  const x = new Date(d + 'T12:00:00Z');
+  const m = ['jan.','fév.','mar.','avr.','mai','jun.','jul.','aoû.','sep.','oct.','nov.','déc.'];
+  return `${x.getDate()} ${m[x.getMonth()]} ${x.getFullYear()}`;
+}
+
+function show(id) {
+  ['state-loading','state-error','state-signed','state-main'].forEach(s => {
+    document.getElementById(s).style.display = s === id ? 'block' : 'none';
+  });
+}
+
+async function loadContract() {
+  if (!token) { show('state-error'); return; }
+  try {
+    const res = await fetch(FN_URL + '?token=' + encodeURIComponent(token));
+    if (!res.ok) { show('state-error'); return; }
+    const c = await res.json();
+
+    if (c.already_signed) {
+      const d = c.signed_at ? new Date(c.signed_at).toLocaleString('fr-FR') : '';
+      document.getElementById('signed-info').innerHTML =
+        `Ce contrat a été signé par <strong>${c.signature_name || '—'}</strong>${d ? ' le ' + d : ''}.<br>Un exemplaire vous a été envoyé par email.`;
+      document.getElementById('signed-proof').innerHTML =
+        `<strong>Référence de signature :</strong><br>Nom : ${c.signature_name || '—'} · Date : ${d || '—'}`;
+      show('state-signed');
+      return;
+    }
+
+    // Afficher le contrat
+    document.getElementById('contract-prestation').textContent = c.prestation || '—';
+    const meta = [];
+    if (c.plan_paiement && c.plan_paiement !== '1x') meta.push(c.plan_paiement + ' fois');
+    if (c.montant) meta.push(parseFloat(c.montant).toFixed(2) + ' €');
+    document.getElementById('contract-meta').innerHTML = meta.map(m => `<span>${m}</span>`).join('');
+
+    // Échéances
+    const echeances = c.echeances || [];
+    if (echeances.length > 1) {
+      document.getElementById('echeances-section').style.display = 'table';
+      document.getElementById('echeances-body').innerHTML = echeances.map(e =>
+        `<tr><td>Versement ${e.numero}</td><td>${fmtDate(e.date)}</td><td>${parseFloat(e.montant||0).toFixed(2)} €</td></tr>`
+      ).join('');
+    }
+
+    // Corps du contrat
+    if (c.contenu_html) {
+      document.getElementById('contract-body').innerHTML = c.contenu_html;
+    }
+
+    show('state-main');
+    setupValidation();
+  } catch(e) {
+    show('state-error');
+  }
+}
+
+function setupValidation() {
+  const prenom = document.getElementById('sign-prenom');
+  const lu = document.getElementById('sign-lu');
+  const check = document.getElementById('sign-check');
+  const btn = document.getElementById('btn-sign');
+
+  function validate() {
+    const luVal = lu.value.trim().toLowerCase().replace(/\s+/g,' ');
+    const ok = prenom.value.trim().length >= 2 &&
+               (luVal === 'lu et approuvé' || luVal === 'lu et approuve') &&
+               check.checked;
+    btn.disabled = !ok;
+  }
+  prenom.addEventListener('input', validate);
+  lu.addEventListener('input', validate);
+  check.addEventListener('change', validate);
+}
+
+async function submitSignature() {
+  const prenom = document.getElementById('sign-prenom').value.trim();
+  const btn = document.getElementById('btn-sign');
+  btn.disabled = true;
+  btn.textContent = 'Signature en cours…';
+
+  try {
+    const res = await fetch(FN_URL + '?token=' + encodeURIComponent(token), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prenom, accepted: true })
+    });
+    const data = await res.json();
+
+    if (res.status === 409 || data.already_signed) {
+      show('state-signed');
+      document.getElementById('signed-info').textContent = 'Ce contrat était déjà signé.';
+      return;
+    }
+    if (!res.ok) throw new Error(data.error || 'Erreur');
+
+    // Succès
+    document.getElementById('state-main').style.display = 'none';
+    document.getElementById('state-signed').style.display = 'block';
+    document.getElementById('state-signed').querySelector('.state-icon').textContent = '✅';
+    document.querySelector('.state-title').style.color = '#81c784';
+    document.querySelector('.state-title').textContent = 'Contrat signé !';
+    document.getElementById('signed-info').innerHTML =
+      `Merci <strong>${prenom}</strong> — votre signature a bien été enregistrée.<br>Un exemplaire vous a été envoyé par email.`;
+    const signedAt = data.signed_at ? new Date(data.signed_at).toLocaleString('fr-FR') : new Date().toLocaleString('fr-FR');
+    document.getElementById('signed-proof').innerHTML =
+      `<strong>Preuve de signature :</strong><br>Nom : ${prenom} · Date : ${signedAt}`;
+  } catch(e) {
+    btn.textContent = 'Erreur — réessayer';
+    btn.disabled = false;
+  }
+}
+
+loadContract();
+</script>
+</body>
+</html>

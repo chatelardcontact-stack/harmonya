@@ -1726,29 +1726,36 @@ async function saveContrat(form) {
   if (!error && data) {
     closeModal();
     loadAllContrats();
-    // Auto-envoi email au client avec le récapitulatif du contrat
-    if (client?.email) {
+    // Auto-envoi email avec lien de signature
+    if (client?.email && data.signature_token) {
+      const signUrl = `https://www.harmonyamassage.fr/sign.html?token=${data.signature_token}`;
       const echeances = data.echeances || [];
       const fmtE = d => { if(!d) return '—'; const x=new Date(d+'T12:00:00Z'); const m=['jan','fév','mar','avr','mai','jun','jul','aoû','sep','oct','nov','déc']; return `${x.getDate()} ${m[x.getMonth()]} ${x.getFullYear()}`; };
       const echeancesRows = echeances.map(e => `<tr><td style="padding:6px 10px;border-bottom:1px solid #2a2a2a;">Versement ${e.numero}</td><td style="padding:6px 10px;border-bottom:1px solid #2a2a2a;">${fmtE(e.date)}</td><td style="padding:6px 10px;border-bottom:1px solid #2a2a2a;text-align:right;color:#d4af7a;">${parseFloat(e.montant).toFixed(2)} €</td></tr>`).join('');
       await sb.functions.invoke('send-email', {
         body: {
           to: client.email,
-          subject: `📋 Votre contrat Harmonya — ${prestation}`,
-          html: `<div style="font-family:Georgia,serif;max-width:540px;margin:0 auto;background:#1a1a1a;color:#e8ddd0;padding:32px;border-radius:12px;">
-            <div style="text-align:center;margin-bottom:20px;"><span style="font-size:1.4rem;letter-spacing:.12em;color:#c9a96e;">HARMONYA</span></div>
-            <h2 style="color:#d4af7a;font-size:1.1rem;font-weight:normal;margin:0 0 8px;">Votre contrat est prêt</h2>
-            <p style="color:#ccc;font-size:.9rem;margin:0 0 20px;">Bonjour <strong>${client.full_name || client.prenom || 'cliente'}</strong>, voici le récapitulatif de votre cure <strong>${prestation}</strong>.</p>
-            <table width="100%" style="background:#111;border-radius:8px;border-collapse:collapse;font-size:.85rem;margin-bottom:20px;">
-              <tr style="color:#999;"><th style="padding:8px 10px;text-align:left;font-weight:500;">Versement</th><th style="padding:8px 10px;text-align:left;font-weight:500;">Date</th><th style="padding:8px 10px;text-align:right;font-weight:500;">Montant</th></tr>
-              ${echeancesRows}
-            </table>
-            <p style="color:#666;font-size:.8rem;text-align:center;">Un lien de paiement vous sera envoyé avant chaque échéance. Questions : <a href="tel:0626142589" style="color:#c9a96e;">06 26 14 25 89</a></p>
-          </div>`
+          subject: `✍️ Votre contrat à signer — ${prestation} · Harmonya`,
+          html: `<!DOCTYPE html><html><head><meta charset="UTF-8"></head>
+          <body style="margin:0;padding:0;background:#0d0d0d;font-family:Georgia,serif;">
+          <table width="100%" cellpadding="0" cellspacing="0" style="background:#0d0d0d;"><tr><td align="center" style="padding:40px 20px;">
+          <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;background:#1a1a1a;border-radius:12px;overflow:hidden;">
+          <tr><td style="background:linear-gradient(135deg,#b8975a,#d4af7a);padding:32px 40px;text-align:center;">
+            <h1 style="margin:0;font-size:26px;color:#fff;font-weight:normal;letter-spacing:2px;">HARMONYA</h1>
+          </td></tr>
+          <tr><td style="padding:36px 40px;">
+            <h2 style="color:#d4af7a;font-size:18px;font-weight:normal;margin:0 0 12px;">Votre contrat est prêt à signer</h2>
+            <p style="color:#ccc;font-size:14px;margin:0 0 20px;">Bonjour <strong>${client.full_name || client.prenom || 'chère cliente'}</strong>, votre contrat <strong>${prestation}</strong> a été établi. Veuillez le lire et le signer en ligne.</p>
+            ${echeancesRows ? `<table width="100%" style="background:#111;border-radius:8px;border-collapse:collapse;font-size:.82rem;margin-bottom:24px;"><tr style="color:#999;"><th style="padding:8px 10px;text-align:left;font-weight:500;">Versement</th><th style="padding:8px 10px;text-align:left;font-weight:500;">Date</th><th style="padding:8px 10px;text-align:right;font-weight:500;">Montant</th></tr>${echeancesRows}</table>` : ''}
+            <div style="text-align:center;margin:24px 0;">
+              <a href="${signUrl}" style="display:inline-block;background:linear-gradient(135deg,#b8975a,#d4af7a);color:#fff;text-decoration:none;padding:14px 36px;border-radius:8px;font-size:15px;letter-spacing:.5px;">✍️ Lire et signer mon contrat</a>
+            </div>
+            <p style="color:#666;font-size:.75rem;text-align:center;line-height:1.7;">Ce lien vous est réservé. Signature électronique valide (Art. 1366 Code Civil).<br>Questions : <a href="tel:0626142589" style="color:#c9a96e;">06 26 14 25 89</a></p>
+          </td></tr></table></td></tr></table></body></html>`
         }
       });
     }
-    showAdminToast('✓ Contrat créé et envoyé à la cliente', 'green');
+    showAdminToast('✓ Contrat créé — lien de signature envoyé à la cliente', 'green');
   }
   else console.error('Erreur création contrat:', error);
 }
