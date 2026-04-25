@@ -520,6 +520,33 @@
         </div>
       </div>
       <div id="calendar-view"></div>
+
+      <!-- ── Sync Google Calendar ─────────────── -->
+      <div id="gcal-integration" style="margin-top:28px;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.07);border-radius:12px;padding:20px 22px;">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
+          <span style="font-size:1.2rem;">📅</span>
+          <div>
+            <div style="font-size:.85rem;font-weight:600;color:var(--gold-light);letter-spacing:.04em;">Synchronisation Google Agenda</div>
+            <div style="font-size:.74rem;color:rgba(232,221,208,.4);margin-top:2px;">Les jours indisponibles sur Google se bloquent automatiquement ici</div>
+          </div>
+          <div id="gcal-sync-badge" style="margin-left:auto;font-size:.72rem;padding:3px 10px;border-radius:20px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);color:rgba(232,221,208,.4);">Non configuré</div>
+        </div>
+        <div style="display:flex;gap:10px;align-items:flex-end;">
+          <div style="flex:1;">
+            <label style="font-size:.74rem;color:rgba(232,221,208,.5);display:block;margin-bottom:5px;">URL secrète iCal de Google Agenda</label>
+            <input id="gcal-ical-url" type="url" placeholder="https://calendar.google.com/calendar/ical/…/basic.ics"
+              style="width:100%;padding:9px 12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:#e8ddd0;font-size:.83rem;font-family:monospace;outline:none;"
+              oninput="document.getElementById('gcal-save-btn').style.opacity='1'">
+          </div>
+          <button id="gcal-save-btn" onclick="saveGcalUrl()" style="opacity:.5;transition:.2s;white-space:nowrap;padding:9px 16px;background:rgba(201,169,110,.12);border:1px solid rgba(201,169,110,.3);border-radius:8px;color:#c9a96e;font-size:.8rem;cursor:pointer;">Enregistrer</button>
+          <button onclick="triggerGcalSync()" id="gcal-sync-btn"
+            style="white-space:nowrap;padding:9px 16px;background:rgba(201,169,110,.15);border:1px solid rgba(201,169,110,.35);border-radius:8px;color:#d4af7a;font-size:.8rem;cursor:pointer;font-weight:600;">⟳ Sync</button>
+        </div>
+        <div id="gcal-help" style="margin-top:12px;font-size:.74rem;color:rgba(232,221,208,.35);line-height:1.6;">
+          Comment trouver l'URL : <strong style="color:rgba(232,221,208,.55);">Google Agenda → ⚙️ Paramètres → choisir un agenda → Intégrer l'agenda → «Adresse secrète au format iCal»</strong>
+        </div>
+        <div id="gcal-last-sync" style="margin-top:8px;font-size:.73rem;color:rgba(232,221,208,.3);display:none;"></div>
+      </div>
     </div>
 
     <!-- ── CONTRATS ───────────────────────────── -->
@@ -754,6 +781,61 @@ async function loadAll() {
   renderCalendarWeek();
   renderOverview();
   subscribeRealtime();
+  loadGcalUrl();
+}
+
+// ── Google Calendar Sync ────────────────────────────
+async function loadGcalUrl() {
+  try {
+    const { data } = await sb.from('settings').select('value,updated_at').eq('key', 'google_calendar_ical_url').maybeSingle();
+    if (data?.value) {
+      document.getElementById('gcal-ical-url').value = data.value;
+      document.getElementById('gcal-sync-badge').textContent = '✓ Configuré';
+      document.getElementById('gcal-sync-badge').style.background = 'rgba(129,199,132,.08)';
+      document.getElementById('gcal-sync-badge').style.borderColor = 'rgba(129,199,132,.25)';
+      document.getElementById('gcal-sync-badge').style.color = '#81c784';
+    }
+  } catch(e) { console.warn('loadGcalUrl:', e); }
+}
+
+async function saveGcalUrl() {
+  const url = document.getElementById('gcal-ical-url').value.trim();
+  const btn = document.getElementById('gcal-save-btn');
+  btn.textContent = '…'; btn.style.opacity = '.6';
+  try {
+    const { error } = await sb.from('settings').upsert({ key: 'google_calendar_ical_url', value: url, updated_at: new Date().toISOString() }, { onConflict: 'key' });
+    if (error) throw error;
+    btn.textContent = '✓ Enregistré';
+    document.getElementById('gcal-sync-badge').textContent = url ? '✓ Configuré' : 'Non configuré';
+    document.getElementById('gcal-sync-badge').style.background = url ? 'rgba(129,199,132,.08)' : 'rgba(255,255,255,.04)';
+    document.getElementById('gcal-sync-badge').style.borderColor = url ? 'rgba(129,199,132,.25)' : 'rgba(255,255,255,.08)';
+    document.getElementById('gcal-sync-badge').style.color = url ? '#81c784' : 'rgba(232,221,208,.4)';
+    setTimeout(() => { btn.textContent = 'Enregistrer'; btn.style.opacity = '.5'; }, 2000);
+  } catch(e) {
+    btn.textContent = 'Erreur'; btn.style.opacity = '1';
+    setTimeout(() => { btn.textContent = 'Enregistrer'; }, 2000);
+  }
+}
+
+async function triggerGcalSync() {
+  const btn = document.getElementById('gcal-sync-btn');
+  btn.textContent = '⟳ Sync…'; btn.style.opacity = '.6';
+  try {
+    const { data, error } = await sb.functions.invoke('sync-google-calendar', { method: 'POST', body: {} });
+    if (error) throw error;
+    const info = data || {};
+    const msg = `Dernière sync : ${new Date().toLocaleString('fr-FR')} · ${info.jours_bloques ?? 0} jour(s) bloqué(s) · ${info.events_trouves ?? 0} événement(s)`;
+    document.getElementById('gcal-last-sync').textContent = msg;
+    document.getElementById('gcal-last-sync').style.display = 'block';
+    btn.textContent = '✓ Synchro OK';
+    showAdminToast(`Calendrier Google synchronisé — ${info.jours_bloques ?? 0} jour(s) bloqué(s)`, 'success');
+    setTimeout(() => { btn.textContent = '⟳ Sync'; btn.style.opacity = '1'; }, 2000);
+    renderCalendarWeek();
+  } catch(e) {
+    btn.textContent = '✗ Erreur'; btn.style.opacity = '1';
+    showAdminToast('Erreur de synchronisation Google Agenda', 'error');
+    setTimeout(() => { btn.textContent = '⟳ Sync'; }, 3000);
+  }
 }
 
 // ── PANEL NAV ─────────────────────────────────────────
