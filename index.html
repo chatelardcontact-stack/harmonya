@@ -1461,6 +1461,7 @@
       var overlay = document.getElementById('bk-overlay');
       overlay.style.display = 'flex';
       document.body.style.overflow = 'hidden';
+      if (BOOKING_MAINTENANCE) { renderMaintenanceStep(); return; }
       // Réinitialiser les variables de session
       window.selectedServiceId = null;
       window.selectedServiceTitle = null;
@@ -1741,6 +1742,28 @@
       window.selectedLocation = 'domicile';
       window.selectedAddress = document.getElementById('address-input').value;
       renderDateTimePicker();
+    }
+
+    // ── Maintenance du système de réservation ────────────
+    var BOOKING_MAINTENANCE = true; // true = mode maintenance (appel téléphonique)
+
+    function renderMaintenanceStep() {
+      var bkc = document.getElementById('bk-content');
+      bkc.innerHTML =
+        '<button class="bk-close" onclick="closeBookingModal()">✕</button>' +
+        '<div style="text-align:center;padding:48px 24px 36px;">' +
+        '<div style="font-size:2.8rem;margin-bottom:20px;">📞</div>' +
+        '<p class="bk-eyebrow" style="margin-bottom:10px;">Harmonya · Réservation</p>' +
+        '<h2 class="bk-title" style="margin-bottom:16px;">Réservation en ligne</h2>' +
+        '<p style="font-size:1rem;color:rgba(232,221,208,.75);line-height:1.7;margin-bottom:28px;">' +
+        'La réservation en ligne est temporairement indisponible.<br>' +
+        'Contactez-nous directement pour réserver votre séance.' +
+        '</p>' +
+        '<a href="tel:0626142589" style="display:inline-flex;align-items:center;gap:10px;background:linear-gradient(135deg,#b8975a,#d4af7a);color:#0a0806;font-weight:700;font-size:1.05rem;text-decoration:none;padding:14px 32px;border-radius:50px;letter-spacing:.04em;">' +
+        '📱 06 26 14 25 89' +
+        '</a>' +
+        '<p style="margin-top:14px;font-size:.78rem;color:rgba(232,221,208,.35);">Du lundi au samedi · 9h – 19h</p>' +
+        '</div>';
     }
 
     var BK_SUPA_URL = 'https://qewdympkbxbevgmbfxfd.supabase.co';
@@ -2273,6 +2296,7 @@
       var overlay = document.getElementById('bk-overlay');
       overlay.style.display = 'flex';
       document.body.style.overflow = 'hidden';
+      if (BOOKING_MAINTENANCE) { renderMaintenanceStep(); return; }
       window.selectedServiceId = id;
       window.selectedServiceTitle = title;
       window.selectedServicePrice = price;
@@ -2445,6 +2469,12 @@
 
     <script>
     function openGiftModal(value) {
+      if (BOOKING_MAINTENANCE) {
+        document.getElementById('bk-overlay').style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+        renderMaintenanceStep();
+        return;
+      }
       document.getElementById('gift-overlay').style.display = 'flex';
       document.body.style.overflow = 'hidden';
       if (value) {
